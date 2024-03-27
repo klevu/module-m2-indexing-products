@@ -1,0 +1,85 @@
+pipeline: Pipeline\CreateRecord
+stages:
+  -
+    pipeline: Pipeline\CreateRecord
+    stages:
+      amount:
+        stages:
+          -
+            pipeline: Stage\Extract
+            args:
+              extraction: currentProduct::
+              transformations:
+                - ToBundlePrice("regular_price")
+                - FormatNumber("2",".")
+                - ToFloat
+      type:
+        pipeline: Stage\StaticValue
+        args:
+          value: "defaultPrice"
+      currency:
+        pipeline: Stage\Extract
+        args:
+          extraction: store::getForCurrentStore().base_currency_code
+  -
+    pipeline: Pipeline\CreateRecord
+    stages:
+      amount:
+        stages:
+          -
+            pipeline: Stage\Extract
+            args:
+              extraction: currentProduct::
+              transformations:
+                - ToBundlePrice("final_price")
+                - FormatNumber("2",".")
+                - ToFloat
+      type:
+        pipeline: Stage\StaticValue
+        args:
+          value: "salePrice"
+      currency:
+        pipeline: Stage\Extract
+        args:
+          extraction: store::getForCurrentStore().base_currency_code
+  -
+    pipeline: Pipeline\CreateRecord
+    stages:
+      amount:
+        stages:
+          -
+            pipeline: Stage\Extract
+            args:
+              extraction: currentProduct::
+              transformations:
+                - ToBundlePrice("min_final_price")
+                - FormatNumber("2",".")
+                - ToFloat
+      type:
+        pipeline: Stage\StaticValue
+        args:
+          value: "startPrice"
+      currency:
+        pipeline: Stage\Extract
+        args:
+          extraction: store::getForCurrentStore().base_currency_code
+  -
+    pipeline: Pipeline\CreateRecord
+    stages:
+      amount:
+        stages:
+          - pipeline: Stage\Extract
+            args:
+              extraction: currentProduct::
+              transformations:
+                - ToBundlePrice("max_final_price")
+                - FormatNumber("2",".")
+                - ToFloat
+      type:
+        pipeline: Stage\StaticValue
+        args:
+          value: "toPrice"
+      currency:
+        pipeline: Stage\Extract
+        args:
+          extraction: store::getForCurrentStore().base_currency_code

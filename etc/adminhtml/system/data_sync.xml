@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+
+<!-- Copyright © Klevu Oy. All rights reserved. See LICENSE.txt for license details. -->
+
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_include.xsd">
+    <group id="indexing">
+        <field id="enable_product_sync"
+               translate="label comment tooltip"
+               sortOrder="30"
+               type="select"
+               showInDefault="1"
+               showInWebsite="1"
+               showInStore="1"
+               canRestore="1">
+            <label>Enable Product Sync</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <config_path>klevu/indexing/enable_product_sync</config_path>
+        </field>
+        <field id="image_width_product"
+               translate="label comment tooltip"
+               sortOrder="30"
+               type="text"
+               showInDefault="1"
+               showInWebsite="1"
+               showInStore="1"
+               canRestore="1">
+            <label>Product Image Width</label>
+            <comment><![CDATA[Width of the product images synced to Klevu.]]></comment>
+            <config_path>klevu/indexing/image_width_product</config_path>
+        </field>
+        <field id="image_height_product"
+               translate="label comment tooltip"
+               sortOrder="30"
+               type="text"
+               showInDefault="1"
+               showInWebsite="1"
+               showInStore="1"
+               canRestore="1">
+            <label>Product Image Height</label>
+            <comment><![CDATA[Height of the product images synced to Klevu.]]></comment>
+            <config_path>klevu/indexing/image_height_product</config_path>
+        </field>
+    </group>
+</config>

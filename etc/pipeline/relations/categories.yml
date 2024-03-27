@@ -1,0 +1,9 @@
+pipeline: Pipeline\CreateRecord
+stages:
+  values:
+    pipeline: Stage\Extract
+    args:
+      extraction: currentProduct::
+      transformations:
+        - ToCategoryIds
+        - Prepend("categoryid_")

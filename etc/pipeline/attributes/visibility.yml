@@ -1,0 +1,12 @@
+stages:
+  -
+    pipeline: Stage\Extract
+    args:
+      extraction: currentProduct::getVisibility()
+      transformations: >
+        ToInteger|ValueMap([
+            {"sourceValue": 1, "convertedValue": []},
+            {"sourceValue": 2, "convertedValue": ["catalog"]},
+            {"sourceValue": 3, "convertedValue": ["search"]},
+            {"sourceValue": 4, "convertedValue": ["catalog", "search"]}
+        ])

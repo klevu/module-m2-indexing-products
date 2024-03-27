@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Copyright © Klevu Oy. All rights reserved. See LICENSE.txt for license details. -->
+
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+
+    <event name="catalog_product_delete_after_done">
+        <observer name="Klevu_IndexingProducts_ProductDelete"
+                  instance="Klevu\IndexingProducts\Observer\ProductDeleteObserver"/>
+    </event>
+
+    <event name="catalog_product_import_bunch_save_after">
+        <observer name="Klevu_IndexingProducts_ProductImport"
+                  instance="Klevu\IndexingProducts\Observer\ProductImportObserver"/>
+    </event>
+
+    <event name="catalog_entity_attribute_save_after">
+        <observer name="Klevu_IndexingProducts_ProductAttributeSave"
+                  instance="Klevu\IndexingProducts\Observer\ProductAttributeObserver" />
+    </event>
+
+    <event name="catalog_entity_attribute_delete_commit_after">
+        <observer name="Klevu_IndexingProducts_ProductAttributeDelete"
+                  instance="Klevu\IndexingProducts\Observer\ProductAttributeObserver" />
+    </event>
+
+    <event name="klevu_indexing_entity_update_after">
+        <observer name="Klevu_IndexingProducts_entityUpdateAfter"
+                  instance="Klevu\IndexingProducts\Observer\IndexingEntityUpdateObserver"/>
+    </event>
+
+    <event name="klevu_indexing_attributes_action_add_after">
+        <observer name="Klevu_IndexingProducts_syncAddAttribute"
+                  instance="Klevu\IndexingProducts\Observer\Sync\Attributes\AddAttributeObserver"/>
+    </event>
+
+    <event name="klevu_indexing_attributes_action_delete_after">
+        <observer name="Klevu_IndexingProducts_syncDeleteAttribute"
+                  instance="Klevu\IndexingProducts\Observer\Sync\Attributes\DeleteAttributeObserver"/>
+    </event>
+
+    <event name="klevu_indexing_attributes_action_update_after">
+        <observer name="Klevu_IndexingProducts_syncUpdateAttribute"
+                  instance="Klevu\IndexingProducts\Observer\Sync\Attributes\UpdateAttributeObserver"/>
+    </event>
+
+</config>

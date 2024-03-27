@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+
+<!--
+/**
+ * Copyright © Klevu Oy. All rights reserved. See LICENSE.txt for license details.
+ */
+-->
+
+<page layout="admin-1column"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="content">
+            <referenceBlock name="attribute_edit_content">
+                <referenceContainer name="form">
+                    <block class="Klevu\IndexingProducts\Block\Adminhtml\Product\Attribute\Edit\Tab\KlevuIndexingProperties"
+                           name="klevu.form.options" />
+                </referenceContainer>
+            </referenceBlock>
+        </referenceContainer>
+    </body>
+</page>

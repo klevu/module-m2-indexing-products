@@ -1,0 +1,10 @@
+pipeline: Pipeline\CreateRecord
+stages:
+  values:
+    stages:
+    - pipeline: Pipeline\CreateRecord
+      stages:
+      - pipeline: Stage\Extract
+        args:
+          extraction: currentParentProduct::getEntityId()
+          transformations: ToString

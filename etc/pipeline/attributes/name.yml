@@ -1,0 +1,9 @@
+pipeline: Pipeline\CreateRecord
+stages:
+  default:
+    stages:
+      -
+        pipeline: Stage\Extract
+        args:
+          extraction: currentProduct::getName()
+          transformations: EscapeHtml
