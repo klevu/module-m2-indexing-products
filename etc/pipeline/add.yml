@@ -1,19 +1,19 @@
 stages:
   logStart:
-    pipeline: Indexing\Stage\Log
+    pipeline: Indexing\Stage\Log # log that the pipeline has begun
     args:
       message: "Start Add Products Pipeline"
   iterateIndexingRecords:
-    pipeline: Pipeline\Iterate
+    pipeline: Pipeline\Iterate # LOOP OVER ALL PROVIDED RECORDS
     args:
       continueOnException: ~
     stages:
-      processIndexingRecordStart:
+      processIndexingRecordStart: # set some variables before processing product data
         stages:
           registerIndexingRecordToContext:
             pipeline: Stage\RegisterContext
             args:
-              contextKey: "currentIndexingRecord"
+              contextKey: "currentIndexingRecord" # Set the current record to a variable called "currentIndexingRecord"
           registerProductToContext:
             stages:
               extractProduct:
@@ -23,7 +23,7 @@ stages:
               registerProduct:
                 pipeline: Stage\RegisterContext
                 args:
-                  contextKey: "currentProduct"
+                  contextKey: "currentProduct" # i.e. $currentProduct = currentIndexingRecord::getEntity();
           registerParentProductToContext:
             stages:
               extractParentProduct:
@@ -33,7 +33,7 @@ stages:
               registerParentProduct:
                 pipeline: Stage\RegisterContext
                 args:
-                  contextKey: "currentParentProduct"
+                  contextKey: "currentParentProduct" # i.e. $currentParentProduct = currentIndexingRecord::getParent();
           registerActionToContext:
             stages:
               createAction:
@@ -43,7 +43,7 @@ stages:
               registerAction:
                 pipeline: Stage\RegisterContext
                 args:
-                  contextKey: "currentAction"
+                  contextKey: "currentAction" # i.e. $currentAction = 'Add';
           registerEntityTypeToContext:
             stages:
               createEntityType:
@@ -53,90 +53,83 @@ stages:
               registerEntityType:
                 pipeline: Stage\RegisterContext
                 args:
-                  contextKey: "currentEntityType"
-      processProduct:
-        pipeline: Pipeline\CreateRecord
+                  contextKey: "currentEntityType" # i.e. $currentEntityType = 'KLEVU_PRODUCT';
+      processProduct: # GENERATE PRODUCT DATA
+        pipeline: Pipeline\Fallback # if validation during one stage fails, move onto the next stage
         stages:
-          -
-            pipeline: Pipeline\Fallback
+          variantProduct: # Simple products belonging to configurable products
             stages:
-              variantProduct: # Simple products belonging to configurable products
+              - pipeline: Stage\Extract
+                args:
+                  extraction: currentParentProduct::
+              - pipeline: Stage\Validate
+                args:
+                  validation: IsNotEmpty
+              - pipeline: Pipeline\CreateRecord
                 stages:
-                  - pipeline: Stage\Extract
-                    args:
-                      extraction: currentParentProduct::
-                  - pipeline: Stage\Validate
-                    args:
-                      validation: IsNotEmpty
-                  - pipeline: Pipeline\CreateRecord
-                    stages:
-                      transformVariantProduct:
-                        import: transform-product-variant.yml
-              configurableProduct:
+                  transformVariantProduct:
+                    import: transform-product-variant.yml # use this file for configurable variant data
+          configurableProduct:
+            stages:
+              -
+                pipeline: Stage\Extract
+                args:
+                  extraction: currentProduct::getTypeId()
+              -
+                pipeline: Stage\Validate
+                args:
+                  validation: IsEqualTo("configurable")
+              -
+                pipeline: Pipeline\CreateRecord
                 stages:
-                  -
-                    pipeline: Stage\Extract
-                    args:
-                      extraction: currentProduct::getTypeId()
-                  -
-                    pipeline: Stage\Validate
-                    args:
-                      validation: IsEqualTo("configurable")
-                  -
-                    pipeline: Pipeline\CreateRecord
-                    stages:
-                      transformConfigurableProduct:
-                        import: transform-product-configurable.yml
-              groupedProduct:
+                  transformConfigurableProduct:
+                    import: transform-product-configurable.yml # use this file for configurable product data
+          groupedProduct:
+            stages:
+              -
+                pipeline: Stage\Extract
+                args:
+                  extraction: currentProduct::getTypeId()
+              -
+                pipeline: Stage\Validate
+                args:
+                  validation: IsEqualTo("grouped")
+              -
+                pipeline: Pipeline\CreateRecord
                 stages:
-                  -
-                    pipeline: Stage\Extract
-                    args:
-                      extraction: currentProduct::getTypeId()
-                  -
-                    pipeline: Stage\Validate
-                    args:
-                      validation: IsEqualTo("grouped")
-                  -
-                    pipeline: Pipeline\CreateRecord
-                    stages:
-                      transformGroupedProduct:
-                        import: transform-product-grouped.yml
-              bundleProduct:
+                  transformGroupedProduct:
+                    import: transform-product-grouped.yml # use this file for grouped product data
+          bundleProduct:
+            stages:
+              -
+                pipeline: Stage\Extract
+                args:
+                  extraction: currentProduct::getTypeId()
+              -
+                pipeline: Stage\Validate
+                args:
+                  validation: IsEqualTo("bundle")
+              -
+                pipeline: Pipeline\CreateRecord
                 stages:
-                  -
-                    pipeline: Stage\Extract
-                    args:
-                      extraction: currentProduct::getTypeId()
-                  -
-                    pipeline: Stage\Validate
-                    args:
-                      validation: IsEqualTo("bundle")
-                  -
-                    pipeline: Pipeline\CreateRecord
-                    stages:
-                      transformGroupedProduct:
-                        import: transform-product-bundle.yml
-              default:
+                  transformGroupedProduct:
+                    import: transform-product-bundle.yml # use this file for bundle product data
+          default:
+            stages:
+              - pipeline: Pipeline\CreateRecord
                 stages:
-                  - pipeline: Pipeline\CreateRecord
-                    stages:
-                      transformDefaultProduct:
-                        import: transform-product.yml
-      mergeVariants:
-        pipeline: Stage\Transform
-        args:
-          transformation: Flatten
+                  transformDefaultProduct:
+                    import: transform-product.yml # use this file for all other product types product data
   processPayload:
     stages:
       mergeRecords:
         pipeline: Stage\Transform
         args:
           transformation: Flatten
-      processRecords:
+      processRecords: # send generated data to Klevu
         # import: Klevu_Indexing::etc/pipeline/process-batch-payload.yml
         import: ../../../module-m2-indexing/etc/pipeline/process-batch-payload.yml
   logEnd:
-    pipeline: Indexing\Stage\Log
+    pipeline: Indexing\Stage\Log # log that the pipeline has ended
     args:
       message: "End Add Products Pipeline"

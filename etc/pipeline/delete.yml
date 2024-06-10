@@ -1,19 +1,19 @@
 stages:
   logStart:
-    pipeline: Indexing\Stage\Log
+    pipeline: Indexing\Stage\Log # log that the pipeline has begun
     args:
       message: "Start Delete Products Pipeline"
   iterateIndexingRecords:
-    pipeline: Pipeline\Iterate
+    pipeline: Pipeline\Iterate # LOOP OVER ALL PROVIDED RECORDS
     args:
       continueOnException: ~
     stages:
-      processIndexingRecordStart:
+      processIndexingRecordStart: # set some variables before processing product data
         stages:
           registerIndexingRecordToContext:
             pipeline: Stage\RegisterContext
             args:
-              contextKey: "currentIndexingRecord"
+              contextKey: "currentIndexingRecord" # Set the current record to a variable called "currentIndexingRecord"
           registerActionToContext:
             stages:
               createAction:
@@ -23,7 +23,7 @@ stages:
               registerAction:
                 pipeline: Stage\RegisterContext
                 args:
-                  contextKey: "currentAction"
+                  contextKey: "currentAction" # i.e. $currentAction = 'Delete';
           registerEntityTypeToContext:
             stages:
               createEntityType:
@@ -33,12 +33,12 @@ stages:
               registerEntityType:
                 pipeline: Stage\RegisterContext
                 args:
-                  contextKey: "currentEntityType"
+                  contextKey: "currentEntityType" # i.e. $currentEntityType = 'KLEVU_PRODUCT';
       processProduct:
         pipeline: Pipeline\CreateRecord
         stages:
           -
-            pipeline: Pipeline\Fallback
+            pipeline: Pipeline\Fallback # if validation during one stage fails, move onto the next stage
             stages:
               variantProduct: # Simple products belonging to configurable products
                 stages:
@@ -52,10 +52,10 @@ stages:
                     args:
                       extraction: currentIndexingRecord::getEntityId()
                       transformations:
-                        - Prepend($currentIndexingRecord::getParentId(), "-")
+                        - Prepend($currentIndexingRecord::getParentId(), "-") # prepend parent_id . '-' to entity_id
                         - Trim("-")
                         - Trim
-              default:
+              default: # all other product types
                 stages:
                   - pipeline: Stage\Extract
                     args:
@@ -67,10 +67,10 @@ stages:
         pipeline: Stage\Transform
         args:
           transformation: Flatten
-      processRecords:
+      processRecords: # send generated data to Klevu
         # import: Klevu_Indexing::etc/pipeline/process-batch-delete-payload.yml
         import: ../../../module-m2-indexing/etc/pipeline/process-batch-delete-payload.yml
   logEnd:
-    pipeline: Indexing\Stage\Log
+    pipeline: Indexing\Stage\Log # log that the pipeline has ended
     args:
       message: "End Delete Products Pipeline"

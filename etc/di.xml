@@ -20,6 +20,9 @@
     <preference for="Klevu\IndexingApi\Service\Provider\Catalog\CategoryIdProviderInterface"
                 type="Klevu\IndexingProducts\Service\Provider\Catalog\CategoryIdProvider"/>
 
+    <preference for="Klevu\IndexingApi\Service\Provider\Catalog\AttributeTextProviderInterface"
+                type="Klevu\IndexingProducts\Service\Provider\Catalog\AttributeTextProvider"/>
+
     <preference for="Klevu\IndexingApi\Service\Provider\Catalog\ParentAnchorCategoryIdProviderInterface"
                 type="Klevu\IndexingProducts\Service\Provider\Catalog\ParentAnchorCategoryIdProvider"/>
 
@@ -245,10 +248,8 @@
                  type="Klevu\Indexing\Service\Provider\AttributeDiscoveryProvider">
         <arguments>
             <argument name="attributeType" xsi:type="string">KLEVU_PRODUCT</argument>
-            <argument name="attributeProviders" xsi:type="array">
-                <item name="KLEVU_PRODUCT"
-                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\ProductAttributeProvider</item>
-            </argument>
+            <argument name="attributeProviderProvider"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\AttributeProviderProvider</argument>
             <argument name="attributeMappers" xsi:type="array">
                 <item name="KLEVU_PRODUCT"
                       xsi:type="object">Klevu\IndexingProducts\Service\Mapper\MagentoToKlevuAttributeMapper</item>
@@ -574,12 +575,32 @@
         </arguments>
     </type>
 
+    <type name="Klevu\IndexingProducts\Service\Provider\AttributeProviderProvider">
+        <arguments>
+            <argument name="attributeProviders" xsi:type="array">
+                <item name="KLEVU_PRODUCT"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\ProductAttributeProvider</item>
+            </argument>
+            <argument name="staticAttributeProviders" xsi:type="array">
+                <item name="KLEVU_PRODUCT"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\StaticAttributeProvider</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\IndexingProducts\Service\Provider\StaticAttributeProvider">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
+            <argument name="validator" xsi:type="object">Klevu\Indexing\Validator\StaticAttributeValidator</argument>
+        </arguments>
+    </type>
+
     <virtualType name="Klevu\IndexingProducts\Service\Provider\Sync\AttributeIndexingRecordProvider"
                  type="Klevu\Indexing\Service\Provider\Sync\AttributeIndexingRecordProvider">
         <arguments>
             <argument name="entityType" xsi:type="string">KLEVU_PRODUCT</argument>
-            <argument name="attributeProvider"
-                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\ProductAttributeProvider</argument>
+            <argument name="attributeProvidersProvider"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\AttributeProviderProvider</argument>
             <argument name="indexingRecordCreatorService"
                       xsi:type="object">Klevu\IndexingProducts\Service\AttributeIndexingRecordCreatorService</argument>
             <argument name="indexingDeleteRecordCreatorService"
@@ -621,6 +642,10 @@
             <argument name="updateIndexingAttributeActionsAction"
                       xsi:type="object">Klevu\IndexingProducts\Service\Action\UpdateIndexingAttributeActionsAction\Add</argument>
             <argument name="entityType" xsi:type="string">KLEVU_PRODUCT</argument>
+            <argument name="staticAttributeProviders" xsi:type="array">
+                <item name="KLEVU_PRODUCT"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\StaticAttributeProvider</item>
+            </argument>
         </arguments>
     </virtualType>
 
@@ -658,6 +683,10 @@
             <argument name="updateIndexingAttributeActionsAction"
                       xsi:type="object">Klevu\IndexingProducts\Service\Action\UpdateIndexingAttributeActionsAction\Update</argument>
             <argument name="entityType" xsi:type="string">KLEVU_PRODUCT</argument>
+            <argument name="staticAttributeProviders" xsi:type="array">
+                <item name="KLEVU_PRODUCT"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\StaticAttributeProvider</item>
+            </argument>
         </arguments>
     </virtualType>
 
@@ -695,6 +724,10 @@
             <argument name="updateIndexingAttributeActionsAction"
                       xsi:type="object">Klevu\IndexingProducts\Service\Action\UpdateIndexingAttributeActionsAction\Delete</argument>
             <argument name="entityType" xsi:type="string">KLEVU_PRODUCT</argument>
+            <argument name="staticAttributeProviders" xsi:type="array">
+                <item name="KLEVU_PRODUCT"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\StaticAttributeProvider</item>
+            </argument>
         </arguments>
     </virtualType>
 
@@ -784,6 +817,12 @@
                 <item name="\Klevu\IndexingProducts\Pipeline\Transformer"
                       xsi:type="const">Klevu\Pipelines\ObjectManager\ObjectManagerInterface::PRIORITY_NAMESPACE_SORT_ORDER</item>
             </argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\IndexingProducts\Pipeline\Provider\Argument\Transformer\GetAttributeTextArgumentProvider">
+        <arguments>
+            <argument name="argumentProvider" xsi:type="object">Klevu\Pipelines\Provider\ArgumentProvider</argument>
         </arguments>
     </type>
 

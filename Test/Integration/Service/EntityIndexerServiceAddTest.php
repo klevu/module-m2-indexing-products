@@ -32,11 +32,13 @@ use Klevu\TestFixtures\Traits\ObjectInstantiationTrait;
 use Klevu\TestFixtures\Traits\PipelineEntityApiCallTrait;
 use Klevu\TestFixtures\Traits\SetAuthKeysTrait;
 use Klevu\TestFixtures\Traits\TestImplementsInterfaceTrait;
+use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\Product\Type;
 use Magento\Catalog\Model\Product\Visibility;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\Downloadable\Model\Product\Type as DownloadableType;
+use Magento\Framework\DataObject;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\GroupedProduct\Model\Product\Type\Grouped;
 use Magento\TestFramework\Helper\Bootstrap;
@@ -322,8 +324,6 @@ class EntityIndexerServiceAddTest extends TestCase
     /**
      * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
-     * @magentoConfigFixture klevu_test_store_1_store klevu/indexing/image_width_product 800
-     * @magentoConfigFixture klevu_test_store_1_store klevu/indexing/image_height_product 800
      */
     public function testExecute_ReturnsSuccess_WhenSimpleProductAdded(): void
     {
@@ -337,6 +337,16 @@ class EntityIndexerServiceAddTest extends TestCase
             scopeProvider: $scopeProvider,
             jsApiKey: $apiKey,
             restAuthKey: 'SomeValidRestKey123',
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu/indexing/image_width_product',
+            value: 800,
+            storeCode: $storeFixture->getCode(),
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu/indexing/image_height_product',
+            value: 800,
+            storeCode: $storeFixture->getCode(),
         );
 
         $this->createCategory([
@@ -536,6 +546,16 @@ class EntityIndexerServiceAddTest extends TestCase
             scopeProvider: $scopeProvider,
             jsApiKey: $apiKey,
             restAuthKey: 'weign934jt93jg934j',
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu/indexing/image_width_product',
+            value: 800,
+            storeCode: $storeFixture->getCode(),
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu/indexing/image_height_product',
+            value: 800,
+            storeCode: $storeFixture->getCode(),
         );
 
         $this->createCategory([
@@ -878,10 +898,6 @@ class EntityIndexerServiceAddTest extends TestCase
      * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      */
-    /**
-     * @magentoAppIsolation enabled
-     * @magentoDbIsolation disabled
-     */
     public function testExecute_ReturnsSuccess_WhenConfigurableProductAdded(): void
     {
         $apiKey = 'klevu-123456789';
@@ -894,6 +910,16 @@ class EntityIndexerServiceAddTest extends TestCase
             scopeProvider: $scopeProvider,
             jsApiKey: $apiKey,
             restAuthKey: 'weign934jt93jg934j',
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu/indexing/image_width_product',
+            value: 800,
+            storeCode: $storeFixture->getCode(),
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu/indexing/image_height_product',
+            value: 800,
+            storeCode: $storeFixture->getCode(),
         );
 
         $this->createCategory([
@@ -1132,8 +1158,6 @@ class EntityIndexerServiceAddTest extends TestCase
     /**
      * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
-     * @magentoConfigFixture klevu_test_store_1_store klevu/indexing/image_width_product 800
-     * @magentoConfigFixture klevu_test_store_1_store klevu/indexing/image_height_product 800
      */
     public function testExecute_ReturnsSuccess_WhenVariantProductAdded(): void
     {
@@ -1147,6 +1171,16 @@ class EntityIndexerServiceAddTest extends TestCase
             scopeProvider: $scopeProvider,
             jsApiKey: $apiKey,
             restAuthKey: 'weign934jt93jg934j',
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu/indexing/image_width_product',
+            value: 800,
+            storeCode: $storeFixture->getCode(),
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu/indexing/image_height_product',
+            value: 800,
+            storeCode: $storeFixture->getCode(),
         );
 
         $this->createCategory([
@@ -1189,6 +1223,9 @@ class EntityIndexerServiceAddTest extends TestCase
             ],
         ]);
         $variantProductFixture1 = $this->productFixturePool->get('test_product_variant_1');
+        /** @var DataObject|ProductInterface $variantProduct1 */
+        $variantProduct1 = $variantProductFixture1->getProduct();
+
         $ratingIds = $this->getRatingIds();
         $ratings = [];
         $value = 2;
@@ -1305,10 +1342,24 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->assertSame(expected: [(string)$productFixture->getId()], actual: $parentProductRelation['values']);
 
         $attributes = $record->getAttributes();
-        $this->assertArrayNotHasKey(key: 'sku', array: $attributes);
+        $this->assertArrayHasKey(key: 'sku', array: $attributes);
+        $this->assertSame(expected: $variantProduct1->getSku(), actual: $attributes['sku']);
+
+        $this->assertArrayHasKey(key: 'shortDescription', array: $attributes);
+        $this->assertArrayHasKey(key: 'default', array: $attributes['shortDescription']);
+        $this->assertSame(
+            expected: $variantProduct1->getData('short_description'),
+            actual: $attributes['shortDescription']['default'],
+        );
+
+        $this->assertArrayHasKey(key: 'description', array: $attributes);
+        $this->assertArrayHasKey(key: 'default', array: $attributes['description']);
+        $this->assertSame(
+            expected: $variantProduct1->getData('description'),
+            actual: $attributes['description']['default'],
+        );
+
         $this->assertArrayNotHasKey(key: 'name', array: $attributes);
-        $this->assertArrayNotHasKey(key: 'shortDescription', array: $attributes);
-        $this->assertArrayNotHasKey(key: 'description', array: $attributes);
         $this->assertArrayNotHasKey(key: 'visibility', array: $attributes);
 
         $this->assertArrayHasKey(key: 'inStock', array: $attributes);
@@ -1365,8 +1416,6 @@ class EntityIndexerServiceAddTest extends TestCase
     /**
      * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
-     * @magentoConfigFixture klevu_test_store_1_store klevu/indexing/image_width_product 800
-     * @magentoConfigFixture klevu_test_store_1_store klevu/indexing/image_height_product 800
      */
     public function testExecute_ReturnsSuccess_WhenGroupedProductAdded_MinPriceChildDisabled(): void
     {
@@ -1380,6 +1429,16 @@ class EntityIndexerServiceAddTest extends TestCase
             scopeProvider: $scopeProvider,
             jsApiKey: $apiKey,
             restAuthKey: 'weign934jt93jg934j',
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu/indexing/image_width_product',
+            value: 800,
+            storeCode: $storeFixture->getCode(),
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu/indexing/image_height_product',
+            value: 800,
+            storeCode: $storeFixture->getCode(),
         );
 
         $this->createCategory([

@@ -24,6 +24,8 @@ use Klevu\TestFixtures\Store\StoreTrait;
 use Klevu\TestFixtures\Traits\ObjectInstantiationTrait;
 use Klevu\TestFixtures\Traits\SetAuthKeysTrait;
 use Klevu\TestFixtures\Traits\TestImplementsInterfaceTrait;
+use Magento\Eav\Model\Entity\Attribute\AbstractAttribute;
+use Magento\Eav\Model\Entity\Attribute\AttributeInterface;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
@@ -163,10 +165,13 @@ class AddEntityIndexingRecordProviderTest extends TestCase
             'attribute_type' => 'configurable',
         ]);
         $attributeFixture = $this->attributeFixturePool->get('test_attribute');
+        /** @var AbstractAttribute&AttributeInterface $attribute */
+        $attribute = $attributeFixture->getAttribute();
+        $attributeSource = $attribute->getSource();
 
         $this->createProduct([
             'data' => [
-                $attributeFixture->getAttributeCode() => '1',
+                $attributeFixture->getAttributeCode() => $attributeSource->getOptionId('Option 1'),
             ],
         ]);
         $productFixture = $this->productFixturePool->get('test_product');
