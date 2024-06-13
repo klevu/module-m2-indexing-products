@@ -30,11 +30,13 @@ use Klevu\TestFixtures\Traits\ObjectInstantiationTrait;
 use Klevu\TestFixtures\Traits\PipelineEntityApiCallTrait;
 use Klevu\TestFixtures\Traits\SetAuthKeysTrait;
 use Klevu\TestFixtures\Traits\TestImplementsInterfaceTrait;
+use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\Product\Type;
 use Magento\Catalog\Model\Product\Visibility;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\Downloadable\Model\Product\Type as DownloadableType;
+use Magento\Framework\DataObject;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\GroupedProduct\Model\Product\Type\Grouped;
 use Magento\TestFramework\Helper\Bootstrap;
@@ -1035,6 +1037,9 @@ class EntityIndexerServiceUpdateTest extends TestCase
             ],
         ]);
         $variantProductFixture1 = $this->productFixturePool->get('test_product_variant_1');
+        /** @var DataObject|ProductInterface $variantProduct1 */
+        $variantProduct1 = $variantProductFixture1->getProduct();
+
         $this->createProduct([
             'key' => 'test_product_variant_2',
             'name' => 'Klevu Simple Product Test',
@@ -1137,11 +1142,25 @@ class EntityIndexerServiceUpdateTest extends TestCase
         $this->assertSame(expected: [(string)$productFixture->getId()], actual: $parentProductRelation['values']);
 
         $attributes = $record->getAttributes();
-        $this->assertArrayNotHasKey(key: 'sku', array: $attributes);
         $this->assertArrayNotHasKey(key: 'name', array: $attributes);
-        $this->assertArrayNotHasKey(key: 'shortDescription', array: $attributes);
-        $this->assertArrayNotHasKey(key: 'description', array: $attributes);
         $this->assertArrayNotHasKey(key: 'visibility', array: $attributes);
+
+        $this->assertArrayHasKey(key: 'sku', array: $attributes);
+        $this->assertSame(expected: $variantProduct1->getSku(), actual: $attributes['sku']);
+
+        $this->assertArrayHasKey(key: 'shortDescription', array: $attributes);
+        $this->assertArrayHasKey(key: 'default', array: $attributes['shortDescription']);
+        $this->assertSame(
+            expected: $variantProduct1->getData('short_description'),
+            actual: $attributes['shortDescription']['default'],
+        );
+
+        $this->assertArrayHasKey(key: 'description', array: $attributes);
+        $this->assertArrayHasKey(key: 'default', array: $attributes['description']);
+        $this->assertSame(
+            expected: $variantProduct1->getData('description'),
+            actual: $attributes['description']['default'],
+        );
 
         $this->assertArrayHasKey(key: 'inStock', array: $attributes);
         $this->assertFalse(condition: $attributes['inStock'], message: 'In Stock');

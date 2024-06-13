@@ -19,7 +19,7 @@
         </field>
         <field id="image_width_product"
                translate="label comment tooltip"
-               sortOrder="30"
+               sortOrder="40"
                type="text"
                showInDefault="1"
                showInWebsite="1"
@@ -31,7 +31,7 @@
         </field>
         <field id="image_height_product"
                translate="label comment tooltip"
-               sortOrder="30"
+               sortOrder="50"
                type="text"
                showInDefault="1"
                showInWebsite="1"

@@ -31,11 +31,16 @@ class FrameworkImageProvider implements FrameworkImageProviderInterface
      * @var WriteInterface
      */
     private readonly WriteInterface $mediaDirectory;
+    /**
+     * @var string|null
+     */
+    private readonly ?string $adapterName;
 
     /**
      * @param MediaConfig $imageConfig
      * @param Filesystem $filesystem
      * @param ImageFactory $imageFactory
+     * @param string|null $adapterName
      *
      * @throws FileSystemException
      */
@@ -43,10 +48,12 @@ class FrameworkImageProvider implements FrameworkImageProviderInterface
         MediaConfig $imageConfig,
         Filesystem $filesystem,
         ImageFactory $imageFactory,
+        ?string $adapterName = null,
     ) {
         $this->imageConfig = $imageConfig;
         $this->imageFactory = $imageFactory;
         $this->mediaDirectory = $filesystem->getDirectoryWrite(directoryCode: DirectoryList::MEDIA);
+        $this->adapterName = $adapterName;
     }
 
     /**
@@ -60,6 +67,7 @@ class FrameworkImageProvider implements FrameworkImageProviderInterface
     {
         $image = $this->imageFactory->create(
             fileName: $this->getMediaDirectoryPath($imagePath),
+            adapterName: $this->adapterName,
         );
         $image->keepAspectRatio(value: $imageParams['keep_aspect_ratio'] ?? true);
         $image->keepFrame(value: $imageParams['keep_frame'] ?? true);
