@@ -83,6 +83,8 @@ class EntityIndexerServiceUpdateTest extends TestCase
         $this->attributeFixturePool = $this->objectManager->get(AttributeFixturePool::class);
         $this->categoryFixturePool = $this->objectManager->get(CategoryFixturePool::class);
         $this->productFixturePool = $this->objectManager->get(ProductFixturePool::class);
+
+        $this->cleanIndexingEntities(apiKey: 'klevu-1234567890');
     }
 
     /**
@@ -97,6 +99,8 @@ class EntityIndexerServiceUpdateTest extends TestCase
         $this->categoryFixturePool->rollback();
         $this->attributeFixturePool->rollback();
         $this->storeFixturesPool->rollback();
+
+        $this->cleanIndexingEntities(apiKey: 'klevu-1234567890');
     }
 
     /**
@@ -183,6 +187,9 @@ class EntityIndexerServiceUpdateTest extends TestCase
         $service->execute(apiKey: $apiKey);
     }
 
+    /**
+     * @magentoAppIsolation enabled
+     */
     public function testExecute_ReturnsNoop_WhenNoProductsToUpdate(): void
     {
         $apiKey = 'klevu-js-key';
@@ -211,6 +218,7 @@ class EntityIndexerServiceUpdateTest extends TestCase
     }
 
     /**
+     * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      */
     public function testExecute_ReturnsNoop_WhenProductSyncDisabled(): void
@@ -296,7 +304,7 @@ class EntityIndexerServiceUpdateTest extends TestCase
         $service = $this->instantiateTestObject();
         $result = $service->execute(apiKey: $apiKey);
 
-        $this->assertSame(
+        $this->assertEquals(
             expected: IndexerResultStatuses::PARTIAL,
             actual: $result->getStatus(),
             message: 'Status: ' . $result->getStatus()->name,

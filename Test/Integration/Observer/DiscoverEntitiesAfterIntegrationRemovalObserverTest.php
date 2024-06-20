@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace Klevu\IndexingProducts\Test\Integration\Observer;
 
+use Klevu\Indexing\Constants;
 use Klevu\Indexing\Model\IndexingEntity;
 use Klevu\Indexing\Model\ResourceModel\IndexingEntity\Collection as IndexingEntityCollection;
 use Klevu\Indexing\Observer\DiscoverEntitiesAfterIntegrationRemovalObserver;
@@ -24,6 +25,8 @@ use Klevu\TestFixtures\Website\WebsiteFixturesPool;
 use Klevu\TestFixtures\Website\WebsiteTrait;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\Product\Type;
+use Magento\Cron\Model\ResourceModel\Schedule\Collection as CronScheduleCollection;
+use Magento\Cron\Model\ResourceModel\Schedule\CollectionFactory as CronScheduleCollectionFactory;
 use Magento\Downloadable\Model\Product\Type as DownloadableType;
 use Magento\Framework\Event\ManagerInterface as EventManager;
 use Magento\Framework\Event\ObserverInterface;
@@ -110,7 +113,7 @@ class DiscoverEntitiesAfterIntegrationRemovalObserverTest extends TestCase
      * @magentoConfigFixture default/klevu/indexing/exclude_disabled_products 1
      * @magentoConfigFixture default/klevu/indexing/exclude_oos_products 0
      */
-    public function testExecute_UpdatesIndexingEntities_ForMultiStore_OnRemovalOfApiKey(): void
+    public function testExecute_CreatesCronToDiscoverIndexingEntities_ForMultiStore_OnRemovalOfApiKey(): void
     {
         $apiKey = 'klevu-js-api-key';
         $this->cleanIndexingEntities($apiKey);
@@ -229,20 +232,39 @@ class DiscoverEntitiesAfterIntegrationRemovalObserverTest extends TestCase
             IndexingEntity::LAST_ACTION_TIMESTAMP => date('Y-m-d H:i:s'),
         ]);
 
+        $indexingEntityCollection = $this->objectManager->create(IndexingEntityCollection::class);
+        $indexingEntityCollection->addFieldToFilter(IndexingEntity::API_KEY, ['in' => [$apiKey]]);
+        $collectionSize = count($indexingEntityCollection->getItems());
+
+        $cronScheduleFactory = $this->objectManager->get(CronScheduleCollectionFactory::class);
+        /** @var CronScheduleCollection $existingCronSchedule */
+        $existingCronSchedule = $cronScheduleFactory->create();
+        $existingCronSchedule->addFieldToFilter(
+            'job_code',
+            ['eq' => Constants::CRON_JOB_CODE_INDEXING_ENTITY_DISCOVERY],
+        );
+        $existingCronScheduleItems = $existingCronSchedule->getItems();
+        $existingScheduledItems = count($existingCronScheduleItems);
+
         $this->dispatchEvent(
             apiKey: $apiKey,
         );
 
-        $collection = $this->objectManager->create(IndexingEntityCollection::class);
-        $indexingEntities = $collection->getItems();
-        $this->assertGreaterThanOrEqual(
-            expected: 3,
-            actual: count($indexingEntities),
+        // check observer no longer discovers entities directly
+        $indexingEntityCollection = $this->objectManager->create(IndexingEntityCollection::class);
+        $indexingEntityCollection->addFieldToFilter(IndexingEntity::API_KEY, ['in' => [$apiKey]]);
+        $indexingEntities = $indexingEntityCollection->getItems();
+        $this->assertCount(
+            expectedCount: $collectionSize,
+            haystack: $indexingEntities,
             message: 'Final Items Count',
         );
-        $this->assertIndexingEntity($indexingEntities, $product1, $apiKey, Actions::DELETE, true);
-        $this->assertIndexingEntity($indexingEntities, $product2, $apiKey, Actions::NO_ACTION, true);
-        $this->assertIndexingEntity($indexingEntities, $product3, $apiKey, Actions::NO_ACTION, true);
+
+        /** @var CronScheduleCollection $cronSchedule */
+        $cronSchedule = $cronScheduleFactory->create();
+        $cronSchedule->addFieldToFilter('job_code', ['eq' => Constants::CRON_JOB_CODE_INDEXING_ENTITY_DISCOVERY]);
+        $cronScheduleItems = $cronSchedule->getItems();
+        $this->assertCount(expectedCount: $existingScheduledItems + 1, haystack: $cronScheduleItems);
 
         $this->cleanIndexingEntities($apiKey);
     }
@@ -340,20 +362,40 @@ class DiscoverEntitiesAfterIntegrationRemovalObserverTest extends TestCase
             IndexingEntity::LAST_ACTION_TIMESTAMP => date('Y-m-d H:i:s'),
         ]);
 
+        $indexingEntityCollection = $this->objectManager->create(IndexingEntityCollection::class);
+        $indexingEntityCollection->addFieldToFilter(IndexingEntity::API_KEY, $apiKey);
+        $collectionSize = count($indexingEntityCollection->getItems());
+
+        $cronScheduleFactory = $this->objectManager->get(CronScheduleCollectionFactory::class);
+        /** @var CronScheduleCollection $existingCronSchedule */
+        $existingCronSchedule = $cronScheduleFactory->create();
+        $existingCronSchedule->addFieldToFilter(
+            'job_code',
+            ['eq' => Constants::CRON_JOB_CODE_INDEXING_ENTITY_DISCOVERY],
+        );
+        $existingCronScheduleItems = $existingCronSchedule->getItems();
+        $existingScheduledItems = count($existingCronScheduleItems);
+
         $this->dispatchEvent(
             apiKey: $apiKey,
         );
 
+        // check observer no longer discovers entities directly
         $indexingEntityCollection = $this->objectManager->create(IndexingEntityCollection::class);
         $indexingEntityCollection->addFieldToFilter(IndexingEntity::API_KEY, $apiKey);
         $indexingEntities = $indexingEntityCollection->getItems();
         $this->assertCount(
-            expectedCount: 2,
+            expectedCount: $collectionSize,
             haystack: $indexingEntities,
             message: 'Final Items Count',
         );
-        $this->assertIndexingEntity($indexingEntities, $product1, $apiKey, Actions::NO_ACTION, true);
-        $this->assertIndexingEntity($indexingEntities, $product2, $apiKey, Actions::NO_ACTION, true);
+
+        /** @var CronScheduleCollection $cronSchedule */
+        $cronSchedule = $cronScheduleFactory->create();
+        $cronSchedule->addFieldToFilter('job_code', ['eq' => Constants::CRON_JOB_CODE_INDEXING_ENTITY_DISCOVERY]);
+        $cronScheduleItems = $cronSchedule->getItems();
+
+        $this->assertCount(expectedCount: $existingScheduledItems + 1, haystack: $cronScheduleItems);
 
         $this->cleanIndexingEntities(apiKey: $apiKey);
     }
