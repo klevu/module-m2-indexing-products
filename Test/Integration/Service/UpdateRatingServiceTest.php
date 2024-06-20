@@ -28,6 +28,7 @@ use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\Product;
 use Magento\Eav\Api\AttributeRepositoryInterface;
 use Magento\Eav\Api\Data\AttributeInterface;
+use Magento\Eav\Model\AttributeRepository;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\ObjectManagerInterface;
@@ -91,6 +92,9 @@ class UpdateRatingServiceTest extends TestCase
         $this->customerFixturePool->rollback();
     }
 
+    /**
+     * @magentoAppIsolation enabled
+     */
     public function testExecute_ThrowsException_WhenKlevuRatingAttributeDoesNotExist(): void
     {
         $this->expectException(KlevuProductAttributeMissingException::class);
@@ -105,9 +109,9 @@ class UpdateRatingServiceTest extends TestCase
         $productFixture = $this->productFixturePool->get('test_product');
 
         $matcher = $this->exactly(2);
-        $mockEavAttribute = $this->getMockBuilder(AttributeRepositoryInterface::class)
+        $mockAttributeRepository = $this->getMockBuilder(AttributeRepositoryInterface::class)
             ->getMock();
-        $mockEavAttribute->expects($matcher)
+        $mockAttributeRepository->expects($matcher)
             ->method('get')
             ->withConsecutive(
                 [
@@ -129,7 +133,7 @@ class UpdateRatingServiceTest extends TestCase
                         ),
                     );
                 }
-                $attributeRepository = $this->objectManager->create(AttributeRepositoryInterface::class);
+                $attributeRepository = $this->objectManager->create(AttributeRepository::class);
 
                 return $attributeRepository->get(
                     entityTypeCode: ProductAttributeInterface::ENTITY_TYPE_CODE,
@@ -138,7 +142,7 @@ class UpdateRatingServiceTest extends TestCase
             });
 
         $this->objectManager->addSharedInstance(
-            instance: $mockEavAttribute,
+            instance: $mockAttributeRepository,
             className: AttributeRepositoryInterface::class,
             forPreference: true,
         );
@@ -169,9 +173,9 @@ class UpdateRatingServiceTest extends TestCase
         $productFixture = $this->productFixturePool->get('test_product');
 
         $matcher = $this->exactly(2);
-        $mockEavAttribute = $this->getMockBuilder(AttributeRepositoryInterface::class)
+        $mockAttributeRepository = $this->getMockBuilder(AttributeRepositoryInterface::class)
             ->getMock();
-        $mockEavAttribute->expects($matcher)
+        $mockAttributeRepository->expects($matcher)
             ->method('get')
             ->withConsecutive(
                 [
@@ -202,7 +206,7 @@ class UpdateRatingServiceTest extends TestCase
             });
 
         $this->objectManager->addSharedInstance(
-            instance: $mockEavAttribute,
+            instance: $mockAttributeRepository,
             className: AttributeRepositoryInterface::class,
             forPreference: true,
         );
@@ -239,6 +243,9 @@ class UpdateRatingServiceTest extends TestCase
         $service->execute($mockProduct);
     }
 
+    /**
+     * @magentoAppIsolation enabled
+     */
     public function testExecute_LogsError_WhenInvalidRatingValueExceptionThrown(): void
     {
         $this->createProduct();
@@ -280,6 +287,7 @@ class UpdateRatingServiceTest extends TestCase
     }
 
     /**
+     * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      */
     public function testExecute_SavesRatingDataToProduct(): void

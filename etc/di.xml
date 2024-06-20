@@ -955,4 +955,5 @@
             <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
         </arguments>
     </type>
+
 </config>

@@ -81,6 +81,7 @@ class RatingProviderTest extends TestCase
     }
 
     /**
+     * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      */
     public function testGet_ReturnsArray_WhenNoReviewsExist(): void
@@ -115,6 +116,7 @@ class RatingProviderTest extends TestCase
 
     /**
      * @magentoAppArea adminhtml
+     * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      */
     public function testGet_ReturnsArray_WhenProductHasPendingReview(): void
