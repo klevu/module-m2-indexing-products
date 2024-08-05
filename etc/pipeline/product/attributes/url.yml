@@ -1,0 +1,5 @@
+stages:
+  getUrl:
+    pipeline: Stage\Extract
+    args:
+      extraction: currentProduct::getProductUrl()

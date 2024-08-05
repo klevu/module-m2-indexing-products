@@ -72,6 +72,7 @@ class ConfigurableVariantProductEntityCollectionTest extends TestCase
     }
 
     /**
+     * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      */
     public function testGet_ReturnsCollection_FilteredByType(): void
@@ -170,6 +171,7 @@ class ConfigurableVariantProductEntityCollectionTest extends TestCase
     }
 
     /**
+     * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      */
     public function testGet_ReturnsCollection_FilteredByType_AndStore_AndEntityId(): void

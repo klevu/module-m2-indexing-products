@@ -23,7 +23,7 @@ use Psr\Log\LoggerInterface;
 
 class OutOfStockProductsIsIndexableDeterminer implements IsIndexableDeterminerInterface
 {
-    private const XML_PATH_EXCLUDE_OOS_PRODUCTS = 'klevu/indexing/exclude_oos_products';
+    public const XML_PATH_EXCLUDE_OOS_PRODUCTS = 'klevu/indexing/exclude_oos_products';
 
     /**
      * @var ScopeConfigInterface
@@ -65,12 +65,14 @@ class OutOfStockProductsIsIndexableDeterminer implements IsIndexableDeterminerIn
     /**
      * @param ExtensibleDataInterface|PageInterface $entity
      * @param StoreInterface $store
+     * @param string $entitySubtype
      *
      * @return bool
      */
     public function execute(
         ExtensibleDataInterface|PageInterface $entity,
         StoreInterface $store,
+        string $entitySubtype = '', // phpcs:ignore SlevomatCodingStandard.Functions.UnusedParameter.UnusedParameter
     ): bool {
         if (!($entity instanceof ProductInterface)) {
             throw new \InvalidArgumentException(

@@ -21,6 +21,7 @@ use Klevu\TestFixtures\Traits\SetAuthKeysTrait;
 use Klevu\TestFixtures\Traits\TestImplementsInterfaceTrait;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Model\AbstractModel;
+use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\CatalogImportExport\Model\Import\Product as ProductImport;
 use Magento\Framework\Event\ConfigInterface as EventConfig;
 use Magento\Framework\Event\ManagerInterface as EventManager;
@@ -95,6 +96,7 @@ class ProductImportObserverTest extends TestCase
      * @magentoDbIsolation disabled
      * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/js_api_key klevu-js-api-key
      * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/rest_auth_key klevu-rest-auth-key
+     * @magentoConfigFixture default/klevu/indexing/exclude_disabled_products 0
      */
     public function testProductImport_ForNewProducts_CreatesIndexingEntities(): void
     {
@@ -122,6 +124,7 @@ class ProductImportObserverTest extends TestCase
                 'sku' => $product->getSku(),
                 'name' => $product->getName(),
                 'visibility' => $product->getVisibility(),
+                'status' => Status::STATUS_DISABLED,
                 'product_type' => $product->getTypeId(),
                 '_store' => $storeFixture->getId(),
                 'url_key' => $product->getData('url_key'),
@@ -149,7 +152,11 @@ class ProductImportObserverTest extends TestCase
         $this->assertSame(
             expected: Actions::ADD,
             actual: $indexingEntity->getNextAction(),
-            message:'Next Action: Add',
+            message: sprintf(
+                'Next %s: Update, Received %s',
+                Actions::ADD->value,
+                $indexingEntity->getNextAction()->value,
+            ),
         );
         $this->assertTrue(condition: $indexingEntity->getIsIndexable());
         $this->cleanIndexingEntities($apiKey);
@@ -160,6 +167,7 @@ class ProductImportObserverTest extends TestCase
      * @magentoDbIsolation disabled
      * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/js_api_key klevu-js-api-key
      * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/rest_auth_key klevu-rest-auth-key
+     * @magentoConfigFixture default/klevu/indexing/exclude_disabled_products 0
      */
     public function testProductImport_ForExistingProducts_SetsIndexingEntityToUpdate(): void
     {
@@ -222,7 +230,11 @@ class ProductImportObserverTest extends TestCase
         $this->assertSame(
             expected: Actions::UPDATE,
             actual: $indexingEntity->getNextAction(),
-            message:'Next Action: Update',
+            message: sprintf(
+                'Next Action: %s, Received %s',
+                Actions::UPDATE->value,
+                $indexingEntity->getNextAction()->value,
+            ),
         );
         $this->assertTrue(condition: $indexingEntity->getIsIndexable());
         $this->cleanIndexingEntities($apiKey);

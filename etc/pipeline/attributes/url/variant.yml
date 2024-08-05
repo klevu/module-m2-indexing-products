@@ -1,7 +1,0 @@
-stages:
-  -
-    pipeline: Stage\Extract
-    args:
-      extraction: currentParentProduct::getProductUrl()
-      transformations:
-        - Append()

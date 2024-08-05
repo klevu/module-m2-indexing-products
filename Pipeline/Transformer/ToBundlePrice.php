@@ -14,6 +14,7 @@ use Klevu\Pipelines\Exception\Transformation\InvalidInputDataException;
 use Klevu\Pipelines\Model\ArgumentIterator;
 use Klevu\Pipelines\Transformer\TransformerInterface;
 use Magento\Catalog\Api\Data\ProductInterface;
+use Magento\Catalog\Model\Product;
 
 class ToBundlePrice implements TransformerInterface
 {
@@ -68,6 +69,8 @@ class ToBundlePrice implements TransformerInterface
             extractionPayload: $data,
             extractionContext: $context,
         );
+        /** @var Product $data */
+        $data->setQty(qty: 1);
 
         return $this->bundlePriceProvider->get(product: $data, priceType: $priceType);
     }

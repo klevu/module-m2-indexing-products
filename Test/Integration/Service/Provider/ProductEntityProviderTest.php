@@ -29,7 +29,7 @@ use TddWizard\Fixtures\Catalog\ProductFixturePool;
 use TddWizard\Fixtures\Core\ConfigFixture;
 
 /**
- * @covers \Klevu\IndexingProducts\Service\Provider\ProductEntityProvider::class
+ * @covers ProductEntityProvider::class
  * @method EntityProviderInterface instantiateTestObject(?array $arguments = null)
  * @method EntityProviderInterface instantiateTestObjectFromInterface(?array $arguments = null)
  */
@@ -54,6 +54,9 @@ class ProductEntityProviderTest extends TestCase
 
         $this->implementationFqcn = ProductEntityProvider::class;
         $this->interfaceFqcn = EntityProviderInterface::class;
+        $this->constructorArgumentDefaults = [
+            'entitySubtype' => ProductEntityProvider::ENTITY_SUBTYPE_SIMPLE,
+        ];
         $this->objectManager = Bootstrap::getObjectManager();
         $this->storeFixturesPool = $this->objectManager->get(StoreFixturesPool::class);
         $this->productFixturePool = $this->objectManager->get(ProductFixturePool::class);

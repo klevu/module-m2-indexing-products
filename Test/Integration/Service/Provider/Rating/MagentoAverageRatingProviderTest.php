@@ -27,6 +27,7 @@ use Magento\Review\Model\ResourceModel\Rating\Option\Collection as RatingOptionC
 use Magento\Review\Model\ResourceModel\Review as ReviewResourceModel;
 use Magento\Review\Model\Review;
 use Magento\TestFramework\Helper\Bootstrap;
+use Magento\TestFramework\ObjectManager;
 use PHPUnit\Framework\TestCase;
 use TddWizard\Fixtures\Catalog\ProductFixturePool;
 use TddWizard\Fixtures\Customer\CustomerFixturePool;
@@ -276,9 +277,11 @@ class MagentoAverageRatingProviderTest extends TestCase
         $provider = $this->instantiateTestObject([]);
         $provider->get(productId: $productFixture->getId(), storeId: $storeFixture->getId());
 
-        $this->objectManager->removeSharedInstance(
-            className: RatingFactory::class,
-        );
+        if ($this->objectManager instanceof ObjectManager) {
+            $this->objectManager->removeSharedInstance(
+                className: RatingFactory::class,
+            );
+        }
     }
 
     /**
@@ -348,9 +351,11 @@ class MagentoAverageRatingProviderTest extends TestCase
         $provider = $this->instantiateTestObject([]);
         $provider->get(productId: $productFixture->getId(), storeId: $storeFixture->getId());
 
-        $this->objectManager->removeSharedInstance(
-            className: RatingFactory::class,
-        );
+        if ($this->objectManager instanceof ObjectManager) {
+            $this->objectManager->removeSharedInstance(
+                className: RatingFactory::class,
+            );
+        }
     }
 
     /**

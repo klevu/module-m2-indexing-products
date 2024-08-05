@@ -1,0 +1,45 @@
+pipeline: Pipeline\CreateRecord
+stages:
+  $store::getForCurrentStore().base_currency_code:
+    pipeline: Pipeline\CreateRecord
+    stages:
+      defaultPrice:
+        stages:
+          getPrice:
+            pipeline: Stage\Extract
+            args:
+              extraction: currentProduct::
+              transformations:
+                - ToBundlePrice("regular_price")
+                - FormatNumber("2",".")
+                - ToFloat
+      salePrice:
+        stages:
+          getPrice:
+            pipeline: Stage\Extract
+            args:
+              extraction: currentProduct::
+              transformations:
+                - ToBundlePrice("final_price")
+                - FormatNumber("2",".")
+                - ToFloat
+      startPrice:
+        stages:
+          getPrice:
+            pipeline: Stage\Extract
+            args:
+              extraction: currentProduct::
+              transformations:
+                - ToBundlePrice("min_final_price")
+                - FormatNumber("2",".")
+                - ToFloat
+      toPrice:
+        stages:
+          getPrice:
+            pipeline: Stage\Extract
+            args:
+              extraction: currentProduct::
+              transformations:
+                - ToBundlePrice("max_final_price")
+                - FormatNumber("2",".")
+                - ToFloat

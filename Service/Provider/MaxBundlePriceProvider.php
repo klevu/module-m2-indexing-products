@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace Klevu\IndexingProducts\Service\Provider;
 
-use Magento\Bundle\Pricing\Price\FinalPriceInterface;
+use Klevu\IndexingApi\Service\Provider\Bundle\Price\FinalPriceProviderInterface;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Psr\Log\LoggerInterface;
 
@@ -18,13 +18,21 @@ class MaxBundlePriceProvider implements BundlePriceTypeProviderInterface
      * @var LoggerInterface
      */
     private readonly LoggerInterface $logger;
+    /**
+     * @var FinalPriceProviderInterface
+     */
+    private readonly FinalPriceProviderInterface $finalPriceProvider;
 
     /**
      * @param LoggerInterface $logger
+     * @param FinalPriceProviderInterface $finalPriceProvider
      */
-    public function __construct(LoggerInterface $logger)
-    {
+    public function __construct(
+        LoggerInterface $logger,
+        FinalPriceProviderInterface $finalPriceProvider,
+    ) {
         $this->logger = $logger;
+        $this->finalPriceProvider = $finalPriceProvider;
     }
 
     /**
@@ -49,25 +57,9 @@ class MaxBundlePriceProvider implements BundlePriceTypeProviderInterface
 
             return null;
         }
-        $priceInfo = $product->getPriceInfo();
-        $finalPrice = $priceInfo->getPrice('final_price');
-        if (!($finalPrice instanceof FinalPriceInterface)) {
-            $this->logger->error(
-                message: 'Method: {method}, Error: {message}',
-                context: [
-                    'method' => __METHOD__,
-                    'message' => sprintf(
-                        'getPrice("final_price") did not return instance of %s, for product id %s',
-                        FinalPriceInterface::class,
-                        $product->getId(),
-                    ),
-                ],
-            );
+        $finalPrice = $this->finalPriceProvider->get(product: $product);
+        $maximalPrice = $finalPrice->getMaximalPrice();
 
-            return null;
-        }
-        $minimalPrice = $finalPrice->getMaximalPrice();
-
-        return (float)$minimalPrice->getValue();
+        return (float)$maximalPrice->getValue();
     }
 }

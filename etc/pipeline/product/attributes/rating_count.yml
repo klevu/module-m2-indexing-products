@@ -1,0 +1,7 @@
+stages:
+  getRatingCount:
+    pipeline: Stage\Extract
+    args:
+      extraction: currentProduct::
+      transformations:
+        - ToRatingCount($store::getForCurrentStore().store_id)

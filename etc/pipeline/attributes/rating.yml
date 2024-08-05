@@ -1,9 +1,0 @@
-stages:
-  -
-    pipeline: Stage\Extract
-    args:
-      extraction: currentProduct::
-      transformations:
-        - ToRating($store::getForCurrentStore().store_id)
-        - FormatNumber("2",".")
-        - ToFloat

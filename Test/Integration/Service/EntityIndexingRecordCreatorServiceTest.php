@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace Klevu\IndexingProducts\Test\Integration\Service;
 
 use Klevu\Indexing\Exception\InvalidIndexingRecordDataTypeException;
+use Klevu\IndexingApi\Model\Source\Actions;
 use Klevu\IndexingApi\Service\EntityIndexingRecordCreatorServiceInterface;
 use Klevu\IndexingProducts\Service\EntityIndexingRecordCreatorService;
 use Klevu\TestFixtures\Catalog\ProductTrait;
@@ -83,6 +84,7 @@ class EntityIndexingRecordCreatorServiceTest extends TestCase
         $service = $this->instantiateTestObject();
         $service->execute(
             recordId: 1,
+            action: Actions::ADD,
             entity: $page,
         );
     }
@@ -109,6 +111,7 @@ class EntityIndexingRecordCreatorServiceTest extends TestCase
         $service = $this->instantiateTestObject();
         $service->execute(
             recordId: 1,
+            action: Actions::UPDATE,
             entity: $product,
             parent: $page,
         );
@@ -123,6 +126,7 @@ class EntityIndexingRecordCreatorServiceTest extends TestCase
         $service = $this->instantiateTestObject();
         $result = $service->execute(
             recordId: 1,
+            action: Actions::DELETE,
             entity: $productFixture->getProduct(),
         );
 
@@ -131,6 +135,10 @@ class EntityIndexingRecordCreatorServiceTest extends TestCase
             actual: (int)$result->getEntity()->getId(),
         );
         $this->assertNull(actual: $result->getParent());
+        $this->assertSame(
+            expected: Actions::DELETE->value,
+            actual: $result->getAction(),
+        );
     }
 
     /**
@@ -151,6 +159,7 @@ class EntityIndexingRecordCreatorServiceTest extends TestCase
         $service = $this->instantiateTestObject();
         $result = $service->execute(
             recordId: 1,
+            action: Actions::NO_ACTION,
             entity: $product1,
             parent: $product2,
         );
@@ -162,6 +171,10 @@ class EntityIndexingRecordCreatorServiceTest extends TestCase
         $this->assertSame(
             expected: (int)$product2->getId(),
             actual: (int)$result->getParent()->getId(),
+        );
+        $this->assertSame(
+            expected: Actions::NO_ACTION->value,
+            actual: $result->getAction(),
         );
     }
 }

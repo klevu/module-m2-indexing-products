@@ -1,0 +1,24 @@
+pipeline: Pipeline\CreateRecord
+stages:
+  $store::getForCurrentStore().base_currency_code:
+    pipeline: Pipeline\CreateRecord
+    stages:
+      defaultPrice: # @TODO remove when indexing supports removal
+        stages:
+          getPrice:
+            pipeline: Stage\Extract
+            args:
+              extraction: currentProduct::getPrice()
+              transformations:
+                - FormatNumber("2",".")
+                - ToFloat
+      salePrice:
+        stages:
+          getPrice:
+            pipeline: Stage\Extract
+            args:
+              extraction: currentProduct::
+              transformations:
+                - ToFinalPrice(1)
+                - FormatNumber("2",".")
+                - ToFloat

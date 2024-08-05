@@ -53,7 +53,7 @@ class DefaultIndexingAttributesAspectMappingProviderTest extends TestCase
         $result = $provider->get();
 
         $this->assertArrayHasKey(key: 'category_ids', array: $result);
-        $this->assertSame(expected: $result['category_ids'], actual: Aspect::CATEGORIES);
+        $this->assertSame(expected: $result['category_ids'], actual: Aspect::RELATIONS);
 
         $this->assertArrayHasKey(key: 'name', array: $result);
         $this->assertSame(expected: $result['name'], actual: Aspect::ATTRIBUTES);

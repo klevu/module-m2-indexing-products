@@ -81,7 +81,8 @@
     <virtualType name="Klevu\IndexingProducts\Service\Provider\SyncEnabledProvider"
                  type="Klevu\Configuration\Service\Provider\ScopeConfigProvider">
         <arguments>
-            <argument name="path" xsi:type="string">klevu/indexing/enable_product_sync</argument>
+            <argument name="path"
+                      xsi:type="const">Klevu\IndexingProducts\Constants::XML_PATH_PRODUCT_SYNC_ENABLED</argument>
             <argument name="returnType"
                       xsi:type="const">Klevu\Configuration\Service\Provider\ScopeConfigProvider::TYPE_BOOLEAN</argument>
         </arguments>
@@ -104,6 +105,12 @@
                       xsi:type="object">Klevu\IndexingProducts\Service\Provider\Discovery\ProductAttributeCollection</argument>
         </arguments>
     </virtualType>
+
+    <type name="Klevu\IndexingProducts\Service\Provider\Discovery\ConfigurableVariantProductEntityCollection">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
+        </arguments>
+    </type>
 
     <virtualType name="Klevu\IndexingProducts\Service\Provider\Discovery\ProductEntityCollection\Simple"
                  type="Klevu\IndexingProducts\Service\Provider\Discovery\ProductEntityCollection">
@@ -158,6 +165,8 @@
         <arguments>
             <argument name="productEntityCollection"
                       xsi:type="object">Klevu\IndexingProducts\Service\Provider\Discovery\ProductEntityCollection\Simple</argument>
+            <argument name="entitySubtype"
+                      xsi:type="const">Klevu\IndexingProducts\Service\Provider\ProductEntityProvider::ENTITY_SUBTYPE_SIMPLE</argument>
         </arguments>
     </virtualType>
 
@@ -166,6 +175,8 @@
         <arguments>
             <argument name="productEntityCollection"
                       xsi:type="object">Klevu\IndexingProducts\Service\Provider\Discovery\ProductEntityCollection\Virtual</argument>
+            <argument name="entitySubtype"
+                      xsi:type="const">Klevu\IndexingProducts\Service\Provider\ProductEntityProvider::ENTITY_SUBTYPE_VIRTUAL</argument>
         </arguments>
     </virtualType>
 
@@ -174,6 +185,8 @@
         <arguments>
             <argument name="productEntityCollection"
                       xsi:type="object">Klevu\IndexingProducts\Service\Provider\Discovery\ProductEntityCollection\Downloadable</argument>
+            <argument name="entitySubtype"
+                      xsi:type="const">Klevu\IndexingProducts\Service\Provider\ProductEntityProvider::ENTITY_SUBTYPE_DOWNLOADABLE</argument>
         </arguments>
     </virtualType>
 
@@ -182,6 +195,8 @@
         <arguments>
             <argument name="productEntityCollection"
                       xsi:type="object">Klevu\IndexingProducts\Service\Provider\Discovery\ProductEntityCollection\Bundle</argument>
+            <argument name="entitySubtype"
+                      xsi:type="const">Klevu\IndexingProducts\Service\Provider\ProductEntityProvider::ENTITY_SUBTYPE_BUNDLE</argument>
         </arguments>
     </virtualType>
 
@@ -190,6 +205,8 @@
         <arguments>
             <argument name="productEntityCollection"
                       xsi:type="object">Klevu\IndexingProducts\Service\Provider\Discovery\ProductEntityCollection\Grouped</argument>
+            <argument name="entitySubtype"
+                      xsi:type="const">Klevu\IndexingProducts\Service\Provider\ProductEntityProvider::ENTITY_SUBTYPE_GROUPED</argument>
         </arguments>
     </virtualType>
 
@@ -198,6 +215,8 @@
         <arguments>
             <argument name="productEntityCollection"
                       xsi:type="object">Klevu\IndexingProducts\Service\Provider\Discovery\ProductEntityCollection\Configurable</argument>
+            <argument name="entitySubtype"
+                      xsi:type="const">Klevu\IndexingProducts\Service\Provider\ProductEntityProvider::ENTITY_SUBTYPE_CONFIGURABLE</argument>
         </arguments>
     </virtualType>
 
@@ -206,6 +225,8 @@
         <arguments>
             <argument name="productEntityCollection"
                       xsi:type="object">Klevu\IndexingProducts\Service\Provider\Discovery\ConfigurableVariantProductEntityCollection</argument>
+            <argument name="entitySubtype"
+                      xsi:type="const">Klevu\IndexingProducts\Service\Provider\ProductEntityProvider::ENTITY_SUBTYPE_CONFIGURABLE_VARIANTS</argument>
         </arguments>
     </virtualType>
 
@@ -265,15 +286,26 @@
         </arguments>
     </type>
 
+    <type name="Klevu\IndexingProducts\Service\Provider\Bundle\Price\FinalPriceProvider">
+        <arguments>
+            <argument name="calculator"
+                      xsi:type="object">Klevu\IndexingProducts\Pricing\Bundle\Adjustment\Calculator</argument>
+        </arguments>
+    </type>
+
     <type name="Klevu\IndexingProducts\Service\Provider\MinBundlePriceProvider">
         <arguments>
             <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
+            <argument name="finalPriceProvider"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\Bundle\Price\FinalPriceProvider</argument>
         </arguments>
     </type>
 
     <type name="Klevu\IndexingProducts\Service\Provider\MaxBundlePriceProvider">
         <arguments>
             <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
+            <argument name="finalPriceProvider"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\Bundle\Price\FinalPriceProvider</argument>
         </arguments>
     </type>
 
@@ -336,10 +368,29 @@
         </arguments>
     </type>
 
+    <type name="Klevu\IndexingProducts\Setup\Patch\Data\CreateKlevuImageAttribute">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\IndexingProducts\Setup\Patch\Data\CreateKlevuRatingAttribute">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\IndexingProducts\Setup\Patch\Data\CreateKlevuRatingCountAttribute">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
+        </arguments>
+    </type>
+
     <type name="Klevu\IndexingProducts\Setup\Patch\Data\SetDefaultAttributeSyncValues">
         <arguments>
             <argument name="defaultIndexingAttributesProvider"
                       xsi:type="object">Klevu\IndexingProducts\Service\Provider\DefaultIndexingAttributesProvider</argument>
+            <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
         </arguments>
     </type>
 
@@ -347,6 +398,7 @@
         <arguments>
             <argument name="defaultMappingProvider"
                       xsi:type="object">Klevu\IndexingProducts\Service\Provider\DefaultIndexingAttributesAspectMappingProvider</argument>
+            <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
         </arguments>
     </type>
 
@@ -575,6 +627,12 @@
         </arguments>
     </type>
 
+    <type name="Klevu\IndexingProducts\Service\EntityUpdateResponderService">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
+        </arguments>
+    </type>
+
     <type name="Klevu\IndexingProducts\Service\Provider\AttributeProviderProvider">
         <arguments>
             <argument name="attributeProviders" xsi:type="array">
@@ -761,11 +819,11 @@
             <argument name="entityType"
                       xsi:type="const">Magento\Catalog\Api\Data\ProductAttributeInterface::ENTITY_TYPE_CODE</argument>
             <argument name="attributeMapping" xsi:type="array">
-                <item name="klevu_image" xsi:type="string">images</item>
+                <item name="image" xsi:type="null"/>
+                <item name="klevu_image" xsi:type="string">image</item>
                 <item name="klevu_rating" xsi:type="string">rating</item>
                 <item name="klevu_rating_count" xsi:type="string">ratingCount</item>
                 <item name="quantity_and_stock_status" xsi:type="string">inStock</item>
-                <item name="price" xsi:type="string">prices</item>
                 <item name="short_description" xsi:type="string">shortDescription</item>
                 <item name="url_key" xsi:type="string">url</item>
             </argument>
@@ -814,7 +872,7 @@
     <type name="Klevu\PlatformPipelines\ObjectManager\TransformerManager">
         <arguments>
             <argument name="namespaces" xsi:type="array">
-                <item name="\Klevu\IndexingProducts\Pipeline\Transformer"
+                <item name="Klevu\IndexingProducts\Pipeline\Transformer"
                       xsi:type="const">Klevu\Pipelines\ObjectManager\ObjectManagerInterface::PRIORITY_NAMESPACE_SORT_ORDER</item>
             </argument>
         </arguments>
@@ -826,7 +884,19 @@
         </arguments>
     </type>
 
+    <type name="Klevu\IndexingProducts\Pipeline\Provider\Argument\Transformer\SetCustomerGroupIdArgumentProvider">
+        <arguments>
+            <argument name="argumentProvider" xsi:type="object">Klevu\Pipelines\Provider\ArgumentProvider</argument>
+        </arguments>
+    </type>
+
     <type name="Klevu\IndexingProducts\Pipeline\Provider\Argument\Transformer\ToBundlePriceArgumentProvider">
+        <arguments>
+            <argument name="argumentProvider" xsi:type="object">Klevu\Pipelines\Provider\ArgumentProvider</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\IndexingProducts\Pipeline\Provider\Argument\Transformer\ToFinalPriceArgumentProvider">
         <arguments>
             <argument name="argumentProvider" xsi:type="object">Klevu\Pipelines\Provider\ArgumentProvider</argument>
         </arguments>
@@ -911,7 +981,7 @@
             <argument name="entityIndexingRecordProvider"
                       xsi:type="object">Klevu\IndexingProducts\Service\Provider\Sync\EntityIndexingRecordProvider\Add</argument>
             <argument name="pipelineConfigurationFilepath"
-                      xsi:type="string">Klevu_IndexingProducts::etc/pipeline/add.yml</argument>
+                      xsi:type="string">Klevu_IndexingProducts::etc/pipeline/add_update.yml</argument>
         </arguments>
     </virtualType>
 
@@ -931,7 +1001,7 @@
             <argument name="entityIndexingRecordProvider"
                       xsi:type="object">Klevu\IndexingProducts\Service\Provider\Sync\EntityIndexingRecordProvider\Update</argument>
             <argument name="pipelineConfigurationFilepath"
-                      xsi:type="string">Klevu_IndexingProducts::etc/pipeline/update.yml</argument>
+                      xsi:type="string">Klevu_IndexingProducts::etc/pipeline/add_update.yml</argument>
         </arguments>
     </virtualType>
 
@@ -953,6 +1023,29 @@
     <type name="Klevu\IndexingProducts\Service\Action\Image\ResizeAction">
         <arguments>
             <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\IndexingProducts\Observer\Admin\System\Config\UpdateProductSyncSettingsObserver">
+        <arguments>
+            <argument name="createCronScheduleAction"
+                      xsi:type="object">Klevu\Indexing\Service\Action\Cron\CreateCronScheduleForEntityDiscoveryAction</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Indexing\Service\Provider\ConflictingAttributeNamesProvider">
+        <arguments>
+            <argument name="attributeMappers" xsi:type="array">
+                <item name="KLEVU_PRODUCT" xsi:type="object">Klevu\IndexingProducts\Service\Mapper\MagentoToKlevuAttributeMapper</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Indexing\Service\Provider\DuplicateAttributeMappingProvider">
+        <arguments>
+            <argument name="attributeMappers" xsi:type="array">
+                <item name="KLEVU_PRODUCT" xsi:type="object">Klevu\IndexingProducts\Service\Mapper\MagentoToKlevuAttributeMapper</item>
+            </argument>
         </arguments>
     </type>
 

@@ -1,0 +1,5 @@
+stages:
+  getTags:
+    pipeline: Stage\StaticValue
+    args:
+      value: []

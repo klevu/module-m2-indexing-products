@@ -35,29 +35,35 @@ stages:
                 args:
                   contextKey: "currentEntityType" # i.e. $currentEntityType = 'KLEVU_PRODUCT';
       processProduct:
-        pipeline: Pipeline\CreateRecord
+        pipeline: Pipeline\Fallback # if validation during one stage fails, move onto the next stage
         stages:
-          -
-            pipeline: Pipeline\Fallback # if validation during one stage fails, move onto the next stage
+          variantProduct: # Simple products belonging to configurable products
             stages:
-              variantProduct: # Simple products belonging to configurable products
+              getParentProduct:
+                pipeline: Stage\Extract
+                args:
+                  extraction: currentIndexingRecord::getParentId()
+              validateParentProduct:
+                pipeline: Stage\Validate
+                args:
+                  validation: IsNotEmpty
+              generateRecord:
+                pipeline: Pipeline\CreateRecord
                 stages:
-                  - pipeline: Stage\Extract
-                    args:
-                      extraction: currentIndexingRecord::getParentId()
-                  - pipeline: Stage\Validate
-                    args:
-                      validation: IsNotEmpty
-                  - pipeline: Stage\Extract
+                  -
+                    pipeline: Stage\Extract
                     args:
                       extraction: currentIndexingRecord::getEntityId()
                       transformations:
                         - Prepend($currentIndexingRecord::getParentId(), "-") # prepend parent_id . '-' to entity_id
-                        - Trim("-")
-                        - Trim
-              default: # all other product types
+                        - Trim("- ")
+          default: # all other product types
+            stages:
+              generateRecord:
+                pipeline: Pipeline\CreateRecord
                 stages:
-                  - pipeline: Stage\Extract
+                  -
+                    pipeline: Stage\Extract
                     args:
                       extraction: currentIndexingRecord::getEntityId()
                       transformations: ToString
@@ -68,8 +74,7 @@ stages:
         args:
           transformation: Flatten
       processRecords: # send generated data to Klevu
-        # import: Klevu_Indexing::etc/pipeline/process-batch-delete-payload.yml
-        import: ../../../module-m2-indexing/etc/pipeline/process-batch-delete-payload.yml
+        import: Klevu_Indexing::etc/pipeline/process-batch-delete-payload.yml
   logEnd:
     pipeline: Indexing\Stage\Log # log that the pipeline has ended
     args:

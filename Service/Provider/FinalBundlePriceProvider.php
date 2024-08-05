@@ -10,6 +10,7 @@ namespace Klevu\IndexingProducts\Service\Provider;
 
 use Magento\Bundle\Pricing\Price\FinalPriceInterface;
 use Magento\Catalog\Api\Data\ProductInterface;
+use Magento\GroupedProduct\Pricing\Price\FinalPrice;
 use Psr\Log\LoggerInterface;
 
 class FinalBundlePriceProvider implements BundlePriceTypeProviderInterface
@@ -50,14 +51,15 @@ class FinalBundlePriceProvider implements BundlePriceTypeProviderInterface
             return null;
         }
         $priceInfo = $product->getPriceInfo();
-        $finalPrice = $priceInfo->getPrice('final_price');
+        $finalPrice = $priceInfo->getPrice(FinalPrice::PRICE_CODE);
         if (!($finalPrice instanceof FinalPriceInterface)) {
             $this->logger->error(
                 message: 'Method: {method}, Error: {message}',
                 context: [
                     'method' => __METHOD__,
                     'message' => sprintf(
-                        'getPrice("final_price") did not return instance of %s, for product id %s',
+                        'getPrice("%s") did not return instance of %s, for product id %s',
+                        FinalPrice::PRICE_CODE,
                         FinalPriceInterface::class,
                         $product->getId(),
                     ),

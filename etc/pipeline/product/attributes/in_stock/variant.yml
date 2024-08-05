@@ -1,0 +1,21 @@
+pipeline: Pipeline\Fallback
+stages:
+  checkStock:
+    stages:
+      getParentStock:
+        pipeline: Stage\Extract
+        args:
+          extraction: currentParentProduct::isAvailable()
+      validateParentStock:
+        pipeline: Stage\Validate
+        args:
+          validation: IsEqualTo(true, true)
+      getVariantStock:
+        pipeline: Stage\Extract
+        args:
+          extraction: currentProduct::isAvailable()
+          transformations: ToBoolean
+  defaultToOos:
+    pipeline: Stage\StaticValue
+    args:
+      value: false
