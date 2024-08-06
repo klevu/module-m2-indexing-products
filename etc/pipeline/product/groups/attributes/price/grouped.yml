@@ -1,0 +1,92 @@
+stages:
+  registerMinPriceProduct:
+    stages:
+      extractMinPrice:
+        pipeline: Stage\Extract
+        args:
+          extraction: currentProduct::
+          transformations: ToMinPriceProduct()
+      registerMinPrice:
+        pipeline: Stage\RegisterContext
+        args:
+          contextKey: "minPriceProduct"
+  processPrices:
+    pipeline: Pipeline\CreateRecord
+    stages:
+      $store::getForCurrentStore().base_currency_code:
+        pipeline: Pipeline\CreateRecord
+        stages:
+          defaultPrice: # @TODO remove when indexing supports removal
+            pipeline: Pipeline\Fallback
+            stages:
+              getPrice:
+                stages:
+                  getMinPricedProduct:
+                    pipeline: Stage\Extract
+                    args:
+                      extraction: minPriceProduct::
+                  validateProduct:
+                    pipeline: Stage\Validate
+                    args:
+                      validation: IsNotEmpty
+                  getPrice:
+                    pipeline: Stage\Extract
+                    args:
+                      extraction: minPriceProduct::getPrice()
+                      transformations:
+                        - FormatNumber("2",".")
+                        - ToFloat
+              defaultPrice:
+                pipeline: Stage\StaticValue
+                args:
+                  value: 0.00
+          salePrice:
+            pipeline: Pipeline\Fallback
+            stages:
+              getFinalPrice:
+                stages:
+                  getMinPricedProduct:
+                    pipeline: Stage\Extract
+                    args:
+                      extraction: minPriceProduct::
+                  validateProduct:
+                    pipeline: Stage\Validate
+                    args:
+                      validation: IsNotEmpty
+                  getPrice:
+                    pipeline: Stage\Extract
+                    args:
+                      extraction: minPriceProduct::
+                      transformations:
+                        - ToFinalPrice(1)
+                        - FormatNumber("2",".")
+                        - ToFloat
+              defaultFinalPrice:
+                pipeline: Stage\StaticValue
+                args:
+                  value: 0.00
+          startPrice:
+            pipeline: Pipeline\Fallback
+            stages:
+              getFinalPrice:
+                stages:
+                  getMinPricedProduct:
+                    pipeline: Stage\Extract
+                    args:
+                      extraction: minPriceProduct::
+                  validateProduct:
+                    pipeline: Stage\Validate
+                    args:
+                      validation: IsNotEmpty
+                  getPrice:
+                    pipeline: Stage\Extract
+                    args:
+                      extraction: minPriceProduct::
+                      transformations:
+                        - ToFinalPrice(1)
+                        - FormatNumber("2",".")
+                        - ToFloat
+              defaultFinalPrice:
+                pipeline: Stage\StaticValue
+                args:
+                  value: null

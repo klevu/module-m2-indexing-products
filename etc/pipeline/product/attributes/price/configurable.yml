@@ -1,0 +1,15 @@
+pipeline: Pipeline\CreateRecord
+stages:
+  $store::getForCurrentStore().base_currency_code:
+    pipeline: Pipeline\CreateRecord
+    stages:
+      salePrice:
+        stages:
+          getPrice:
+            pipeline: Stage\Extract
+            args:
+              extraction: currentProduct::
+              transformations:
+                - ToFinalPrice(1)
+                - FormatNumber("2",".")
+                - ToFloat

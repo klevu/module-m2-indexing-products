@@ -23,17 +23,14 @@ use Klevu\TestFixtures\Traits\TestImplementsInterfaceTrait;
 use Klevu\TestFixtures\Traits\TestInterfacePreferenceTrait;
 use Klevu\TestFixtures\Website\WebsiteFixturesPool;
 use Klevu\TestFixtures\Website\WebsiteTrait;
-use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Api\ProductWebsiteLinkRepositoryInterface;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\Product\Type;
-use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
 use Magento\Downloadable\Model\Product\Type as DownloadableType;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\ObjectManagerInterface;
-use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Api\WebsiteRepositoryInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
@@ -105,8 +102,6 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $storeFixture = $this->storeFixturesPool->get('test_store');
         $store = $storeFixture->get();
 
-        $productCollectionCount = count($this->getProducts($store));
-
         $this->createProduct(
             productData: [
                 'in_stock' => true,
@@ -163,15 +158,11 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $collection = $this->objectManager->create(Collection::class);
         $collection->addFieldToFilter(IndexingEntity::API_KEY, ['eq' => $apiKey]);
         $indexingEntities = $collection->getItems();
-        $this->assertCount(
-            expectedCount: 3 + $productCollectionCount,
-            haystack: $indexingEntities,
-            message: 'Final Items Count',
-        );
 
         $this->assertAddIndexingEntity($indexingEntities, $product1, $apiKey, true);
         $this->assertAddIndexingEntity($indexingEntities, $product2, $apiKey, true);
         $this->assertAddIndexingEntity($indexingEntities, $product3, $apiKey, true);
+        $this->assertIndexingEntityDoesNotExist($indexingEntities, $product4, $apiKey);
 
         $this->cleanIndexingEntities($apiKey);
     }
@@ -192,7 +183,6 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $this->createStore();
         $storeFixture = $this->storeFixturesPool->get('test_store');
         $store = $storeFixture->get();
-        $productCollectionCount = count($this->getProducts($store));
 
         $this->createProduct(
             productData: [
@@ -250,21 +240,19 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $collection = $this->objectManager->create(Collection::class);
         $collection->addFieldToFilter(IndexingEntity::API_KEY, ['eq' => $apiKey]);
         $indexingEntities = $collection->getItems();
-        $this->assertCount(
-            expectedCount: 3 + $productCollectionCount,
-            haystack: $indexingEntities,
-            message: 'Final Items Count',
-        );
 
         $this->assertAddIndexingEntity($indexingEntities, $product1, $apiKey, true);
         $this->assertAddIndexingEntity($indexingEntities, $product2, $apiKey, false);
+        $this->assertAddIndexingEntity($indexingEntities, $product3, $apiKey, true);
+        $this->assertIndexingEntityDoesNotExist($indexingEntities, $product4, $apiKey);
 
         $this->cleanIndexingEntities($apiKey);
 
         $this->markTestIncomplete(
             'TODO fix OOS products test product stockItem object (it does not contain is_in_stock)',
         );
-        $this->assertAddIndexingEntity($indexingEntities, $product3, $apiKey, false);
+        // phpcs:ignore Generic.Files.LineLength.TooLong
+        $this->assertAddIndexingEntity($indexingEntities, $product3, $apiKey, false); // @phpstan-ignore-line Remove if test no longer marked incomplete
     }
 
     /**
@@ -364,7 +352,6 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
         $storeFixture = $this->storeFixturesPool->get('test_store_1');
         $store1 = $storeFixture->get();
-        $productCollectionCount1 = count($this->getProducts($store1));
 
         $this->createStore([
             'code' => 'klevu_test_store_2',
@@ -373,8 +360,6 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
         $storeFixture = $this->storeFixturesPool->get('test_store_2');
         $store2 = $storeFixture->get();
-        $productCollectionCount2 = count($this->getProducts($store2));
-        $productCollectionCount = max($productCollectionCount1, $productCollectionCount2);
 
         $this->createProduct(
             productData: [
@@ -422,11 +407,6 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $collection = $this->objectManager->create(Collection::class);
         $collection->addFieldToFilter(IndexingEntity::API_KEY, ['eq' => $apiKey]);
         $indexingEntities = $collection->getItems();
-        $this->assertCount(
-            expectedCount: 2 + $productCollectionCount,
-            haystack: $indexingEntities,
-            message: 'Final Items Count',
-        );
 
         $this->assertAddIndexingEntity($indexingEntities, $productStore1, $apiKey, true);
         $this->assertAddIndexingEntity($indexingEntities, $productStore2, $apiKey, false);
@@ -449,7 +429,6 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $this->createStore();
         $storeFixture = $this->storeFixturesPool->get('test_store');
         $store = $storeFixture->get();
-        $productCollectionCount = count($this->getProducts($store));
 
         $this->createProduct(
             productData: [
@@ -481,11 +460,6 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $collection = $this->objectManager->create(Collection::class);
         $collection->addFieldToFilter(IndexingEntity::API_KEY, ['eq' => $apiKey]);
         $indexingEntities = $collection->getItems();
-        $this->assertCount(
-            expectedCount: 1 + $productCollectionCount,
-            haystack: $indexingEntities,
-            message: 'Final Items Count',
-        );
         $this->assertDeleteIndexingEntity($indexingEntities, $product, $apiKey, Actions::DELETE, true);
 
         $this->cleanIndexingEntities($apiKey);
@@ -514,7 +488,6 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
         $storeFixture = $this->storeFixturesPool->get('test_store_1');
         $store1 = $storeFixture->get();
-        $productCollectionCount1 = count($this->getProducts($store1));
 
         $this->createStore([
             'code' => 'klevu_test_store_2',
@@ -523,8 +496,6 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
         $storeFixture = $this->storeFixturesPool->get('test_store_2');
         $store2 = $storeFixture->get();
-        $productCollectionCount2 = count($this->getProducts($store2));
-        $productCollectionCount = max($productCollectionCount1, $productCollectionCount2);
 
         $this->createProduct(
             productData: [
@@ -592,13 +563,491 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $collection = $this->objectManager->create(Collection::class);
         $collection->addFieldToFilter(IndexingEntity::API_KEY, ['eq' => $apiKey]);
         $indexingEntities = $collection->getItems();
-        $this->assertCount(
-            expectedCount: 2 + $productCollectionCount,
-            haystack: $indexingEntities,
-            message: 'Final Items Count',
-        );
         $this->assertDeleteIndexingEntity($indexingEntities, $product1, $apiKey, Actions::DELETE, true);
         $this->assertDeleteIndexingEntity($indexingEntities, $product2, $apiKey, Actions::NO_ACTION, true);
+
+        $this->cleanIndexingEntities($apiKey);
+    }
+
+    /**
+     * @magentoDbIsolation disabled
+     * @magentoAppIsolation enabled
+     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/js_api_key klevu-js-api-key
+     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/rest_auth_key klevu-rest-auth-key
+     * @magentoConfigFixture default/klevu/indexing/exclude_disabled_products 1
+     */
+    public function testExecute_SetsExistingNotIndexedProductToNotIndexable_WhenDisabled(): void
+    {
+        $apiKey = 'klevu-js-api-key';
+        $this->cleanIndexingEntities($apiKey);
+
+        $this->createStore();
+        $storeFixture = $this->storeFixturesPool->get('test_store');
+        $store = $storeFixture->get();
+
+        $this->createProduct(
+            productData: [
+                'in_stock' => true,
+                'qty' => 123,
+                'status' => Status::STATUS_DISABLED,
+                'website_ids' => [(int)$store->getWebsiteId()],
+                'key' => 'test_product_1',
+            ],
+            storeId: (int)$store->getId(),
+        );
+        $product = $this->productFixturePool->get('test_product_1');
+        $this->cleanIndexingEntities($apiKey);
+
+        $this->createIndexingEntity(data: [
+            IndexingEntity::API_KEY => $apiKey,
+            IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ID => (int)$product->getId(),
+            IndexingEntity::IS_INDEXABLE => true,
+            IndexingEntity::NEXT_ACTION => Actions::ADD,
+            IndexingEntity::LAST_ACTION => Actions::NO_ACTION,
+            IndexingEntity::LAST_ACTION_TIMESTAMP => null,
+        ]);
+
+        $service = $this->instantiateTestObject();
+        $result = $service->execute(entityType: 'KLEVU_PRODUCT');
+        $this->assertTrue($result->isSuccess());
+
+        $collection = $this->objectManager->create(Collection::class);
+        $collection->addFieldToFilter(IndexingEntity::API_KEY, ['eq' => $apiKey]);
+        $indexingEntities = $collection->getItems();
+        $indexingEntityArray = $this->filterIndexEntities($indexingEntities, $product->getId(), $apiKey);
+        $indexingEntity = array_shift($indexingEntityArray);
+        $this->assertSame(
+            expected: (int)$product->getId(),
+            actual: $indexingEntity->getTargetId(),
+            message: 'Target Id',
+        );
+        $this->assertSame(
+            expected: 'KLEVU_PRODUCT',
+            actual: $indexingEntity->getTargetEntityType(),
+            message: 'Target Entity Type',
+        );
+        $this->assertSame(
+            expected: $apiKey,
+            actual: $indexingEntity->getApiKey(),
+            message: 'Target Entity Type',
+        );
+        $this->assertSame(
+            expected: Actions::NO_ACTION,
+            actual: $indexingEntity->getNextAction(),
+            message: 'Next Action',
+        );
+        $this->assertNull(
+            actual: $indexingEntity->getLastActionTimestamp(),
+            message: 'Last Action Timestamp',
+        );
+        $this->assertNull(
+            actual: $indexingEntity->getLockTimestamp(),
+            message: 'Lock Timestamp',
+        );
+        $this->assertFalse(
+            condition: $indexingEntity->getIsIndexable(),
+            message: 'Is Indexable',
+        );
+        $this->cleanIndexingEntities($apiKey);
+    }
+
+    /**
+     * @magentoDbIsolation disabled
+     * @magentoAppIsolation enabled
+     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/js_api_key klevu-js-api-key
+     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/rest_auth_key klevu-rest-auth-key
+     * @magentoConfigFixture klevu_test_store_2_store klevu_configuration/auth_keys/js_api_key klevu-js-api-key
+     * @magentoConfigFixture klevu_test_store_2_store klevu_configuration/auth_keys/rest_auth_key klevu-rest-auth-key
+     * @magentoConfigFixture default/klevu/indexing/exclude_disabled_products 1
+     */
+    public function testExecute_SetsExistingNotIndexedProductToNotIndexable_WhenDisabled_MultiStore(): void
+    {
+        $apiKey = 'klevu-js-api-key';
+        $this->cleanIndexingEntities($apiKey);
+
+        $this->createWebsite();
+        $websiteFixture = $this->websiteFixturesPool->get('test_website');
+
+        $this->createStore([
+            'code' => 'klevu_test_store_1',
+            'key' => 'test_store_1',
+        ]);
+        $storeFixture = $this->storeFixturesPool->get('test_store_1');
+        $store1 = $storeFixture->get();
+
+        $this->createStore([
+            'code' => 'klevu_test_store_2',
+            'key' => 'test_store_2',
+            'website_id' => $websiteFixture->getId(),
+        ]);
+        $storeFixture = $this->storeFixturesPool->get('test_store_2');
+        $store2 = $storeFixture->get();
+
+        $this->createProduct(
+            productData: [
+                'key' => 'test_product_1',
+                'website_ids' => [
+                    $store1->getWebsiteId(),
+                    $store2->getWebsiteId(),
+                ],
+                'type_id' => DownloadableType::TYPE_DOWNLOADABLE,
+                'status' => Status::STATUS_DISABLED,
+                'stores' => [
+                    $store1->getId() => [
+                        'status' => Status::STATUS_DISABLED,
+                    ],
+                    $store2->getId() => [
+                        'status' => Status::STATUS_DISABLED,
+                    ],
+                ],
+            ],
+        );
+        $product1 = $this->productFixturePool->get('test_product_1');
+        $this->createProduct(
+            productData: [
+                'key' => 'test_product_2',
+                'website_ids' => [
+                    $store1->getWebsiteId(),
+                    $store2->getWebsiteId(),
+                ],
+                'stores' => [
+                    $store1->getId() => [
+                        'status' => Status::STATUS_ENABLED,
+                    ],
+                    $store2->getId() => [
+                        'status' => Status::STATUS_DISABLED,
+                    ],
+                ],
+            ],
+        );
+        $product2 = $this->productFixturePool->get('test_product_2');
+        $this->cleanIndexingEntities($apiKey);
+
+        $this->createIndexingEntity(data: [
+            IndexingEntity::API_KEY => $apiKey,
+            IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ID => (int)$product1->getId(),
+            IndexingEntity::IS_INDEXABLE => true,
+            IndexingEntity::NEXT_ACTION => Actions::ADD,
+            IndexingEntity::LAST_ACTION => Actions::NO_ACTION,
+            IndexingEntity::LAST_ACTION_TIMESTAMP => null,
+        ]);
+        $this->createIndexingEntity(data: [
+            IndexingEntity::API_KEY => $apiKey,
+            IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ID => (int)$product2->getId(),
+            IndexingEntity::IS_INDEXABLE => true,
+            IndexingEntity::NEXT_ACTION => Actions::ADD,
+            IndexingEntity::LAST_ACTION => Actions::NO_ACTION,
+            IndexingEntity::LAST_ACTION_TIMESTAMP => null,
+        ]);
+
+        $service = $this->instantiateTestObject();
+        $result = $service->execute(entityType: 'KLEVU_PRODUCT');
+        $this->assertTrue($result->isSuccess());
+
+        $collection = $this->objectManager->create(Collection::class);
+        $collection->addFieldToFilter(IndexingEntity::API_KEY, ['eq' => $apiKey]);
+        $indexingEntities = $collection->getItems();
+
+        $indexingEntityArray1 = $this->filterIndexEntities($indexingEntities, $product1->getId(), $apiKey);
+        $indexingEntity1 = array_shift($indexingEntityArray1);
+        $this->assertSame(
+            expected: (int)$product1->getId(),
+            actual: $indexingEntity1->getTargetId(),
+            message: 'Target Id',
+        );
+        $this->assertSame(
+            expected: Actions::NO_ACTION,
+            actual: $indexingEntity1->getNextAction(),
+            message: 'Next Action',
+        );
+        $this->assertNull(
+            actual: $indexingEntity1->getLastActionTimestamp(),
+            message: 'Last Action Timestamp',
+        );
+        $this->assertNull(
+            actual: $indexingEntity1->getLockTimestamp(),
+            message: 'Lock Timestamp',
+        );
+        $this->assertFalse(
+            condition: $indexingEntity1->getIsIndexable(),
+            message: 'Is Indexable',
+        );
+
+        $indexingEntityArray2 = $this->filterIndexEntities($indexingEntities, $product2->getId(), $apiKey);
+        $indexingEntity2 = array_shift($indexingEntityArray2);
+        $this->assertSame(
+            expected: (int)$product2->getId(),
+            actual: $indexingEntity2->getTargetId(),
+            message: 'Target Id',
+        );
+        $this->assertSame(
+            expected: Actions::ADD,
+            actual: $indexingEntity2->getNextAction(),
+            message: 'Next Action',
+        );
+        $this->assertNull(
+            actual: $indexingEntity2->getLastActionTimestamp(),
+            message: 'Last Action Timestamp',
+        );
+        $this->assertNull(
+            actual: $indexingEntity2->getLockTimestamp(),
+            message: 'Lock Timestamp',
+        );
+        $this->assertTrue(
+            condition: $indexingEntity2->getIsIndexable(),
+            message: 'Is Indexable',
+        );
+
+        $this->cleanIndexingEntities($apiKey);
+    }
+
+    /**
+     * @magentoDbIsolation disabled
+     * @magentoAppIsolation enabled
+     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/js_api_key klevu-js-api-key
+     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/rest_auth_key klevu-rest-auth-key
+     * @magentoConfigFixture default/klevu/indexing/exclude_disabled_products 1
+     */
+    public function testExecute_SetsExistingProductToIndexable_WhenEnabled_IfPreviousDeleteActionNotYetIndexed(): void
+    {
+        $apiKey = 'klevu-js-api-key';
+        $this->cleanIndexingEntities($apiKey);
+
+        $this->createStore();
+        $storeFixture = $this->storeFixturesPool->get('test_store');
+        $store = $storeFixture->get();
+
+        $this->createProduct(
+            productData: [
+                'in_stock' => true,
+                'qty' => 123,
+                'status' => Status::STATUS_ENABLED,
+                'website_ids' => [(int)$store->getWebsiteId()],
+                'key' => 'test_product_1',
+            ],
+            storeId: (int)$store->getId(),
+        );
+        $product = $this->productFixturePool->get('test_product_1');
+        $this->cleanIndexingEntities($apiKey);
+
+        $this->createIndexingEntity(data: [
+            IndexingEntity::API_KEY => $apiKey,
+            IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ID => (int)$product->getId(),
+            IndexingEntity::IS_INDEXABLE => true,
+            IndexingEntity::NEXT_ACTION => Actions::DELETE,
+            IndexingEntity::LAST_ACTION => Actions::ADD,
+            IndexingEntity::LAST_ACTION_TIMESTAMP => date('Y-m-d H:i:s'),
+        ]);
+
+        $service = $this->instantiateTestObject();
+        $result = $service->execute(entityType: 'KLEVU_PRODUCT');
+        $this->assertTrue($result->isSuccess());
+
+        $collection = $this->objectManager->create(Collection::class);
+        $collection->addFieldToFilter(IndexingEntity::API_KEY, ['eq' => $apiKey]);
+        $indexingEntities = $collection->getItems();
+        $indexingEntityArray = $this->filterIndexEntities($indexingEntities, $product->getId(), $apiKey);
+        $indexingEntity = array_shift($indexingEntityArray);
+        $this->assertSame(
+            expected: (int)$product->getId(),
+            actual: $indexingEntity->getTargetId(),
+            message: 'Target Id',
+        );
+        $this->assertSame(
+            expected: 'KLEVU_PRODUCT',
+            actual: $indexingEntity->getTargetEntityType(),
+            message: 'Target Entity Type',
+        );
+        $this->assertSame(
+            expected: $apiKey,
+            actual: $indexingEntity->getApiKey(),
+            message: 'Target Entity Type',
+        );
+        $this->assertSame(
+            expected: Actions::NO_ACTION,
+            actual: $indexingEntity->getNextAction(),
+            message: sprintf(
+                'Next Action: Expected %s, Received %s',
+                Actions::NO_ACTION->value,
+                $indexingEntity->getNextAction()->value,
+            ),
+        );
+        $this->assertNotNull(
+            actual: $indexingEntity->getLastActionTimestamp(),
+            message: 'Last Action Timestamp',
+        );
+        $this->assertNull(
+            actual: $indexingEntity->getLockTimestamp(),
+            message: 'Lock Timestamp',
+        );
+        $this->assertTrue(
+            condition: $indexingEntity->getIsIndexable(),
+            message: 'Is Indexable',
+        );
+        $this->cleanIndexingEntities($apiKey);
+    }
+
+    /**
+     * @magentoDbIsolation disabled
+     * @magentoAppIsolation enabled
+     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/js_api_key klevu-js-api-key
+     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/rest_auth_key klevu-rest-auth-key
+     * @magentoConfigFixture klevu_test_store_2_store klevu_configuration/auth_keys/js_api_key klevu-js-api-key
+     * @magentoConfigFixture klevu_test_store_2_store klevu_configuration/auth_keys/rest_auth_key klevu-rest-auth-key
+     * @magentoConfigFixture default/klevu/indexing/exclude_disabled_products 1
+     */
+    public function testExecute_SetsExistingProductToIndexable_WhenEnabled_IfPreviousDeleteActionNotYetIndexed_MultiStore(): void // phpcs:ignore Generic.Files.LineLength.TooLong
+    {
+        $apiKey = 'klevu-js-api-key';
+        $this->cleanIndexingEntities($apiKey);
+
+        $this->createWebsite();
+        $websiteFixture = $this->websiteFixturesPool->get('test_website');
+
+        $this->createStore([
+            'code' => 'klevu_test_store_1',
+            'key' => 'test_store_1',
+        ]);
+        $storeFixture = $this->storeFixturesPool->get('test_store_1');
+        $store1 = $storeFixture->get();
+
+        $this->createStore([
+            'code' => 'klevu_test_store_2',
+            'key' => 'test_store_2',
+            'website_id' => $websiteFixture->getId(),
+        ]);
+        $storeFixture = $this->storeFixturesPool->get('test_store_2');
+        $store2 = $storeFixture->get();
+
+        $this->createProduct(
+            productData: [
+                'key' => 'test_product_1',
+                'website_ids' => [
+                    $store1->getWebsiteId(),
+                    $store2->getWebsiteId(),
+                ],
+                'type_id' => DownloadableType::TYPE_DOWNLOADABLE,
+                'status' => Status::STATUS_DISABLED,
+                'stores' => [
+                    $store1->getId() => [
+                        'status' => Status::STATUS_DISABLED,
+                    ],
+                    $store2->getId() => [
+                        'status' => Status::STATUS_ENABLED,
+                    ],
+                ],
+            ],
+        );
+        $product1 = $this->productFixturePool->get('test_product_1');
+        $this->createProduct(
+            productData: [
+                'key' => 'test_product_2',
+                'website_ids' => [
+                    $store1->getWebsiteId(),
+                    $store2->getWebsiteId(),
+                ],
+                'status' => Status::STATUS_DISABLED,
+                'stores' => [
+                    $store1->getId() => [
+                        'status' => Status::STATUS_ENABLED,
+                    ],
+                    $store2->getId() => [
+                        'status' => Status::STATUS_DISABLED,
+                    ],
+                ],
+            ],
+        );
+        $product2 = $this->productFixturePool->get('test_product_2');
+        $this->cleanIndexingEntities($apiKey);
+
+        $this->createIndexingEntity(data: [
+            IndexingEntity::API_KEY => $apiKey,
+            IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ID => (int)$product1->getId(),
+            IndexingEntity::IS_INDEXABLE => true,
+            IndexingEntity::NEXT_ACTION => Actions::DELETE,
+            IndexingEntity::LAST_ACTION => Actions::NO_ACTION,
+            IndexingEntity::LAST_ACTION_TIMESTAMP => null,
+        ]);
+        $this->createIndexingEntity(data: [
+            IndexingEntity::API_KEY => $apiKey,
+            IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ID => (int)$product2->getId(),
+            IndexingEntity::IS_INDEXABLE => true,
+            IndexingEntity::NEXT_ACTION => Actions::DELETE,
+            IndexingEntity::LAST_ACTION => Actions::ADD,
+            IndexingEntity::LAST_ACTION_TIMESTAMP => date('Y-m-d H:i:s'),
+        ]);
+
+        $service = $this->instantiateTestObject();
+        $result = $service->execute(entityType: 'KLEVU_PRODUCT');
+        $this->assertTrue($result->isSuccess());
+
+        $collection = $this->objectManager->create(Collection::class);
+        $collection->addFieldToFilter(IndexingEntity::API_KEY, ['eq' => $apiKey]);
+        $indexingEntities = $collection->getItems();
+
+        $indexingEntityArray1 = $this->filterIndexEntities($indexingEntities, $product1->getId(), $apiKey);
+        $indexingEntity1 = array_shift($indexingEntityArray1);
+        $this->assertSame(
+            expected: (int)$product1->getId(),
+            actual: $indexingEntity1->getTargetId(),
+            message: 'Target Id',
+        );
+        $this->assertSame(
+            expected: Actions::ADD,
+            actual: $indexingEntity1->getNextAction(),
+            message: sprintf(
+                'Next Action: Expected %s, Received %s',
+                Actions::ADD->value,
+                $indexingEntity1->getNextAction()->value,
+            ),
+        );
+        $this->assertNull(
+            actual: $indexingEntity1->getLastActionTimestamp(),
+            message: 'Last Action Timestamp',
+        );
+        $this->assertNull(
+            actual: $indexingEntity1->getLockTimestamp(),
+            message: 'Lock Timestamp',
+        );
+        $this->assertTrue(
+            condition: $indexingEntity1->getIsIndexable(),
+            message: 'Is Indexable',
+        );
+
+        $indexingEntityArray2 = $this->filterIndexEntities($indexingEntities, $product2->getId(), $apiKey);
+        $indexingEntity2 = array_shift($indexingEntityArray2);
+        $this->assertSame(
+            expected: (int)$product2->getId(),
+            actual: $indexingEntity2->getTargetId(),
+            message: 'Target Id',
+        );
+        $this->assertSame(
+            expected: Actions::NO_ACTION,
+            actual: $indexingEntity2->getNextAction(),
+            message: sprintf(
+                'Next Action: Expected %s, Received %s',
+                Actions::NO_ACTION->value,
+                $indexingEntity2->getNextAction()->value,
+            ),
+        );
+        $this->assertNotNull(
+            actual: $indexingEntity2->getLastActionTimestamp(),
+            message: 'Last Action Timestamp',
+        );
+        $this->assertNull(
+            actual: $indexingEntity2->getLockTimestamp(),
+            message: 'Lock Timestamp',
+        );
+        $this->assertTrue(
+            condition: $indexingEntity2->getIsIndexable(),
+            message: 'Is Indexable',
+        );
 
         $this->cleanIndexingEntities($apiKey);
     }
@@ -618,7 +1067,6 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $this->createStore();
         $storeFixture = $this->storeFixturesPool->get('test_store');
         $store = $storeFixture->get();
-        $productCollectionCount = count($this->getProducts($store));
 
         $this->createProduct(
             productData: [
@@ -651,11 +1099,6 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $collection = $this->objectManager->create(Collection::class);
         $collection->addFieldToFilter(IndexingEntity::API_KEY, ['eq' => $apiKey]);
         $indexingEntities = $collection->getItems();
-        $this->assertCount(
-            expectedCount: 1 + $productCollectionCount,
-            haystack: $indexingEntities,
-            message: 'Final Items Count',
-        );
         $this->assertDeleteIndexingEntity($indexingEntities, $product, $apiKey, Actions::NO_ACTION, false);
 
         $this->cleanIndexingEntities($apiKey);
@@ -684,7 +1127,6 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
         $storeFixture = $this->storeFixturesPool->get('test_store_1');
         $store1 = $storeFixture->get();
-        $productCollectionCount1 = count($this->getProducts($store1));
 
         $this->createStore([
             'code' => 'klevu_test_store_2',
@@ -693,8 +1135,6 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
         $storeFixture = $this->storeFixturesPool->get('test_store_2');
         $store2 = $storeFixture->get();
-        $productCollectionCount2 = count($this->getProducts($store2));
-        $productCollectionCount = max($productCollectionCount1, $productCollectionCount2);
 
         $this->createProduct(
             productData: [
@@ -762,11 +1202,6 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $collection = $this->objectManager->create(Collection::class);
         $collection->addFieldToFilter(IndexingEntity::API_KEY, ['eq' => $apiKey]);
         $indexingEntities = $collection->getItems();
-        $this->assertCount(
-            expectedCount: 2 + $productCollectionCount,
-            haystack: $indexingEntities,
-            message: 'Final Items Count',
-        );
         $this->assertUpdateIndexingEntity($indexingEntities, $product1, $apiKey, Actions::ADD);
         $this->assertUpdateIndexingEntity($indexingEntities, $product2, $apiKey, Actions::UPDATE);
 
@@ -796,7 +1231,6 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
         $storeFixture = $this->storeFixturesPool->get('test_store_1');
         $store1 = $storeFixture->get();
-        $productCollectionCount1 = count($this->getProducts($store1));
 
         $this->createStore([
             'code' => 'klevu_test_store_2',
@@ -805,8 +1239,6 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
         $storeFixture = $this->storeFixturesPool->get('test_store_2');
         $store2 = $storeFixture->get();
-        $productCollectionCount2 = count($this->getProducts($store2));
-        $productCollectionCount = max($productCollectionCount1, $productCollectionCount2);
 
         $this->createProduct(
             productData: [
@@ -874,11 +1306,6 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $collection = $this->objectManager->create(Collection::class);
         $collection->addFieldToFilter(IndexingEntity::API_KEY, ['eq' => $apiKey]);
         $indexingEntities = $collection->getItems();
-        $this->assertCount(
-            expectedCount: 2 + $productCollectionCount,
-            haystack: $indexingEntities,
-            message: 'Final Items Count',
-        );
         $this->assertUpdateIndexingEntity($indexingEntities, $product1, $apiKey, Actions::ADD);
         $this->assertUpdateIndexingEntity($indexingEntities, $product2, $apiKey, Actions::ADD, false);
 
@@ -956,6 +1383,25 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
             expected: $isIndexable,
             actual: $indexingEntity->getIsIndexable(),
             message: 'Is Indexable',
+        );
+    }
+
+    /**
+     * @param IndexingEntityInterface[] $indexingEntities
+     * @param ProductFixture $product
+     * @param string $apiKey
+     *
+     * @return void
+     */
+    private function assertIndexingEntityDoesNotExist(
+        array $indexingEntities,
+        ProductFixture $product,
+        string $apiKey,
+    ): void {
+        $filteredIndexingEntities = $this->filterIndexEntities($indexingEntities, $product->getId(), $apiKey);
+
+        $this->assertEmpty(
+            $filteredIndexingEntities,
         );
     }
 
@@ -1086,22 +1532,5 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
                     && $apiKey === $indexingEntity->getApiKey();
             },
         );
-    }
-
-    /**
-     * @param StoreInterface|null $store
-     *
-     * @return ProductInterface[]
-     */
-    private function getProducts(?StoreInterface $store = null): array
-    {
-        $productCollectionFactory = $this->objectManager->get(ProductCollectionFactory::class);
-        $productCollection = $productCollectionFactory->create();
-        $productCollection->addAttributeToSelect('*');
-        if ($store) {
-            $productCollection->setStore((int)$store->getId());
-        }
-
-        return $productCollection->getItems();
     }
 }

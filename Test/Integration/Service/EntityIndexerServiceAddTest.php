@@ -485,25 +485,16 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->assertArrayHasKey(key: 'url', array: $attributes);
         $this->assertStringContainsString(needle: 'klevu-simple-sku-001.html', haystack: $attributes['url']);
 
-        $this->assertArrayHasKey(key: 'prices', array: $attributes);
-        $defaultPriceArray = array_filter(
-            array: $attributes['prices'],
-            callback: static fn (array $price) => ($price['type'] ?? null) === 'defaultPrice',
-        );
-        $defaultPrice = array_shift($defaultPriceArray);
-        $this->assertSame(expected: 9.99, actual: $defaultPrice['amount']);
-        $this->assertSame(expected: 'USD', actual: $defaultPrice['currency']);
-        $salePriceArray = array_filter(
-            array: $attributes['prices'],
-            callback: static fn (array $price) => ($price['type'] ?? null) === 'salePrice',
-        );
-        $salePrice = array_shift($salePriceArray);
-        $this->assertSame(expected: 9.99, actual: $salePrice['amount']);
-        $this->assertSame(expected: 'USD', actual: $salePrice['currency']);
+        $this->assertArrayHasKey(key: 'price', array: $attributes);
+        $this->assertArrayHasKey(key: 'USD', array: $attributes['price']);
+        $this->assertArrayHasKey(key: 'defaultPrice', array: $attributes['price']['USD']);
+        $this->assertSame(expected: 9.99, actual: $attributes['price']['USD']['defaultPrice']);
+        $this->assertArrayHasKey(key: 'salePrice', array: $attributes['price']['USD']);
+        $this->assertSame(expected: 9.99, actual: $attributes['price']['USD']['salePrice']);
 
-        $this->assertArrayHasKey(key: 'images', array: $attributes);
-        $images = $attributes['images'];
-        $image = array_shift($images);
+        $this->assertArrayHasKey(key: 'image', array: $attributes);
+        $this->assertArrayHasKey(key: 'default', array: $attributes['image']);
+        $image = $attributes['image']['default'];
         $this->assertArrayHasKey(key: 'height', array: $image);
         $this->assertSame(expected: 800, actual: $image['height']);
         $this->assertArrayHasKey(key: 'width', array: $image);
@@ -513,12 +504,6 @@ class EntityIndexerServiceAddTest extends TestCase
             pattern: '#/media/catalog/product/cache/.*/k/l/klevu_test_image_name(_.*)?\.jpg#',
             string: $image['url'],
             message: 'Image URL: ' . $image['url'],
-        );
-        $this->assertArrayHasKey(key: 'type', array: $image);
-        $this->assertSame(
-            expected: 'default',
-            actual: $image['type'],
-            message: 'Image Type: ' . $image['type'],
         );
 
         $this->assertArrayHasKey(key: 'rating', array: $attributes);
@@ -680,25 +665,16 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->assertArrayHasKey(key: 'url', array: $attributes);
         $this->assertStringContainsString(needle: 'klevu-virtual-sku-001.html', haystack: $attributes['url']);
 
-        $this->assertArrayHasKey(key: 'prices', array: $attributes);
-        $defaultPriceArray = array_filter(
-            array: $attributes['prices'],
-            callback: static fn (array $price) => ($price['type'] ?? null) === 'defaultPrice',
-        );
-        $defaultPrice = array_shift($defaultPriceArray);
-        $this->assertSame(expected: 19.99, actual: $defaultPrice['amount']);
-        $this->assertSame(expected: 'USD', actual: $defaultPrice['currency']);
-        $salePriceArray = array_filter(
-            array: $attributes['prices'],
-            callback: static fn (array $price) => ($price['type'] ?? null) === 'salePrice',
-        );
-        $salePrice = array_shift($salePriceArray);
-        $this->assertSame(expected: 19.99, actual: $salePrice['amount']);
-        $this->assertSame(expected: 'USD', actual: $salePrice['currency']);
+        $this->assertArrayHasKey(key: 'price', array: $attributes);
+        $this->assertArrayHasKey(key: 'USD', array: $attributes['price']);
+        $this->assertArrayHasKey(key: 'defaultPrice', array: $attributes['price']['USD']);
+        $this->assertSame(expected: 19.99, actual: $attributes['price']['USD']['defaultPrice']);
+        $this->assertArrayHasKey(key: 'salePrice', array: $attributes['price']['USD']);
+        $this->assertSame(expected: 19.99, actual: $attributes['price']['USD']['salePrice']);
 
-        $this->assertArrayHasKey(key: 'images', array: $attributes);
-        $images = $attributes['images'];
-        $image = array_shift($images);
+        $this->assertArrayHasKey(key: 'image', array: $attributes);
+        $this->assertArrayHasKey(key: 'default', array: $attributes['image']);
+        $image = $attributes['image']['default'];
         $this->assertArrayHasKey(key: 'height', array: $image);
         $this->assertSame(expected: 800, actual: $image['height']);
         $this->assertArrayHasKey(key: 'width', array: $image);
@@ -708,12 +684,6 @@ class EntityIndexerServiceAddTest extends TestCase
             pattern: '#/media/catalog/product/cache/.*/k/l/klevu_test_image_symbol(_.*)?\.jpg#',
             string: $image['url'],
             message: 'Image URL: ' . $image['url'],
-        );
-        $this->assertArrayHasKey(key: 'type', array: $image);
-        $this->assertSame(
-            expected: 'default',
-            actual: $image['type'],
-            message: 'Image Type: ' . $image['type'],
         );
 
         $this->assertArrayHasKey(key: 'rating', array: $attributes);
@@ -865,25 +835,15 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->assertArrayHasKey(key: 'url', array: $attributes);
         $this->assertStringContainsString(needle: 'klevu-downloadable-sku-001.html', haystack: $attributes['url']);
 
-        $this->assertArrayHasKey(key: 'prices', array: $attributes);
-        $defaultPriceArray = array_filter(
-            array: $attributes['prices'],
-            callback: static fn (array $price) => ($price['type'] ?? null) === 'defaultPrice',
-        );
-        $defaultPrice = array_shift($defaultPriceArray);
-        $this->assertSame(expected: 99.99, actual: $defaultPrice['amount']);
-        $this->assertSame(expected: 'USD', actual: $defaultPrice['currency']);
-        $salePriceArray = array_filter(
-            array: $attributes['prices'],
-            callback: static fn (array $price) => ($price['type'] ?? null) === 'salePrice',
-        );
-        $salePrice = array_shift($salePriceArray);
-        $this->assertSame(expected: 54.99, actual: $salePrice['amount']);
-        $this->assertSame(expected: 'USD', actual: $salePrice['currency']);
+        $this->assertArrayHasKey(key: 'price', array: $attributes);
+        $this->assertArrayHasKey(key: 'USD', array: $attributes['price']);
+        $this->assertArrayHasKey(key: 'defaultPrice', array: $attributes['price']['USD']);
+        $this->assertSame(expected: 99.99, actual: $attributes['price']['USD']['defaultPrice']);
+        $this->assertArrayHasKey(key: 'salePrice', array: $attributes['price']['USD']);
+        $this->assertSame(expected: 54.99, actual: $attributes['price']['USD']['salePrice']);
 
-        $this->assertArrayHasKey(key: 'images', array: $attributes);
-        $images = $attributes['images'];
-        $this->assertNull($images);
+        $this->assertArrayHasKey(key: 'image', array: $attributes);
+        $this->assertNull($attributes['image']);
 
         $this->assertArrayHasKey(key: 'rating', array: $attributes);
         $this->assertSame(expected: 0.0, actual: $attributes['rating']);
@@ -1111,24 +1071,15 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->assertArrayHasKey(key: 'url', array: $attributes);
         $this->assertStringContainsString(needle: '/klevu-configurable-sku-001', haystack: $attributes['url']);
 
-        $this->assertArrayHasKey(key: 'prices', array: $attributes);
-        $defaultPriceArray = array_filter(
-            array: $attributes['prices'],
-            callback: static fn (array $price) => ($price['type'] ?? null) === 'defaultPrice',
-        );
-        $this->assertCount(expectedCount: 0, haystack: $defaultPriceArray);
+        $this->assertArrayHasKey(key: 'price', array: $attributes);
+        $this->assertArrayHasKey(key: 'USD', array: $attributes['price']);
+        $this->assertArrayNotHasKey(key: 'defaultPrice', array: $attributes['price']['USD']);
+        $this->assertArrayHasKey(key: 'salePrice', array: $attributes['price']['USD']);
+        $this->assertSame(expected: 39.99, actual: $attributes['price']['USD']['salePrice']);
 
-        $salePriceArray = array_filter(
-            array: $attributes['prices'],
-            callback: static fn (array $price) => ($price['type'] ?? null) === 'salePrice',
-        );
-        $salePrice = array_shift($salePriceArray);
-        $this->assertSame(expected: 39.99, actual: $salePrice['amount']);
-        $this->assertSame(expected: 'USD', actual: $salePrice['currency']);
-
-        $this->assertArrayHasKey(key: 'images', array: $attributes);
-        $images = $attributes['images'];
-        $image = array_shift($images);
+        $this->assertArrayHasKey(key: 'image', array: $attributes);
+        $this->assertArrayHasKey(key: 'default', array: $attributes['image']);
+        $image = $attributes['image']['default'];
         $this->assertArrayHasKey(key: 'height', array: $image);
         $this->assertSame(expected: 800, actual: $image['height']);
         $this->assertArrayHasKey(key: 'width', array: $image);
@@ -1138,12 +1089,6 @@ class EntityIndexerServiceAddTest extends TestCase
             pattern: '#/media/catalog/product/cache/.*/k/l/klevu_test_image_name(_.*)?\.jpg#',
             string: $image['url'],
             message: 'Image URL: ' . $image['url'],
-        );
-        $this->assertArrayHasKey(key: 'type', array: $image);
-        $this->assertSame(
-            expected: 'default',
-            actual: $image['type'],
-            message: 'Image Type: ' . $image['type'],
         );
 
         $this->assertArrayHasKey(key: 'rating', array: $attributes);
@@ -1367,26 +1312,16 @@ class EntityIndexerServiceAddTest extends TestCase
 
         $this->assertArrayHasKey(key: 'url', array: $attributes);
         $this->assertStringContainsString(needle: '/klevu-configurable-sku-001', haystack: $attributes['url']);
+        $this->assertArrayHasKey(key: 'price', array: $attributes);
+        $this->assertArrayHasKey(key: 'USD', array: $attributes['price']);
+        $this->assertArrayHasKey(key: 'defaultPrice', array: $attributes['price']['USD']);
+        $this->assertSame(expected: 99.99, actual: $attributes['price']['USD']['defaultPrice']);
+        $this->assertArrayHasKey(key: 'salePrice', array: $attributes['price']['USD']);
+        $this->assertSame(expected: 49.99, actual: $attributes['price']['USD']['salePrice']);
 
-        $this->assertArrayHasKey(key: 'prices', array: $attributes);
-        $defaultPriceArray = array_filter(
-            array: $attributes['prices'],
-            callback: static fn (array $price) => ($price['type'] ?? null) === 'defaultPrice',
-        );
-        $defaultPrice = array_shift($defaultPriceArray);
-        $this->assertSame(expected: 99.99, actual: $defaultPrice['amount']);
-        $this->assertSame(expected: 'USD', actual: $defaultPrice['currency']);
-        $salePriceArray = array_filter(
-            array: $attributes['prices'],
-            callback: static fn (array $price) => ($price['type'] ?? null) === 'salePrice',
-        );
-        $salePrice = array_shift($salePriceArray);
-        $this->assertSame(expected: 49.99, actual: $salePrice['amount']);
-        $this->assertSame(expected: 'USD', actual: $salePrice['currency']);
-
-        $this->assertArrayHasKey(key: 'images', array: $attributes);
-        $images = $attributes['images'];
-        $image = array_shift($images);
+        $this->assertArrayHasKey(key: 'image', array: $attributes);
+        $this->assertArrayHasKey(key: 'default', array: $attributes['image']);
+        $image = $attributes['image']['default'];
         $this->assertArrayHasKey(key: 'height', array: $image);
         $this->assertSame(expected: 800, actual: $image['height']);
         $this->assertArrayHasKey(key: 'width', array: $image);
@@ -1396,12 +1331,6 @@ class EntityIndexerServiceAddTest extends TestCase
             pattern: '#/media/catalog/product/cache/.*/k/l/klevu_test_image_name(_.*)?\.jpg#',
             string: $image['url'],
             message: 'Image URL: ' . $image['url'],
-        );
-        $this->assertArrayHasKey(key: 'type', array: $image);
-        $this->assertSame(
-            expected: 'default',
-            actual: $image['type'],
-            message: 'Image Type: ' . $image['type'],
         );
 
         $this->assertArrayHasKey(key: 'rating', array: $attributes);
@@ -1662,25 +1591,16 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->assertArrayHasKey(key: 'url', array: $attributes);
         $this->assertStringContainsString(needle: '/klevu-grouped-sku-001', haystack: $attributes['url']);
 
-        $this->assertArrayHasKey(key: 'prices', array: $attributes);
-        $defaultPriceArray = array_filter(
-            array: $attributes['prices'],
-            callback: static fn (array $price) => ($price['type'] ?? null) === 'defaultPrice',
-        );
-        $defaultPrice = array_shift($defaultPriceArray);
-        $this->assertSame(expected: 74.99, actual: $defaultPrice['amount']);
-        $this->assertSame(expected: 'USD', actual: $defaultPrice['currency']);
-        $salePriceArray = array_filter(
-            array: $attributes['prices'],
-            callback: static fn (array $price) => ($price['type'] ?? null) === 'salePrice',
-        );
-        $salePrice = array_shift($salePriceArray);
-        $this->assertSame(expected: 46.99, actual: $salePrice['amount']);
-        $this->assertSame(expected: 'USD', actual: $salePrice['currency']);
+        $this->assertArrayHasKey(key: 'price', array: $attributes);
+        $this->assertArrayHasKey(key: 'USD', array: $attributes['price']);
+        $this->assertArrayHasKey(key: 'defaultPrice', array: $attributes['price']['USD']);
+        $this->assertSame(expected: 74.99, actual: $attributes['price']['USD']['defaultPrice']);
+        $this->assertArrayHasKey(key: 'salePrice', array: $attributes['price']['USD']);
+        $this->assertSame(expected: 46.99, actual: $attributes['price']['USD']['salePrice']);
 
-        $this->assertArrayHasKey(key: 'images', array: $attributes);
-        $images = $attributes['images'];
-        $image = array_shift($images);
+        $this->assertArrayHasKey(key: 'image', array: $attributes);
+        $this->assertArrayHasKey(key: 'default', array: $attributes['image']);
+        $image = $attributes['image']['default'];
         $this->assertArrayHasKey(key: 'height', array: $image);
         $this->assertSame(expected: 800, actual: $image['height']);
         $this->assertArrayHasKey(key: 'width', array: $image);
@@ -1690,12 +1610,6 @@ class EntityIndexerServiceAddTest extends TestCase
             pattern: '#/media/catalog/product/cache/.*/k/l/klevu_test_image_name(_.*)?\.jpg#',
             string: $image['url'],
             message: 'Image URL: ' . $image['url'],
-        );
-        $this->assertArrayHasKey(key: 'type', array: $image);
-        $this->assertSame(
-            expected: 'default',
-            actual: $image['type'],
-            message: 'Image Type: ' . $image['type'],
         );
 
         $this->assertArrayHasKey(key: 'rating', array: $attributes);
@@ -1890,21 +1804,12 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->assertArrayHasKey(key: 'url', array: $attributes);
         $this->assertStringContainsString(needle: '/klevu-grouped-sku-001', haystack: $attributes['url']);
 
-        $this->assertArrayHasKey(key: 'prices', array: $attributes);
-        $defaultPriceArray = array_filter(
-            array: $attributes['prices'],
-            callback: static fn (array $price) => ($price['type'] ?? null) === 'defaultPrice',
-        );
-        $defaultPrice = array_shift($defaultPriceArray);
-        $this->assertSame(expected: 0.00, actual: $defaultPrice['amount']);
-        $this->assertSame(expected: 'USD', actual: $defaultPrice['currency']);
-        $salePriceArray = array_filter(
-            array: $attributes['prices'],
-            callback: static fn (array $price) => ($price['type'] ?? null) === 'salePrice',
-        );
-        $salePrice = array_shift($salePriceArray);
-        $this->assertSame(expected: 0.00, actual: $salePrice['amount']);
-        $this->assertSame(expected: 'USD', actual: $salePrice['currency']);
+        $this->assertArrayHasKey(key: 'price', array: $attributes);
+        $this->assertArrayHasKey(key: 'USD', array: $attributes['price']);
+        $this->assertArrayHasKey(key: 'defaultPrice', array: $attributes['price']['USD']);
+        $this->assertSame(expected: 0.00, actual: $attributes['price']['USD']['defaultPrice']);
+        $this->assertArrayHasKey(key: 'salePrice', array: $attributes['price']['USD']);
+        $this->assertSame(expected: 0.00, actual: $attributes['price']['USD']['salePrice']);
 
         $this->assertArrayHasKey(key: 'rating', array: $attributes);
         $this->assertSame(expected: 0.0, actual: $attributes['rating']);
@@ -2104,25 +2009,16 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->assertArrayHasKey(key: 'url', array: $attributes);
         $this->assertStringContainsString(needle: 'klevu-simple-sku-001.html', haystack: $attributes['url']);
 
-        $this->assertArrayHasKey(key: 'prices', array: $attributes);
-        $defaultPriceArray = array_filter(
-            array: $attributes['prices'],
-            callback: static fn (array $price) => ($price['type'] ?? null) === 'defaultPrice',
-        );
-        $defaultPrice = array_shift($defaultPriceArray);
-        $this->assertSame(expected: 9.99, actual: $defaultPrice['amount']);
-        $this->assertSame(expected: 'USD', actual: $defaultPrice['currency']);
-        $salePriceArray = array_filter(
-            array: $attributes['prices'],
-            callback: static fn (array $price) => ($price['type'] ?? null) === 'salePrice',
-        );
-        $salePrice = array_shift($salePriceArray);
-        $this->assertSame(expected: 9.99, actual: $salePrice['amount']);
-        $this->assertSame(expected: 'USD', actual: $salePrice['currency']);
+        $this->assertArrayHasKey(key: 'price', array: $attributes);
+        $this->assertArrayHasKey(key: 'USD', array: $attributes['price']);
+        $this->assertArrayHasKey(key: 'defaultPrice', array: $attributes['price']['USD']);
+        $this->assertSame(expected: 9.99, actual: $attributes['price']['USD']['defaultPrice']);
+        $this->assertArrayHasKey(key: 'salePrice', array: $attributes['price']['USD']);
+        $this->assertSame(expected: 9.99, actual: $attributes['price']['USD']['salePrice']);
 
-        $this->assertArrayHasKey(key: 'images', array: $attributes);
-        $images = $attributes['images'];
-        $image = array_shift($images);
+        $this->assertArrayHasKey(key: 'image', array: $attributes);
+        $this->assertArrayHasKey(key: 'default', array: $attributes['image']);
+        $image = $attributes['image']['default'];
         $this->assertArrayHasKey(key: 'height', array: $image);
         $this->assertSame(expected: 800, actual: $image['height']);
         $this->assertArrayHasKey(key: 'width', array: $image);
@@ -2132,12 +2028,6 @@ class EntityIndexerServiceAddTest extends TestCase
             pattern: '#/media/catalog/product/cache/.*/k/l/klevu_test_image_name(_.*)?\.jpg#',
             string: $image['url'],
             message: 'Image URL: ' . $image['url'],
-        );
-        $this->assertArrayHasKey(key: 'type', array: $image);
-        $this->assertSame(
-            expected: 'default',
-            actual: $image['type'],
-            message: 'Image Type: ' . $image['type'],
         );
 
         $this->assertArrayHasKey(key: 'rating', array: $attributes);

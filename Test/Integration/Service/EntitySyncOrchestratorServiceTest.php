@@ -229,14 +229,17 @@ class EntitySyncOrchestratorServiceTest extends TestCase
 
         $this->assertArrayHasKey(key: 'KLEVU_PRODUCT::delete', array: $pipelineResults);
         $deleteResponses = $pipelineResults['KLEVU_PRODUCT::delete'];
+        $this->assertIsArray(actual: $deleteResponses, message: 'Product Delete Response');
         $this->assertCount(expectedCount: 0, haystack: $deleteResponses);
 
         $this->assertArrayHasKey(key: 'KLEVU_PRODUCT::update', array: $pipelineResults);
         $updateResponses = $pipelineResults['KLEVU_PRODUCT::update'];
+        $this->assertIsArray(actual: $updateResponses, message: 'Product Update Response');
         $this->assertCount(expectedCount: 0, haystack: $updateResponses);
 
         $this->assertArrayHasKey(key: 'KLEVU_PRODUCT::add', array: $pipelineResults);
         $addResponses = $pipelineResults['KLEVU_PRODUCT::add'];
+        $this->assertIsArray(actual: $addResponses, message: 'Product Add Response');
         $this->assertCount(expectedCount: 1, haystack: $addResponses);
 
         /** @var ApiPipelineResult $pipelineResult */
@@ -311,21 +314,12 @@ class EntitySyncOrchestratorServiceTest extends TestCase
         $this->assertArrayHasKey(key: 'url', array: $attributes);
         $this->assertStringContainsString(needle: '/klevu-simple-sku-001', haystack: $attributes['url']);
 
-        $this->assertArrayHasKey(key: 'prices', array: $attributes);
-        $defaultPriceArray = array_filter(
-            array: $attributes['prices'],
-            callback: static fn (array $price) => ($price['type'] ?? null) === 'defaultPrice',
-        );
-        $defaultPrice = array_shift($defaultPriceArray);
-        $this->assertSame(expected: 9.99, actual: $defaultPrice['amount']);
-        $this->assertSame(expected: 'USD', actual: $defaultPrice['currency']);
-        $salePriceArray = array_filter(
-            array: $attributes['prices'],
-            callback: static fn (array $price) => ($price['type'] ?? null) === 'salePrice',
-        );
-        $salePrice = array_shift($salePriceArray);
-        $this->assertSame(expected: 9.99, actual: $salePrice['amount']);
-        $this->assertSame(expected: 'USD', actual: $salePrice['currency']);
+        $this->assertArrayHasKey(key: 'price', array: $attributes);
+        $this->assertArrayHasKey(key: 'USD', array: $attributes['price']);
+        $this->assertArrayHasKey(key: 'defaultPrice', array: $attributes['price']['USD']);
+        $this->assertSame(expected: 9.99, actual: $attributes['price']['USD']['defaultPrice']);
+        $this->assertArrayHasKey(key: 'salePrice', array: $attributes['price']['USD']);
+        $this->assertSame(expected: 9.99, actual: $attributes['price']['USD']['salePrice']);
 
         $updatedIndexingEntity = $this->getIndexingEntityForEntity(
             apiKey: $apiKey,
@@ -494,21 +488,12 @@ class EntitySyncOrchestratorServiceTest extends TestCase
         $this->assertArrayHasKey(key: 'url', array: $attributes);
         $this->assertStringContainsString(needle: '/klevu-simple-sku-002', haystack: $attributes['url']);
 
-        $this->assertArrayHasKey(key: 'prices', array: $attributes);
-        $defaultPriceArray = array_filter(
-            array: $attributes['prices'],
-            callback: static fn (array $price) => ($price['type'] ?? null) === 'defaultPrice',
-        );
-        $defaultPrice = array_shift($defaultPriceArray);
-        $this->assertSame(expected: 99.99, actual: $defaultPrice['amount']);
-        $this->assertSame(expected: 'USD', actual: $defaultPrice['currency']);
-        $salePriceArray = array_filter(
-            array: $attributes['prices'],
-            callback: static fn (array $price) => ($price['type'] ?? null) === 'salePrice',
-        );
-        $salePrice = array_shift($salePriceArray);
-        $this->assertSame(expected: 99.99, actual: $salePrice['amount']);
-        $this->assertSame(expected: 'USD', actual: $salePrice['currency']);
+        $this->assertArrayHasKey(key: 'price', array: $attributes);
+        $this->assertArrayHasKey(key: 'USD', array: $attributes['price']);
+        $this->assertArrayHasKey(key: 'defaultPrice', array: $attributes['price']['USD']);
+        $this->assertSame(expected: 99.99, actual: $attributes['price']['USD']['defaultPrice']);
+        $this->assertArrayHasKey(key: 'salePrice', array: $attributes['price']['USD']);
+        $this->assertSame(expected: 99.99, actual: $attributes['price']['USD']['salePrice']);
 
         $updatedIndexingEntity = $this->getIndexingEntityForEntity(
             apiKey: $apiKey,

@@ -22,7 +22,7 @@ class DefaultIndexingAttributesAspectMappingProvider implements DefaultIndexingA
      * @var array<string, Aspect>
      */
     private array $aspectMapping = [
-        'category_ids' => Aspect::CATEGORIES,
+        'category_ids' => Aspect::RELATIONS,
         ProductAttributeInterface::CODE_DESCRIPTION => Aspect::ATTRIBUTES,
         KlevuImageInterface::ATTRIBUTE_CODE => Aspect::ATTRIBUTES,
         ProductAttributeInterface::CODE_SEO_FIELD_META_DESCRIPTION => Aspect::ATTRIBUTES,

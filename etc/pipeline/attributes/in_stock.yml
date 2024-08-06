@@ -1,6 +1,0 @@
-stages:
-  -
-    pipeline: Stage\Extract
-    args:
-      extraction: currentProduct::isAvailable()
-      transformations: ToBoolean

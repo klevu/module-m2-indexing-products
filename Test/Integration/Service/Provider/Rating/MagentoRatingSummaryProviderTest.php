@@ -89,7 +89,8 @@ class MagentoRatingSummaryProviderTest extends TestCase
             'Exception causes test to fail with Fatal error: due to uncaught exception,'
             . ' even though we are expecting that exception to be thrown.',
         );
-        $this->expectException(NoSuchEntityException::class);
+        // phpcs:ignore Generic.Files.LineLength.TooLong
+        $this->expectException(NoSuchEntityException::class); // @phpstan-ignore-line Remove when test no longer marked incomplete
         $this->expectExceptionMessage('The store that was requested wasn\'t found. Verify the store and try again.');
 
         $this->createProduct();

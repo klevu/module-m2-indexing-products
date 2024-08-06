@@ -118,10 +118,6 @@ class DiscoverEntitiesAfterIntegrationObserverTest extends TestCase
         $apiKey1 = 'klevu-js-api-key-1';
         $apiKey2 = 'klevu-js-api-key-2';
 
-        $indexingEntityCollection = $this->objectManager->create(IndexingEntityCollection::class);
-        $indexingEntityCollection->addFieldToFilter(IndexingEntity::API_KEY, ['in' => [$apiKey1, $apiKey2]]);
-        $collectionSize = count($indexingEntityCollection->getItems());
-
         $this->createWebsite();
         $websiteFixture = $this->websiteFixturesPool->get('test_website');
 
@@ -227,7 +223,7 @@ class DiscoverEntitiesAfterIntegrationObserverTest extends TestCase
         $indexingEntityCollection->addFieldToFilter(IndexingEntity::API_KEY, ['in' => [$apiKey1, $apiKey2]]);
         $indexingEntities = $indexingEntityCollection->getItems();
         $this->assertCount(
-            expectedCount: $collectionSize,
+            expectedCount: 0,
             haystack: $indexingEntities,
             message: 'Final Items Count',
         );
@@ -238,9 +234,6 @@ class DiscoverEntitiesAfterIntegrationObserverTest extends TestCase
         $cronScheduleItems = $cronSchedule->getItems();
 
         $this->assertCount(expectedCount: $existingScheduledItems + 1, haystack: $cronScheduleItems);
-
-        $this->cleanIndexingEntities($apiKey1);
-        $this->cleanIndexingEntities($apiKey2);
     }
 
     /**

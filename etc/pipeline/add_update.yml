@@ -1,0 +1,127 @@
+stages:
+  logStart:
+    pipeline: Indexing\Stage\Log # log that the pipeline has begun
+    args:
+      message: "Start Add Products Pipeline"
+  iterateIndexingRecords:
+    pipeline: Pipeline\Iterate # LOOP OVER ALL PROVIDED RECORDS
+    args:
+      continueOnException: ~
+    stages:
+      processIndexingRecordStart: # set some variables before processing product data
+        stages:
+          registerIndexingRecordToContext:
+            pipeline: Stage\RegisterContext
+            args:
+              contextKey: "currentIndexingRecord" # Set the current record to a variable called "currentIndexingRecord"
+          registerProductToContext:
+            stages:
+              extractProduct:
+                pipeline: Stage\Extract
+                args:
+                  extraction: currentIndexingRecord::getEntity()
+              registerProduct:
+                pipeline: Stage\RegisterContext
+                args:
+                  contextKey: "currentProduct" # i.e. $currentProduct = currentIndexingRecord::getEntity();
+          registerParentProductToContext:
+            stages:
+              extractParentProduct:
+                pipeline: Stage\Extract
+                args:
+                  extraction: currentIndexingRecord::getParent()
+              registerParentProduct:
+                pipeline: Stage\RegisterContext
+                args:
+                  contextKey: "currentParentProduct" # i.e. $currentParentProduct = currentIndexingRecord::getParent();
+          setCustomerGroupId:
+            stages:
+              GetDefaultCustomerGroupId:
+                pipeline: Stage\StaticValue
+                args:
+                  value: 0
+              SetCustomerGroupId:
+                pipeline: Stage\SetCustomerGroupId
+          registerActionToContext:
+            stages:
+              extractAction:
+                pipeline: Stage\Extract
+                args:
+                  extraction: currentIndexingRecord::getAction()
+              registerAction:
+                pipeline: Stage\RegisterContext
+                args:
+                  contextKey: "currentAction" # i.e. $currentAction = currentIndexingRecord::getAction()';
+          registerEntityTypeToContext:
+            stages:
+              createEntityType:
+                pipeline: Stage\StaticValue
+                args:
+                  value: "KLEVU_PRODUCT"
+              registerEntityType:
+                pipeline: Stage\RegisterContext
+                args:
+                  contextKey: "currentEntityType" # i.e. $currentEntityType = 'KLEVU_PRODUCT';
+      processProduct: # GENERATE PRODUCT DATA
+        pipeline: Pipeline\Fallback # if validation during one stage fails, move onto the next stage
+        stages:
+          variantProduct: # Simple products belonging to configurable products
+            stages:
+              getParentProduct:
+                pipeline: Stage\Extract
+                args:
+                  extraction: currentParentProduct::
+              validateParentProduct:
+                pipeline: Stage\Validate
+                args:
+                  validation: IsNotEmpty
+              generateRecord:
+                import: Klevu_IndexingProducts::etc/pipeline/product/configurable-variant.yml # use this file for configurable variant data
+          configurableProduct:
+            stages:
+              getProductType:
+                pipeline: Stage\Extract
+                args:
+                  extraction: currentProduct::getTypeId()
+              validateProductType:
+                pipeline: Stage\Validate
+                args:
+                  validation: IsEqualTo("configurable")
+              generateRecord:
+                import: Klevu_IndexingProducts::etc/pipeline/product/configurable.yml # use this file for configurable product data
+          groupedProduct:
+            stages:
+              getProductType:
+                pipeline: Stage\Extract
+                args:
+                  extraction: currentProduct::getTypeId()
+              validateProductType:
+                pipeline: Stage\Validate
+                args:
+                  validation: IsEqualTo("grouped")
+              generateRecord:
+                import: Klevu_IndexingProducts::etc/pipeline/product/grouped.yml # use this file for grouped product data
+          bundleProduct:
+            stages:
+              getProductType:
+                pipeline: Stage\Extract
+                args:
+                  extraction: currentProduct::getTypeId()
+              validateProductType:
+                pipeline: Stage\Validate
+                args:
+                  validation: IsEqualTo("bundle")
+              generateRecord:
+                import: Klevu_IndexingProducts::etc/pipeline/product/bundle.yml # use this file for bundle product data
+          default:
+            stages:
+              generateRecord:
+                import: Klevu_IndexingProducts::etc/pipeline/product/default.yml # use this file for all other product types product data
+  processPayload:
+    stages:
+      processRecords: # send generated data to Klevu
+        import: Klevu_Indexing::etc/pipeline/process-batch-payload.yml
+  logEnd:
+    pipeline: Indexing\Stage\Log # log that the pipeline has ended
+    args:
+      message: "End Add Products Pipeline"

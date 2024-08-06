@@ -83,7 +83,7 @@ class AttributesToWatchProviderTest extends TestCase
         $provider = $this->instantiateTestObject([
             'attributesToWatch' => [
                 'custom_attr_to_watch_1' => Aspect::STOCK,
-                'custom_attr_to_watch_2' => Aspect::DISPLAY,
+                'custom_attr_to_watch_2' => Aspect::RELATIONS,
             ],
         ]);
         $attributesToIndex = $provider->getAttributeCodes();

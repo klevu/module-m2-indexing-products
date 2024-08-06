@@ -17,8 +17,7 @@ enum Aspect: int
     case NONE = 0;
     case ALL = 1;
     case ATTRIBUTES = 2;
-    case CATEGORIES = 3;
-    case DISPLAY = 4;
+    case RELATIONS = 3;
     case PRICE = 5;
     case STOCK = 6;
     case VISIBILITY = 7;
@@ -32,9 +31,8 @@ enum Aspect: int
         {
             self::NONE => 'Nothing',
             self::ALL => 'Everything',
-            self::ATTRIBUTES => 'Indexed Attributes',
-            self::CATEGORIES => 'Categories',
-            self::DISPLAY => 'Display Only Attributes',
+            self::ATTRIBUTES => 'Attributes',
+            self::RELATIONS => 'Relations',
             self::PRICE => 'Price',
             self::STOCK => 'Stock',
             self::VISIBILITY => 'Visibility',

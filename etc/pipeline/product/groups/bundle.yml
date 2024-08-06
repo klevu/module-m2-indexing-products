@@ -1,0 +1,36 @@
+stages:
+  getCustomerGroups:
+    pipeline: Stage\Extract
+    args:
+      extraction: store::getForCurrentStore().customer_groups # GET ALL CUSTOMER GROUPS FOR STORE
+      transformations: ToString
+  IterateCustomerGroups:
+    pipeline: Pipeline\Iterate # LOOP OVER ALL CUSTOMER GROUPS
+    args:
+      continueOnException: ~
+    stages:
+      SetCustomerGroupId:
+        pipeline: Stage\SetCustomerGroupId
+      CreateCurrentGroupKey:
+        pipeline: Stage\Transform
+        args:
+          transformation: Prepend("grp_")
+      RegisterCurrentGroupKey:
+        pipeline: Stage\RegisterContext
+        args:
+          contextKey: "currentGroupKey"
+      AddCustomerGroupDataToRecord:
+        pipeline: Pipeline\CreateRecord
+        stages:
+          $currentGroupKey:::
+            pipeline: Pipeline\CreateRecord
+            stages:
+              attributes:
+                pipeline: Pipeline\CreateRecord
+                stages:
+                  price:
+                    import: Klevu_IndexingProducts::etc/pipeline/product/attributes/price/bundle.yml
+  FormatCustomerGroups:
+    pipeline: Stage\Transform
+    args:
+      transformation: Flatten(true)

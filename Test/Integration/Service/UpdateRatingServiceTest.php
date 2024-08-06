@@ -40,6 +40,7 @@ use Magento\Review\Model\ResourceModel\Rating\Option\Collection as RatingOptionC
 use Magento\Review\Model\ResourceModel\Review as ReviewResourceModel;
 use Magento\Review\Model\Review;
 use Magento\TestFramework\Helper\Bootstrap;
+use Magento\TestFramework\ObjectManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use TddWizard\Fixtures\Catalog\ProductFixturePool;
@@ -150,10 +151,12 @@ class UpdateRatingServiceTest extends TestCase
         $service = $this->instantiateTestObject();
         $service->execute($productFixture->getProduct());
 
-        $this->objectManager->removeSharedInstance(
-            className: AttributeRepositoryInterface::class,
-            forPreference: true,
-        );
+        if ($this->objectManager instanceof ObjectManager) {
+            $this->objectManager->removeSharedInstance(
+                className: AttributeRepositoryInterface::class,
+                forPreference: true,
+            );
+        }
     }
 
     /**
@@ -214,10 +217,12 @@ class UpdateRatingServiceTest extends TestCase
         $service = $this->instantiateTestObject();
         $service->execute($productFixture->getProduct());
 
-        $this->objectManager->removeSharedInstance(
-            className: AttributeRepositoryInterface::class,
-            forPreference: true,
-        );
+        if ($this->objectManager instanceof ObjectManager) {
+            $this->objectManager->removeSharedInstance(
+                className: AttributeRepositoryInterface::class,
+                forPreference: true,
+            );
+        }
     }
 
     /**

@@ -1,5 +1,0 @@
-stages:
-  -
-    pipeline: Stage\StaticValue
-    args:
-      value: []

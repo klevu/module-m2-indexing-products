@@ -16,6 +16,7 @@ use Magento\Catalog\Api\Data\ProductAttributeInterface;
 use Magento\Eav\Api\Data\AttributeInterface;
 use Magento\Store\Api\Data\StoreInterface;
 use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 
 class AttributeIsIndexableDeterminer implements IsAttributeIndexableDeterminerInterface
 {
@@ -72,12 +73,29 @@ class AttributeIsIndexableDeterminer implements IsAttributeIndexableDeterminerIn
         $indexAs = (int)$attribute->getData( //@phpstan-ignore-line
             key: MagentoAttributeInterface::ATTRIBUTE_PROPERTY_IS_INDEXABLE,
         );
-        $isIndexable = $indexAs !== IndexType::NO_INDEX->value;
+        try {
+            $indexType = IndexType::from($indexAs);
+        } catch (\ValueError) {
+            $this->logWithScope(
+                store: $store,
+                level: LogLevel::WARNING,
+                message: 'Store ID: {storeId} Attribute ID: {attributeId} has an invalid {attributeProperty} value',
+                context: [
+                    'storeId' => $store->getId(),
+                    'attributeId' => $attribute->getAttributeId(),
+                    'attributeProperty' => MagentoAttributeInterface::ATTRIBUTE_PROPERTY_IS_INDEXABLE,
+                    'indexAs' => $indexAs,
+                    'method' => __METHOD__,
+                ],
+            );
 
-        if (!$isIndexable) {
-            $currentScope = $this->scopeProvider->getCurrentScope();
-            $this->scopeProvider->setCurrentScope(scope: $store);
-            $this->logger->debug(
+            return false;
+        }
+
+        if (!$indexType->isIndexable()) {
+            $this->logWithScope(
+                store: $store,
+                level: LogLevel::DEBUG,
                 // phpcs:ignore Generic.Files.LineLength.TooLong
                 message: 'Store ID: {storeId} Attribute ID: {attributeId} not indexable due to Klevu Index: {indexAs} in {method}',
                 context: [
@@ -87,13 +105,36 @@ class AttributeIsIndexableDeterminer implements IsAttributeIndexableDeterminerIn
                     'method' => __METHOD__,
                 ],
             );
-            if ($currentScope->getScopeObject()) {
-                $this->scopeProvider->setCurrentScope(scope: $currentScope->getScopeObject());
-            } else {
-                $this->scopeProvider->unsetCurrentScope();
-            }
         }
 
-        return $isIndexable;
+        return $indexType->isIndexable();
+    }
+
+    /**
+     * @param StoreInterface $store
+     * @param string $level
+     * @param string $message
+     * @param mixed[] $context
+     *
+     * @return void
+     */
+    private function logWithScope(
+        StoreInterface $store,
+        string $level,
+        string $message,
+        array $context = [],
+    ): void {
+        $currentScope = $this->scopeProvider->getCurrentScope();
+        $this->scopeProvider->setCurrentScope(scope: $store);
+        $this->logger->log(
+            level: $level,
+            message: $message,
+            context: $context,
+        );
+        if ($currentScope->getScopeObject()) {
+            $this->scopeProvider->setCurrentScope(scope: $currentScope->getScopeObject());
+        } else {
+            $this->scopeProvider->unsetCurrentScope();
+        }
     }
 }
