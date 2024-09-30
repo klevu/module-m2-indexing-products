@@ -6,9 +6,9 @@
 
 declare(strict_types=1);
 
-namespace Klevu\IndexingProducts\Test\Integration\Model\ResourceModel\Catalog\ConfigurableProduct;
+namespace Klevu\IndexingProducts\Test\Integration\Model\ResourceModel\Catalog\ConfigurableVariantProduct;
 
-use Klevu\IndexingProducts\Model\ResourceModel\Catalog\ConfigurableProduct\Collection as ConfigurableProductCollection;
+use Klevu\IndexingProducts\Model\ResourceModel\Catalog\ConfigurableVariantProduct\Collection as ConfigurableProductCollection; // phpcs:ignore Generic.Files.LineLength.TooLong
 use Klevu\TestFixtures\Catalog\ProductTrait;
 use Klevu\TestFixtures\Store\StoreFixturesPool;
 use Klevu\TestFixtures\Store\StoreTrait;
@@ -21,7 +21,7 @@ use PHPUnit\Framework\TestCase;
 use TddWizard\Fixtures\Catalog\ProductFixturePool;
 
 /**
- * @covers \Klevu\IndexingProducts\Model\ResourceModel\Catalog\ConfigurableProduct\Collection::class
+ * @covers \Klevu\IndexingProducts\Model\ResourceModel\Catalog\ConfigurableVariantProduct\Collection::class
  * @method ConfigurableProductCollection instantiateTestObject(?array $arguments = null)
  */
 class CollectionTest extends TestCase

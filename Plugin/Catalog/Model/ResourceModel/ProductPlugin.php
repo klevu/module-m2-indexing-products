@@ -14,7 +14,6 @@ use Klevu\IndexingApi\Service\Provider\AttributesToWatchProviderInterface;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Model\ProductFactory;
 use Magento\Catalog\Model\ResourceModel\Product as ProductResourceModel;
-use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\Framework\Model\AbstractModel;
 
 class ProductPlugin
@@ -114,7 +113,7 @@ class ProductPlugin
             return true;
         }
         foreach ($this->attributesToWatchProvider->getAttributeCodes() as $attribute) {
-            if (Configurable::TYPE_CODE === $product->getTypeId() && 'quantity_and_stock_status' === $attribute) {
+            if ('quantity_and_stock_status' === $attribute) {
                 // This attribute is always different even when saving the product with no changes.
                 // 'quantity_and_stock_status' = ['inStock' => true, qty => 1.0]
                 // becomes 'quantity_and_stock_status' = '1'

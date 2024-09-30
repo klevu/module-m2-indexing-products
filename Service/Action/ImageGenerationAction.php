@@ -10,7 +10,7 @@ namespace Klevu\IndexingProducts\Service\Action;
 
 use Klevu\IndexingApi\Service\Action\Image\ResizeActionInterface;
 use Klevu\IndexingApi\Service\Action\Image\SetWatermarkActionInterface;
-use Klevu\IndexingApi\Service\Action\ImageResizeActionInterface;
+use Klevu\IndexingApi\Service\Action\ImageGenerationActionInterface;
 use Klevu\IndexingApi\Service\Provider\Image\FrameworkImageProviderInterface;
 use Klevu\IndexingApi\Service\Provider\Image\IsDbStorageUsedProviderInterface;
 use Klevu\IndexingApi\Service\Provider\Image\PathProviderInterface;
@@ -21,7 +21,7 @@ use Magento\Framework\Filesystem\Directory\WriteInterface;
 use Magento\MediaStorage\Helper\File\Storage\Database as FileStorageDatabase;
 use Psr\Log\LoggerInterface;
 
-class ImageResizeAction implements ImageResizeActionInterface
+class ImageGenerationAction implements ImageGenerationActionInterface
 {
     /**
      * @var PathProviderInterface

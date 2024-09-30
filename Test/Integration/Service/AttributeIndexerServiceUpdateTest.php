@@ -21,8 +21,8 @@ use Klevu\TestFixtures\Catalog\Attribute\AttributeFixturePool;
 use Klevu\TestFixtures\Catalog\AttributeTrait;
 use Klevu\TestFixtures\Store\StoreFixturesPool;
 use Klevu\TestFixtures\Store\StoreTrait;
+use Klevu\TestFixtures\Traits\AttributeApiCallTrait;
 use Klevu\TestFixtures\Traits\ObjectInstantiationTrait;
-use Klevu\TestFixtures\Traits\PipelineAttributeApiCallTrait;
 use Klevu\TestFixtures\Traits\SetAuthKeysTrait;
 use Klevu\TestFixtures\Traits\TestImplementsInterfaceTrait;
 use Magento\Framework\ObjectManagerInterface;
@@ -36,10 +36,11 @@ use PHPUnit\Framework\TestCase;
  */
 class AttributeIndexerServiceUpdateTest extends TestCase
 {
+    use AttributeApiCallTrait;
     use AttributeTrait;
     use IndexingAttributesTrait;
     use ObjectInstantiationTrait;
-    use PipelineAttributeApiCallTrait;
+    use AttributeApiCallTrait;
     use SetAuthKeysTrait;
     use StoreTrait;
     use TestImplementsInterfaceTrait;
@@ -243,6 +244,9 @@ class AttributeIndexerServiceUpdateTest extends TestCase
                 $accountCredentials->restAuthKey,
             ),
         );
+
+        // call real SDK and let that throw the exception
+        $this->removeSharedApiInstances();
 
         $service = $this->instantiateTestObject();
         $service->execute($accountCredentials, 'KLEVU_PRODUCT');

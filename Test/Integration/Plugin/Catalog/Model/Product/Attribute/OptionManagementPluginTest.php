@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace Klevu\IndexingProducts\Test\Integration\Plugin\Catalog\Model\Product\Attribute;
 
+use Klevu\Configuration\Service\Provider\ScopeProviderInterface;
 use Klevu\Indexing\Model\IndexingAttribute;
 use Klevu\Indexing\Test\Integration\Traits\IndexingAttributesTrait;
 use Klevu\IndexingApi\Model\Source\Actions;
@@ -18,6 +19,7 @@ use Klevu\TestFixtures\Catalog\AttributeTrait;
 use Klevu\TestFixtures\Store\StoreFixturesPool;
 use Klevu\TestFixtures\Store\StoreTrait;
 use Klevu\TestFixtures\Traits\ObjectInstantiationTrait;
+use Klevu\TestFixtures\Traits\SetAuthKeysTrait;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
 use Magento\Catalog\Api\ProductAttributeRepositoryInterface;
 use Magento\Catalog\Model\Product\Attribute\OptionManagement as AttributeOptionManagement;
@@ -42,6 +44,7 @@ class OptionManagementPluginTest extends TestCase
     use AttributeTrait;
     use IndexingAttributesTrait;
     use ObjectInstantiationTrait;
+    use SetAuthKeysTrait;
     use StoreTrait;
 
     /**
@@ -88,8 +91,6 @@ class OptionManagementPluginTest extends TestCase
 
     /**
      * @magentoDbIsolation disabled
-     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/js_api_key klevu-js-api-key
-     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/rest_auth_key klevu-rest-auth-key
      */
     public function testAfterAdd_UpdatesIndexingEntities(): void
     {
@@ -97,6 +98,14 @@ class OptionManagementPluginTest extends TestCase
         $this->cleanIndexingAttributes($apiKey);
 
         $this->createStore();
+        $storeFixture = $this->storeFixturesPool->get('test_store');
+        $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
+        $scopeProvider->setCurrentScope($storeFixture->get());
+        $this->setAuthKeys(
+            scopeProvider: $scopeProvider,
+            jsApiKey: 'klevu-js-api-key',
+            restAuthKey: 'klevu-rest-auth-key',
+        );
 
         $this->createAttribute([
             'attribute_type' => 'configurable',
@@ -209,6 +218,15 @@ class OptionManagementPluginTest extends TestCase
         $this->cleanIndexingAttributes($apiKey);
 
         $this->createStore();
+        $storeFixture = $this->storeFixturesPool->get('test_store');
+        $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
+        $scopeProvider->setCurrentScope($storeFixture->get());
+
+        $this->setAuthKeys(
+            scopeProvider: $scopeProvider,
+            jsApiKey: $apiKey,
+            restAuthKey: 'klevu-rest-key',
+        );
 
         $this->createAttribute([
             'attribute_type' => 'configurable',
@@ -317,6 +335,15 @@ class OptionManagementPluginTest extends TestCase
         $this->cleanIndexingAttributes($apiKey);
 
         $this->createStore();
+        $storeFixture = $this->storeFixturesPool->get('test_store');
+        $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
+        $scopeProvider->setCurrentScope($storeFixture->get());
+
+        $this->setAuthKeys(
+            scopeProvider: $scopeProvider,
+            jsApiKey: $apiKey,
+            restAuthKey: 'klevu-rest-key',
+        );
 
         $this->createAttribute([
             'attribute_type' => 'configurable',

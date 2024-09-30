@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace Klevu\IndexingProducts\Test\Integration\Plugin\Catalog\Model\Product\Attribute;
 
+use Klevu\Configuration\Service\Provider\ScopeProviderInterface;
 use Klevu\Indexing\Model\IndexingEntity;
 use Klevu\Indexing\Test\Integration\Traits\IndexingEntitiesTrait;
 use Klevu\IndexingApi\Model\Source\Actions;
@@ -18,6 +19,7 @@ use Klevu\TestFixtures\Catalog\ProductTrait;
 use Klevu\TestFixtures\Store\StoreFixturesPool;
 use Klevu\TestFixtures\Store\StoreTrait;
 use Klevu\TestFixtures\Traits\ObjectInstantiationTrait;
+use Klevu\TestFixtures\Traits\SetAuthKeysTrait;
 use Magento\Catalog\Api\AttributeSetRepositoryInterface;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
 use Magento\Catalog\Api\Data\ProductInterface;
@@ -53,6 +55,7 @@ class ManagementPluginTest extends TestCase
     use IndexingEntitiesTrait;
     use ObjectInstantiationTrait;
     use ProductTrait;
+    use SetAuthKeysTrait;
     use StoreTrait;
 
     /**
@@ -64,13 +67,13 @@ class ManagementPluginTest extends TestCase
      */
     private ?string $pluginName = 'Klevu_IndexingProducts::ProductAttributeManagementPlugin';
     /**
-     * @var AttributeSetRepositoryInterface
+     * @var AttributeSetRepositoryInterface|null
      */
-    private AttributeSetRepositoryInterface $attributeSetRepository;
+    private ?AttributeSetRepositoryInterface $attributeSetRepository = null;
     /**
-     * @var AttributeGroupRepositoryInterface
+     * @var AttributeGroupRepositoryInterface|null
      */
-    private AttributeGroupRepositoryInterface $attributeGroupRepository;
+    private ?AttributeGroupRepositoryInterface $attributeGroupRepository = null;
 
     /**
      * @return void
@@ -120,6 +123,14 @@ class ManagementPluginTest extends TestCase
         $this->cleanIndexingEntities($apiKey);
 
         $this->createStore();
+        $storeFixture = $this->storeFixturesPool->get('test_store');
+        $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
+        $scopeProvider->setCurrentScope($storeFixture->get());
+        $this->setAuthKeys(
+            scopeProvider: $scopeProvider,
+            jsApiKey: $apiKey,
+            restAuthKey: 'klevu-rest-key',
+        );
 
         $this->createAttribute([
             'code' => 'klevu_test_attribute_1',
@@ -217,6 +228,14 @@ class ManagementPluginTest extends TestCase
         $this->cleanIndexingEntities($apiKey);
 
         $this->createStore();
+        $storeFixture = $this->storeFixturesPool->get('test_store');
+        $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
+        $scopeProvider->setCurrentScope($storeFixture->get());
+        $this->setAuthKeys(
+            scopeProvider: $scopeProvider,
+            jsApiKey: $apiKey,
+            restAuthKey: 'klevu-rest-key',
+        );
 
         $this->createAttribute([
             'code' => 'klevu_test_attribute_1',

@@ -11,25 +11,21 @@ namespace Klevu\IndexingProducts\Service\Provider;
 use Klevu\Configuration\Service\Provider\ScopeConfigProviderInterface;
 use Klevu\IndexingApi\Service\Provider\Discovery\ProductEntityCollectionInterface;
 use Klevu\IndexingApi\Service\Provider\EntityProviderInterface;
-use Magento\Bundle\Model\Product\Type as BundleType;
+use Klevu\IndexingProducts\Model\Source\EntitySubtypeOptions;
 use Magento\Catalog\Api\Data\ProductInterface;
-use Magento\Catalog\Model\Product\Type as ProductType;
 use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
-use Magento\ConfigurableProduct\Model\Product\Type\Configurable as ConfigurableType;
-use Magento\Downloadable\Model\Product\Type as DownloadableType;
-use Magento\GroupedProduct\Model\Product\Type\Grouped as GroupedType;
 use Magento\Store\Api\Data\StoreInterface;
 use Psr\Log\LoggerInterface;
 
 class ProductEntityProvider implements EntityProviderInterface
 {
-    public const ENTITY_SUBTYPE_SIMPLE = ProductType::TYPE_SIMPLE;
-    public const ENTITY_SUBTYPE_VIRTUAL = ProductType::TYPE_VIRTUAL;
-    public const ENTITY_SUBTYPE_DOWNLOADABLE = DownloadableType::TYPE_DOWNLOADABLE;
-    public const ENTITY_SUBTYPE_GROUPED = GroupedType::TYPE_CODE;
-    public const ENTITY_SUBTYPE_BUNDLE = BundleType::TYPE_CODE;
-    public const ENTITY_SUBTYPE_CONFIGURABLE = ConfigurableType::TYPE_CODE;
-    public const ENTITY_SUBTYPE_CONFIGURABLE_VARIANTS = 'configurable_variants';
+    public const ENTITY_SUBTYPE_SIMPLE = EntitySubtypeOptions::SIMPLE;
+    public const ENTITY_SUBTYPE_VIRTUAL = EntitySubtypeOptions::VIRTUAL;
+    public const ENTITY_SUBTYPE_DOWNLOADABLE = EntitySubtypeOptions::DOWNLOADABLE;
+    public const ENTITY_SUBTYPE_GROUPED = EntitySubtypeOptions::GROUPED;
+    public const ENTITY_SUBTYPE_BUNDLE = EntitySubtypeOptions::BUNDLE;
+    public const ENTITY_SUBTYPE_CONFIGURABLE = EntitySubtypeOptions::CONFIGURABLE;
+    public const ENTITY_SUBTYPE_CONFIGURABLE_VARIANTS = EntitySubtypeOptions::CONFIGURABLE_VARIANTS;
 
     /**
      * @var ProductEntityCollectionInterface

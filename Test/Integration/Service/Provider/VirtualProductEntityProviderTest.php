@@ -103,13 +103,13 @@ class VirtualProductEntityProviderTest extends TestCase
             $items[] = $searchResult;
         }
 
-        $this->assertCount(expectedCount: 2, haystack: $items);
         $productIds = array_map(
             callback: static function (ProductInterface $item): int {
                 return (int)$item->getId();
             },
             array: $items,
         );
+        $this->assertCount(expectedCount: 2, haystack: $productIds);
         $this->assertContains(needle: (int)$productFixture1->getId(), haystack: $productIds);
         $this->assertContains(needle: (int)$productFixture2->getId(), haystack: $productIds);
 
@@ -165,13 +165,13 @@ class VirtualProductEntityProviderTest extends TestCase
             $items[] = $searchResult;
         }
 
-        $this->assertCount(expectedCount: 2, haystack: $items);
         $productIds = array_map(
             callback: static function (ProductInterface $item): int {
                 return (int)$item->getId();
             },
             array: $items,
         );
+        $this->assertCount(expectedCount: 2, haystack: $productIds);
         $this->assertContains(needle: (int)$productFixture1->getId(), haystack: $productIds);
         $this->assertContains(needle: (int)$productFixture2->getId(), haystack: $productIds);
 

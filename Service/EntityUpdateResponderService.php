@@ -52,12 +52,12 @@ class EntityUpdateResponderService implements EntityUpdateResponderServiceInterf
      */
     public function execute(array $data): void
     {
-        if (empty($data[Entity::ENTITY_IDS])) {
+        if (empty($data[Entity::ENTITY_IDS]) && empty($data[Entity::ENTITY_SUBTYPES])) {
             $this->logger->debug(
                 message: 'Method: {method}, Debug: {message}',
                 context: [
                     'method' => __METHOD__,
-                    'message' => 'No entity Ids provided for KLEVU_PRODUCT entity update.',
+                    'message' => 'No entity Ids or sub types provided for KLEVU_PRODUCT entity update.',
                 ]);
 
             return;
@@ -96,10 +96,11 @@ class EntityUpdateResponderService implements EntityUpdateResponderServiceInterf
         return $this->entityUpdateFactory->create([
             'data' => [
                 Entity::ENTITY_TYPE => 'KLEVU_PRODUCT',
-                Entity::ENTITY_IDS => $data[Entity::ENTITY_IDS],
+                Entity::ENTITY_IDS => $data[Entity::ENTITY_IDS] ?? [],
                 Entity::STORE_IDS => $data[Entity::STORE_IDS] ?? [],
                 Entity::CUSTOMER_GROUP_IDS => $data[Entity::CUSTOMER_GROUP_IDS] ?? [],
                 Entity::ATTRIBUTES => $data[static::CHANGED_ATTRIBUTES] ?? [],
+                Entity::ENTITY_SUBTYPES => $data[Entity::ENTITY_SUBTYPES] ?? [],
             ],
         ]);
     }

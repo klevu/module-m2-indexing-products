@@ -130,9 +130,9 @@ class AttributeTypeMapperServiceTest extends TestCase
         $dataType = $service->execute($magentoAttribute);
 
         $this->assertSame(
-            expected: DataType::STRING,
+            expected: DataType::NUMBER,
             actual: $dataType,
-            message: sprintf('Expected %s, Received %s', DataType::STRING->value, $dataType->value),
+            message: sprintf('Expected %s, Received %s', DataType::NUMBER->value, $dataType->value),
         );
     }
 
@@ -266,9 +266,9 @@ class AttributeTypeMapperServiceTest extends TestCase
         $dataType = $service->execute($magentoAttribute);
 
         $this->assertSame(
-            expected: DataType::STRING,
+            expected: DataType::NUMBER,
             actual: $dataType,
-            message: sprintf('Expected %s, Received %s', DataType::STRING->value, $dataType->value),
+            message: sprintf('Expected %s, Received %s', DataType::NUMBER->value, $dataType->value),
         );
     }
 }

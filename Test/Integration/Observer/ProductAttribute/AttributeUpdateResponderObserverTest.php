@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace Klevu\IndexingProducts\Test\Integration\Observer;
+namespace Klevu\IndexingProducts\Test\Integration\Observer\ProductAttribute;
 
 use Klevu\Configuration\Service\Provider\ScopeProviderInterface;
 use Klevu\Indexing\Model\IndexingAttribute;
@@ -14,7 +14,7 @@ use Klevu\Indexing\Test\Integration\Traits\IndexingAttributesTrait;
 use Klevu\IndexingApi\Model\Source\Actions;
 use Klevu\IndexingApi\Model\Source\IndexType;
 use Klevu\IndexingProducts\Model\Source\Aspect;
-use Klevu\IndexingProducts\Observer\ProductAttributeObserver;
+use Klevu\IndexingProducts\Observer\ProductAttribute\AttributeUpdateResponderObserver;
 use Klevu\TestFixtures\Catalog\Attribute\AttributeFixturePool;
 use Klevu\TestFixtures\Catalog\AttributeTrait;
 use Klevu\TestFixtures\Store\StoreFixturesPool;
@@ -31,7 +31,10 @@ use Magento\Framework\ObjectManagerInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
 
-class ProductAttributeObserverTest extends TestCase
+/**
+ * @covers \Klevu\IndexingProducts\Observer\ProductAttribute\AttributeUpdateResponderObserver::class
+ */
+class AttributeUpdateResponderObserverTest extends TestCase
 {
     use AttributeTrait;
     use IndexingAttributesTrait;
@@ -42,8 +45,8 @@ class ProductAttributeObserverTest extends TestCase
 
     private const EVENT_NAME_DELETE = 'catalog_entity_attribute_delete_commit_after';
     private const EVENT_NAME_SAVE = 'catalog_entity_attribute_save_after';
-    private const OBSERVER_NAME_DELETE = 'Klevu_IndexingProducts_ProductAttributeDelete';
-    private const OBSERVER_NAME_SAVE = 'Klevu_IndexingProducts_ProductAttributeSave';
+    private const OBSERVER_NAME_DELETE = 'Klevu_IndexingProducts_ProductAttribute_AttributeUpdateResponder_Delete';
+    private const OBSERVER_NAME_SAVE = 'Klevu_IndexingProducts_ProductAttribute_AttributeUpdateResponder_Save';
 
     /**
      * @var ObjectManagerInterface|null
@@ -61,7 +64,7 @@ class ProductAttributeObserverTest extends TestCase
     {
         parent::setUp();
 
-        $this->implementationFqcn = ProductAttributeObserver::class;
+        $this->implementationFqcn = AttributeUpdateResponderObserver::class;
         $this->interfaceFqcn = ObserverInterface::class;
         $this->objectManager = Bootstrap::getObjectManager();
         $this->resourceModel = $this->objectManager->get(AttributeResourceModel::class);
@@ -88,9 +91,9 @@ class ProductAttributeObserverTest extends TestCase
 
         $this->assertArrayHasKey(key: self::OBSERVER_NAME_SAVE, array: $observers);
         $this->assertSame(
-            expected: ltrim(string: ProductAttributeObserver::class, characters: '\\'),
+            expected: ltrim(string: AttributeUpdateResponderObserver::class, characters: '\\'),
             actual: $observers[self::OBSERVER_NAME_SAVE]['instance'],
-        );
+        ); 
     }
 
     public function testDeleteObserver_IsConfigured(): void
@@ -100,7 +103,7 @@ class ProductAttributeObserverTest extends TestCase
 
         $this->assertArrayHasKey(key: self::OBSERVER_NAME_DELETE, array: $observers);
         $this->assertSame(
-            expected: ltrim(string: ProductAttributeObserver::class, characters: '\\'),
+            expected: ltrim(string: AttributeUpdateResponderObserver::class, characters: '\\'),
             actual: $observers[self::OBSERVER_NAME_DELETE]['instance'],
         );
     }

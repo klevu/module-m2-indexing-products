@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace Klevu\IndexingProducts\Test\Integration\Observer;
 
+use Klevu\Configuration\Service\Provider\ScopeProviderInterface;
 use Klevu\Indexing\Constants;
 use Klevu\Indexing\Model\IndexingEntity;
 use Klevu\Indexing\Model\ResourceModel\IndexingEntity\Collection as IndexingEntityCollection;
@@ -19,7 +20,9 @@ use Klevu\IndexingApi\Service\EntityDiscoveryOrchestratorServiceInterface;
 use Klevu\TestFixtures\Catalog\ProductTrait;
 use Klevu\TestFixtures\Store\StoreFixturesPool;
 use Klevu\TestFixtures\Store\StoreTrait;
+use Klevu\TestFixtures\Traits\AttributeApiCallTrait;
 use Klevu\TestFixtures\Traits\ObjectInstantiationTrait;
+use Klevu\TestFixtures\Traits\SetAuthKeysTrait;
 use Klevu\TestFixtures\Traits\TestImplementsInterfaceTrait;
 use Klevu\TestFixtures\Website\WebsiteFixturesPool;
 use Klevu\TestFixtures\Website\WebsiteTrait;
@@ -41,9 +44,11 @@ use TddWizard\Fixtures\Catalog\ProductFixturePool;
  */
 class DiscoverEntitiesAfterIntegrationObserverTest extends TestCase
 {
+    use AttributeApiCallTrait;
     use IndexingEntitiesTrait;
     use ObjectInstantiationTrait;
     use ProductTrait;
+    use SetAuthKeysTrait;
     use StoreTrait;
     use TestImplementsInterfaceTrait;
     use WebsiteTrait;
@@ -125,16 +130,31 @@ class DiscoverEntitiesAfterIntegrationObserverTest extends TestCase
             'code' => 'klevu_test_store_1',
             'key' => 'test_store_1',
         ]);
-        $storeFixture = $this->storeFixturesPool->get('test_store_1');
-        $store1 = $storeFixture->get();
+        $storeFixture1 = $this->storeFixturesPool->get('test_store_1');
+        $store1 = $storeFixture1->get();
+        $scopeProvider1 = $this->objectManager->get(ScopeProviderInterface::class);
+        $scopeProvider1->setCurrentScope($storeFixture1->get());
+        $this->setAuthKeys(
+            scopeProvider: $scopeProvider1,
+            jsApiKey: $apiKey1,
+            restAuthKey: 'klevu-rest-key',
+        );
 
         $this->createStore([
             'code' => 'klevu_test_store_2',
             'key' => 'test_store_2',
             'website_id' => $websiteFixture->getId(),
         ]);
-        $storeFixture = $this->storeFixturesPool->get('test_store_2');
-        $store2 = $storeFixture->get();
+        $storeFixture2 = $this->storeFixturesPool->get('test_store_2');
+        $store2 = $storeFixture2->get();
+        $scopeProvider2 = $this->objectManager->get(ScopeProviderInterface::class);
+        $scopeProvider2->setCurrentScope($storeFixture2->get());
+        $this->setAuthKeys(
+            scopeProvider: $scopeProvider2,
+            jsApiKey: $apiKey2,
+            restAuthKey: 'klevu-rest-key',
+            removeApiKeys: false,
+        );
 
         $this->createProduct(
             productData: [
@@ -213,6 +233,8 @@ class DiscoverEntitiesAfterIntegrationObserverTest extends TestCase
         );
         $existingCronScheduleItems = $existingCronSchedule->getItems();
         $existingScheduledItems = count($existingCronScheduleItems);
+
+        $this->mockSdkAttributeGetApiCall();
 
         $this->dispatchEvent(
             apiKey: $apiKey1,

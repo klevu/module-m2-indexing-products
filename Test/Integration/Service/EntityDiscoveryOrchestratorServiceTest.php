@@ -152,7 +152,7 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $this->cleanIndexingEntities($apiKey);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityType: 'KLEVU_PRODUCT', apiKeys: [$apiKey]);
+        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT'], apiKeys: [$apiKey]);
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);
@@ -234,7 +234,7 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $this->cleanIndexingEntities($apiKey);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityType: 'KLEVU_PRODUCT', apiKeys: [$apiKey]);
+        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT'], apiKeys: [$apiKey]);
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);
@@ -313,7 +313,7 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $this->cleanIndexingEntities($apiKey2);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityType: 'KLEVU_PRODUCT');
+        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);
@@ -401,7 +401,7 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $this->cleanIndexingEntities($apiKey);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityType: 'KLEVU_PRODUCT');
+        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);
@@ -454,7 +454,7 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityType: 'KLEVU_PRODUCT');
+        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);
@@ -557,7 +557,7 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityType: 'KLEVU_PRODUCT');
+        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);
@@ -609,7 +609,7 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityType: 'KLEVU_PRODUCT');
+        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);
@@ -744,7 +744,7 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityType: 'KLEVU_PRODUCT');
+        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);
@@ -844,7 +844,7 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityType: 'KLEVU_PRODUCT');
+        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);
@@ -984,7 +984,7 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityType: 'KLEVU_PRODUCT');
+        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);
@@ -1093,7 +1093,7 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityType: 'KLEVU_PRODUCT');
+        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);
@@ -1196,7 +1196,7 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityType: 'KLEVU_PRODUCT', entityIds: []);
+        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT'], entityIds: []);
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);
@@ -1300,7 +1300,7 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityType: 'KLEVU_PRODUCT', entityIds: [(int)$product1->getId()]);
+        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT'], entityIds: [(int)$product1->getId()]);
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);

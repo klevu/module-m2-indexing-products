@@ -5,8 +5,11 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
 
-    <preference for="Klevu\IndexingApi\Service\Action\ImageResizeActionInterface"
-                type="Klevu\IndexingProducts\Service\Action\ImageResizeAction"/>
+    <preference for="Klevu\IndexingProducts\Model\Source\EntitySubtypeOptionsInterface"
+                type="Klevu\IndexingProducts\Model\Source\EntitySubtypeOptions"/>
+
+    <preference for="Klevu\IndexingApi\Service\Action\ImageGenerationActionInterface"
+                type="Klevu\IndexingProducts\Service\Action\ImageGenerationAction"/>
 
     <preference for="Klevu\IndexingApi\Service\Action\Image\ResizeActionInterface"
                 type="Klevu\IndexingProducts\Service\Action\Image\ResizeAction"/>
@@ -25,6 +28,9 @@
 
     <preference for="Klevu\IndexingApi\Service\Provider\Catalog\ParentAnchorCategoryIdProviderInterface"
                 type="Klevu\IndexingProducts\Service\Provider\Catalog\ParentAnchorCategoryIdProvider"/>
+
+    <preference for="Klevu\IndexingProducts\Service\Provider\Catalog\Product\Collection\AddParentAttributeToCollectionModifierProviderInterface"
+                type="Klevu\IndexingProducts\Service\Provider\Catalog\Product\Collection\AddParentAttributeToCollectionModifierProvider"/>
 
     <preference for="Klevu\IndexingApi\Service\Provider\CatalogRule\CatalogRuleProductIdsProviderInterface"
                 type="Klevu\IndexingProducts\Service\Provider\CatalogRule\CatalogRuleProductIdsProvider"/>
@@ -73,7 +79,7 @@
         <arguments>
             <argument name="isIndexableDeterminers" xsi:type="array">
                 <item name="indexTypeIsIndexableDeterminer"
-                      xsi:type="object">Klevu\IndexingProducts\Service\Determiner\AttributeIsIndexableDeterminer</item>
+                      xsi:type="object">Klevu\IndexingProducts\Service\Determiner\IsAttributeIndexTypeIndexableDeterminer</item>
             </argument>
         </arguments>
     </virtualType>
@@ -271,10 +277,6 @@
             <argument name="attributeType" xsi:type="string">KLEVU_PRODUCT</argument>
             <argument name="attributeProviderProvider"
                       xsi:type="object">Klevu\IndexingProducts\Service\Provider\AttributeProviderProvider</argument>
-            <argument name="attributeMappers" xsi:type="array">
-                <item name="KLEVU_PRODUCT"
-                      xsi:type="object">Klevu\IndexingProducts\Service\Mapper\MagentoToKlevuAttributeMapper</item>
-            </argument>
             <argument name="isIndexableDeterminer"
                       xsi:type="object">Klevu\IndexingProducts\Service\Determiner\IsAttributeIndexableDeterminer</argument>
         </arguments>
@@ -349,7 +351,7 @@
         </arguments>
     </type>
 
-    <type name="Klevu\IndexingProducts\Service\Determiner\AttributeIsIndexableDeterminer">
+    <type name="Klevu\IndexingProducts\Service\Determiner\IsAttributeIndexTypeIndexableDeterminer">
         <arguments>
             <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
         </arguments>
@@ -361,10 +363,13 @@
                       xsi:type="object">Klevu\IndexingApi\Model\Source\IndexDataType</argument>
             <argument name="aspectOptions"
                       xsi:type="object">Klevu\IndexingProducts\Model\Source\AspectOptions</argument>
+            <argument name="entitySubtypeOptions"
+                      xsi:type="object">Klevu\IndexingProducts\Model\Source\EntitySubtypeOptions</argument>
             <argument name="defaultIndexingAttributesProvider"
                       xsi:type="object">Klevu\IndexingProducts\Service\Provider\DefaultIndexingAttributesProvider</argument>
             <argument name="indexableAttributeValidator"
                       xsi:type="object">Klevu\IndexingProducts\Validator\IndexableAttributeValidator</argument>
+            <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
         </arguments>
     </type>
 
@@ -453,7 +458,7 @@
         </arguments>
     </type>
 
-    <type name="Klevu\IndexingProducts\Service\Action\ImageResizeAction">
+    <type name="Klevu\IndexingProducts\Service\Action\ImageGenerationAction">
         <arguments>
             <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
         </arguments>
@@ -619,11 +624,31 @@
         </arguments>
     </type>
 
-    <type name="Klevu\IndexingProducts\Observer\ProductAttributeObserver">
+    <type name="Klevu\IndexingProducts\Observer\ProductAttribute\AttributeUpdateResponderObserver">
         <arguments>
             <argument name="responderService"
                       xsi:type="object">Klevu\IndexingProducts\Service\AttributeUpdateResponderService</argument>
             <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\IndexingProducts\Observer\ProductAttribute\EntityUpdateResponderObserver">
+        <arguments>
+            <argument name="responderService"
+                      xsi:type="object">Klevu\IndexingProducts\Service\EntityUpdateResponderService</argument>
+            <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\IndexingProducts\Observer\ProductAttribute\RegenerateConfigurationOverridesObserver">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
+            <argument name="configurationOverridesHandlers" xsi:type="array">
+                <item name="add_update"
+                      xsi:type="object">Klevu\IndexingProducts\Service\ConfigurationOverridesHandler\AddUpdate\Force</item>
+                <item name="delete"
+                      xsi:type="object">Klevu\IndexingProducts\Service\ConfigurationOverridesHandler\Delete\Force</item>
+            </argument>
         </arguments>
     </type>
 
@@ -694,8 +719,6 @@
     <virtualType name="Klevu\IndexingProducts\Observer\Sync\Attributes\AddAttributeObserver"
                  type="Klevu\Indexing\Observer\Sync\Attributes\AddAttributeObserver">
         <arguments>
-            <argument name="attributeToNameMapper"
-                      xsi:type="object">Klevu\IndexingProducts\Service\Mapper\MagentoToKlevuAttributeMapper</argument>
             <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
             <argument name="updateIndexingAttributeActionsAction"
                       xsi:type="object">Klevu\IndexingProducts\Service\Action\UpdateIndexingAttributeActionsAction\Add</argument>
@@ -735,8 +758,6 @@
     <virtualType name="Klevu\IndexingProducts\Observer\Sync\Attributes\UpdateAttributeObserver"
                  type="Klevu\Indexing\Observer\Sync\Attributes\UpdateAttributeObserver">
         <arguments>
-            <argument name="attributeToNameMapper"
-                      xsi:type="object">Klevu\IndexingProducts\Service\Mapper\MagentoToKlevuAttributeMapper</argument>
             <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
             <argument name="updateIndexingAttributeActionsAction"
                       xsi:type="object">Klevu\IndexingProducts\Service\Action\UpdateIndexingAttributeActionsAction\Update</argument>
@@ -776,8 +797,6 @@
     <virtualType name="Klevu\IndexingProducts\Observer\Sync\Attributes\DeleteAttributeObserver"
                  type="Klevu\Indexing\Observer\Sync\Attributes\DeleteAttributeObserver">
         <arguments>
-            <argument name="attributeToNameMapper"
-                      xsi:type="object">Klevu\IndexingProducts\Service\Mapper\MagentoToKlevuAttributeMapper</argument>
             <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
             <argument name="updateIndexingAttributeActionsAction"
                       xsi:type="object">Klevu\IndexingProducts\Service\Action\UpdateIndexingAttributeActionsAction\Delete</argument>
@@ -819,6 +838,7 @@
             <argument name="entityType"
                       xsi:type="const">Magento\Catalog\Api\Data\ProductAttributeInterface::ENTITY_TYPE_CODE</argument>
             <argument name="attributeMapping" xsi:type="array">
+                <item name="category_ids" xsi:type="string">listCategory</item>
                 <item name="image" xsi:type="null"/>
                 <item name="klevu_image" xsi:type="string">image</item>
                 <item name="klevu_rating" xsi:type="string">rating</item>
@@ -830,12 +850,19 @@
         </arguments>
     </virtualType>
 
+    <type name="Klevu\Indexing\Service\Provider\MagentoToKlevuAttributeMapperProvider">
+        <arguments>
+            <argument name="magentoToKlevuAttributeMappers" xsi:type="array">
+                <item name="KLEVU_PRODUCT"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Mapper\MagentoToKlevuAttributeMapper</item>
+            </argument>
+        </arguments>
+    </type>
+
     <virtualType name="Klevu\IndexingProducts\Service\Provider\DefaultIndexingAttributesProvider"
                  type="Klevu\Indexing\Service\Provider\DefaultIndexingAttributesProvider">
         <arguments>
             <argument name="entityType" xsi:type="string">KLEVU_PRODUCT</argument>
-            <argument name="attributeToNameMapper"
-                      xsi:type="object">Klevu\IndexingProducts\Service\Mapper\MagentoToKlevuAttributeMapper</argument>
         </arguments>
     </virtualType>
 
@@ -966,6 +993,78 @@
         </arguments>
     </virtualType>
 
+    <virtualType name="Klevu\IndexingProducts\Service\Provider\GeneratedConfigurationOverridesFilepathProvider\AddUpdate"
+                 type="Klevu\Indexing\Service\Provider\GeneratedConfigurationOverridesFilepathProvider">
+        <arguments>
+            <argument name="filepathInVar" xsi:type="string">klevu/indexing/pipeline/product/add_update.overrides.yml</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Klevu\IndexingProducts\Service\Provider\AttributesForConfigurationOverrideProvider">
+        <arguments>
+            <argument name="attributeCollection"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\Discovery\ProductAttributeCollection</argument>
+            <argument name="attributeMapper"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Mapper\MagentoToKlevuAttributeMapper</argument>
+        </arguments>
+    </type>
+
+    <virtualType name="Klevu\IndexingProducts\Service\Action\GenerateConfigurationOverridesContentAction"
+                 type="Klevu\Indexing\Service\Action\GenerateConfigurationOverridesContentAction">
+        <arguments>
+            <argument name="attributesForConfigurationOverridesProvider"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\AttributesForConfigurationOverrideProvider</argument>
+            <argument name="entityType" xsi:type="string">KLEVU_PRODUCT</argument>
+            <argument name="currentEntityExtractionAccessor" xsi:type="string">currentProduct::</argument>
+            <argument name="entitySubtypeToParentPathMap" xsi:type="array">
+                <item name="simple" xsi:type="string">iterateIndexingRecords.processProduct.default.generateRecord.attributes</item>
+                <item name="virtual" xsi:type="string">iterateIndexingRecords.processProduct.virtualProduct.generateRecord.attributes</item>
+                <item name="downloadable" xsi:type="string">iterateIndexingRecords.processProduct.downloadableProduct.generateRecord.attributes</item>
+                <item name="grouped" xsi:type="string">iterateIndexingRecords.processProduct.groupedProduct.generateRecord.attributes</item>
+                <item name="bundle" xsi:type="string">iterateIndexingRecords.processProduct.bundleProduct.generateRecord.attributes</item>
+                <item name="configurable" xsi:type="string">iterateIndexingRecords.processProduct.configurableProduct.generateRecord.attributes</item>
+                <item name="configurable_variants" xsi:type="string">iterateIndexingRecords.processProduct.variantProduct.generateRecord.attributes</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Klevu\IndexingProducts\Service\ConfigurationOverridesHandler\AddUpdate"
+                 type="Klevu\Indexing\Service\ConfigurationOverridesHandler">
+        <arguments>
+            <argument name="generatedConfigurationOverridesFilepathProvider"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\GeneratedConfigurationOverridesFilepathProvider\AddUpdate</argument>
+            <argument name="generateConfigurationOverridesContentAction"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Action\GenerateConfigurationOverridesContentAction</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="Klevu\IndexingProducts\Service\ConfigurationOverridesHandler\AddUpdate\Force"
+                 type="Klevu\IndexingProducts\Service\ConfigurationOverridesHandler\AddUpdate">
+        <arguments>
+            <argument name="forceFileRegeneration" xsi:type="boolean">true</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Klevu\IndexingProducts\Service\Provider\GeneratedConfigurationOverridesFilepathProvider\Delete"
+                 type="Klevu\Indexing\Service\Provider\GeneratedConfigurationOverridesFilepathProvider">
+        <arguments>
+            <argument name="filepathInVar" xsi:type="string">klevu/indexing/pipeline/product/delete.overrides.yml</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Klevu\IndexingProducts\Service\ConfigurationOverridesHandler\Delete"
+                 type="Klevu\Indexing\Service\ConfigurationOverridesHandler">
+        <arguments>
+            <argument name="generatedConfigurationOverridesFilepathProvider"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\GeneratedConfigurationOverridesFilepathProvider\Delete</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="Klevu\IndexingProducts\Service\ConfigurationOverridesHandler\Delete\Force"
+                 type="Klevu\IndexingProducts\Service\ConfigurationOverridesHandler\Delete">
+        <arguments>
+            <argument name="forceFileRegeneration" xsi:type="boolean">true</argument>
+        </arguments>
+    </virtualType>
+
     <virtualType name="Klevu\IndexingProducts\Service\EntityIndexerService"
                  type="Klevu\Indexing\Service\EntityIndexerService">
         <arguments>
@@ -975,13 +1074,62 @@
             </argument>
         </arguments>
     </virtualType>
+
+    <type name="Klevu\PlatformPipelines\Service\Provider\PipelineConfigurationOverridesFilepathsProviderProvider">
+        <arguments>
+            <argument name="pipelineConfigurationOverridesFilepathsProviders" xsi:type="array">
+                <item name="KLEVU_PRODUCT::add"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\PipelineConfigurationOverridesFilepathsProvider\Add</item>
+                <item name="KLEVU_PRODUCT::delete"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\PipelineConfigurationOverridesFilepathsProvider\Delete</item>
+                <item name="KLEVU_PRODUCT::update"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\PipelineConfigurationOverridesFilepathsProvider\Update</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\PlatformPipelines\Service\Provider\PipelineConfigurationProvider">
+        <arguments>
+            <argument name="pipelineConfigurationFilepaths" xsi:type="array">
+                <item name="KLEVU_PRODUCT::add" xsi:type="string">Klevu_IndexingProducts::etc/pipeline/add_update.yml</item>
+                <item name="KLEVU_PRODUCT::delete" xsi:type="string">Klevu_IndexingProducts::etc/pipeline/delete.yml</item>
+                <item name="KLEVU_PRODUCT::update" xsi:type="string">Klevu_IndexingProducts::etc/pipeline/add_update.yml</item>
+            </argument>
+            <argument name="pipelineConfigurationOverridesFilepathsProviders" xsi:type="array">
+                <item name="KLEVU_PRODUCT::add"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\PipelineConfigurationOverridesFilepathsProvider\Add</item>
+                <item name="KLEVU_PRODUCT::delete"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\PipelineConfigurationOverridesFilepathsProvider\Delete</item>
+                <item name="KLEVU_PRODUCT::update"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\PipelineConfigurationOverridesFilepathsProvider\Update</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <virtualType name="Klevu\IndexingProducts\Service\Provider\PipelineConfigurationOverridesFilepathsProvider\Add"
+                 type="Klevu\PlatformPipelines\Service\Provider\PipelineConfigurationOverridesFilepathsProvider">
+        <arguments>
+            <argument name="generatedConfigurationOverridesFilepathProvider"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\GeneratedConfigurationOverridesFilepathProvider\AddUpdate</argument>
+        </arguments>
+    </virtualType>
+
     <virtualType name="Klevu\IndexingProducts\Service\EntityIndexerService\Add"
                  type="Klevu\IndexingProducts\Service\EntityIndexerService">
         <arguments>
             <argument name="entityIndexingRecordProvider"
                       xsi:type="object">Klevu\IndexingProducts\Service\Provider\Sync\EntityIndexingRecordProvider\Add</argument>
-            <argument name="pipelineConfigurationFilepath"
-                      xsi:type="string">Klevu_IndexingProducts::etc/pipeline/add_update.yml</argument>
+            <argument name="pipelineIdentifier" xsi:type="string">KLEVU_PRODUCT::add</argument>
+            <argument name="configurationOverridesHandler"
+                      xsi:type="object">Klevu\IndexingProducts\Service\ConfigurationOverridesHandler\AddUpdate</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Klevu\IndexingProducts\Service\Provider\PipelineConfigurationOverridesFilepathsProvider\Delete"
+                 type="Klevu\PlatformPipelines\Service\Provider\PipelineConfigurationOverridesFilepathsProvider">
+        <arguments>
+            <argument name="generatedConfigurationOverridesFilepathProvider"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\GeneratedConfigurationOverridesFilepathProvider\Delete</argument>
         </arguments>
     </virtualType>
 
@@ -990,8 +1138,17 @@
         <arguments>
             <argument name="entityIndexingRecordProvider"
                       xsi:type="object">Klevu\IndexingProducts\Service\Provider\Sync\EntityIndexingRecordProvider\Delete</argument>
-            <argument name="pipelineConfigurationFilepath"
-                      xsi:type="string">Klevu_IndexingProducts::etc/pipeline/delete.yml</argument>
+            <argument name="pipelineIdentifier" xsi:type="string">KLEVU_PRODUCT::delete</argument>
+            <argument name="configurationOverridesHandler"
+                      xsi:type="object">Klevu\IndexingProducts\Service\ConfigurationOverridesHandler\Delete</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Klevu\IndexingProducts\Service\Provider\PipelineConfigurationOverridesFilepathsProvider\Update"
+                 type="Klevu\PlatformPipelines\Service\Provider\PipelineConfigurationOverridesFilepathsProvider">
+        <arguments>
+            <argument name="generatedConfigurationOverridesFilepathProvider"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\GeneratedConfigurationOverridesFilepathProvider\AddUpdate</argument>
         </arguments>
     </virtualType>
 
@@ -1000,8 +1157,9 @@
         <arguments>
             <argument name="entityIndexingRecordProvider"
                       xsi:type="object">Klevu\IndexingProducts\Service\Provider\Sync\EntityIndexingRecordProvider\Update</argument>
-            <argument name="pipelineConfigurationFilepath"
-                      xsi:type="string">Klevu_IndexingProducts::etc/pipeline/add_update.yml</argument>
+            <argument name="pipelineIdentifier" xsi:type="string">KLEVU_PRODUCT::update</argument>
+            <argument name="configurationOverridesHandler"
+                      xsi:type="object">Klevu\IndexingProducts\Service\ConfigurationOverridesHandler\AddUpdate</argument>
         </arguments>
     </virtualType>
 
@@ -1049,4 +1207,80 @@
         </arguments>
     </type>
 
+    <virtualType name="Klevu\IndexingProducts\Service\Modifier\Catalog\Product\Collection\AddCombinedStatusAttributeToCollectionModifier"
+                 type="Klevu\IndexingProducts\Service\Modifier\Catalog\Product\Collection\AddParentAttributeToCollectionModifier">
+        <!-- For configurable variant collection combine the status of parent and child products -->
+        <!-- i.e. if parent or child is disabled, return disabled, else if both are enabled return enabled -->
+        <arguments>
+            <argument name="attributeCode" xsi:type="const">Magento\Catalog\Api\Data\ProductInterface::STATUS</argument>
+            <argument name="columnName" xsi:type="string">combined_status</argument>
+            <argument name="columnCreationModifier"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Modifier\Catalog\Product\Collection\Column\StatusAttributeJoinColumnCreationModifier</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Klevu\IndexingProducts\Service\Provider\Catalog\Product\Collection\AddParentAttributeToCollectionModifierProvider">
+        <arguments>
+            <argument name="modifiers" xsi:type="array">
+                <item name="add_combined_status"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Modifier\Catalog\Product\Collection\AddCombinedStatusAttributeToCollectionModifier</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Indexing\Service\Action\ConvertEavAttributeToIndexingAttributeAction">
+        <arguments>
+            <argument name="isIndexableDeterminers" xsi:type="array">
+                <item name="KLEVU_PRODUCT"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Determiner\IsAttributeIndexableDeterminer</item>
+            </argument>
+            <argument name="attributeTypeMappers" xsi:type="array">
+                <item name="KLEVU_PRODUCT"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Mapper\AttributeTypeMapperService</item>
+            </argument>
+            <argument name="attributeMappers" xsi:type="array">
+                <item name="KLEVU_PRODUCT"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Mapper\MagentoToKlevuAttributeMapper</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Indexing\Console\Command\ConfigurationDumpPipelineCommand">
+        <arguments>
+            <argument name="entityIndexerServices" xsi:type="array">
+                <item name="KLEVU_PRODUCT::add"
+                      xsi:type="object">Klevu\IndexingProducts\Service\EntityIndexerService\Add</item>
+                <item name="KLEVU_PRODUCT::delete"
+                      xsi:type="object">Klevu\IndexingProducts\Service\EntityIndexerService\Delete</item>
+                <item name="KLEVU_PRODUCT::update"
+                      xsi:type="object">Klevu\IndexingProducts\Service\EntityIndexerService\Update</item>
+            </argument>
+            <argument name="configurationOverridesHandlers" xsi:type="array">
+                <item name="KLEVU_PRODUCT" xsi:type="array">
+                    <item name="add_update"
+                          xsi:type="object">Klevu\IndexingProducts\Service\ConfigurationOverridesHandler\AddUpdate</item>
+                    <item name="delete"
+                          xsi:type="object">Klevu\IndexingProducts\Service\ConfigurationOverridesHandler\Delete</item>
+                </item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Indexing\Console\Command\ConfigurationOverridesRegenerateCommand">
+        <arguments>
+            <argument name="configurationOverridesHandlers" xsi:type="array">
+                <item name="KLEVU_PRODUCT" xsi:type="array">
+                    <item name="add_update"
+                          xsi:type="object">Klevu\IndexingProducts\Service\ConfigurationOverridesHandler\AddUpdate\Force</item>
+                    <item name="delete"
+                          xsi:type="object">Klevu\IndexingProducts\Service\ConfigurationOverridesHandler\Delete\Force</item>
+                </item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Magento\Eav\Model\ResourceModel\Entity\Attribute">
+        <plugin name="klevu_indexingProducts_serializeCustomAttributeData"
+                type="Klevu\IndexingProducts\Plugin\Catalog\Model\ResourceModel\Attribute\SerializeCustomAttributeDataPlugin"/>
+    </type>
 </config>

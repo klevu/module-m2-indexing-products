@@ -229,13 +229,13 @@ class ConfigurableVariantsProductEntityProviderTest extends TestCase
         foreach ($searchResults1 as $searchResult) {
             $items1[] = $searchResult;
         }
-        $this->assertCount(expectedCount: 2, haystack: $items1);
         $product1Array = array_filter(
             array: $items1,
             callback: static function (ProductInterface $product) use ($productSimple1): bool {
                 return (int)$product->getId() === (int)$productSimple1->getId();
             },
         );
+        $this->assertCount(expectedCount: 1, haystack: $product1Array);
         $productSimple1Store1 = array_shift($product1Array);
         $this->assertSame(
             expected: 'Simple Product 1 Store 1',
@@ -269,13 +269,13 @@ class ConfigurableVariantsProductEntityProviderTest extends TestCase
         foreach ($searchResults2 as $searchResult) {
             $items2[] = $searchResult;
         }
-        $this->assertCount(expectedCount: 2, haystack: $items2);
         $product1Array = array_filter(
             array: $items2,
             callback: static function (ProductInterface $product) use ($productSimple1): bool {
                 return (int)$product->getId() === (int)$productSimple1->getId();
             },
         );
+        $this->assertCount(expectedCount: 1, haystack: $product1Array);
         $productSimple1Store2 = array_shift($product1Array);
         $this->assertSame(
             expected: 'Simple Product 1 Store 2',
@@ -309,13 +309,13 @@ class ConfigurableVariantsProductEntityProviderTest extends TestCase
         foreach ($searchResults3 as $searchResult) {
             $items3[] = $searchResult;
         }
-        $this->assertCount(expectedCount: 2, haystack: $items3);
         $product1Array = array_filter(
             array: $items3,
             callback: static function (ProductInterface $product) use ($productSimple1): bool {
                 return (int)$product->getId() === (int)$productSimple1->getId();
             },
         );
+        $this->assertCount(expectedCount: 1, haystack: $product1Array);
         $productSimple1Store3 = array_shift($product1Array);
         $this->assertSame(
             expected: 'Simple Product 1 Store 3',

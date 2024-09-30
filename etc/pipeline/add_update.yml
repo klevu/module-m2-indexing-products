@@ -113,6 +113,30 @@ stages:
                   validation: IsEqualTo("bundle")
               generateRecord:
                 import: Klevu_IndexingProducts::etc/pipeline/product/bundle.yml # use this file for bundle product data
+          virtualProduct:
+            stages:
+              getProductType:
+                pipeline: Stage\Extract
+                args:
+                  extraction: currentProduct::getTypeId()
+              validateProductType:
+                pipeline: Stage\Validate
+                args:
+                  validation: IsEqualTo("virtual")
+              generateRecord:
+                import: Klevu_IndexingProducts::etc/pipeline/product/default.yml # use this file for virtual product data
+          downloadableProduct:
+            stages:
+              getProductType:
+                pipeline: Stage\Extract
+                args:
+                  extraction: currentProduct::getTypeId()
+              validateProductType:
+                pipeline: Stage\Validate
+                args:
+                  validation: IsEqualTo("downloadable")
+              generateRecord:
+                import: Klevu_IndexingProducts::etc/pipeline/product/default.yml # use this file for downloadable product data
           default:
             stages:
               generateRecord:

@@ -16,6 +16,7 @@ use Klevu\Indexing\Test\Integration\Traits\IndexingEntitiesTrait;
 use Klevu\IndexingApi\Model\Source\Actions;
 use Klevu\IndexingApi\Model\Source\IndexerResultStatuses;
 use Klevu\IndexingApi\Service\EntityIndexerServiceInterface;
+use Klevu\IndexingProducts\Constants;
 use Klevu\IndexingProducts\Service\EntityIndexerService\Delete as EntityIndexerServiceVirtualType;
 use Klevu\PhpSDK\Model\Indexing\RecordIterator;
 use Klevu\PhpSDKPipelines\Model\ApiPipelineResult;
@@ -36,6 +37,7 @@ use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\Downloadable\Model\Product\Type as DownloadableType;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\GroupedProduct\Model\Product\Type\Grouped;
+use Magento\Store\Model\StoreManagerInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
 use TddWizard\Fixtures\Catalog\CategoryFixturePool;
@@ -229,7 +231,7 @@ class EntityIndexerServiceDeleteTest extends TestCase
         );
 
         ConfigFixture::setForStore(
-            path: 'klevu/indexing/enable_product_sync',
+            path: Constants::XML_PATH_PRODUCT_SYNC_ENABLED,
             value: 0,
             storeCode: $storeFixture->getCode(),
         );
@@ -937,10 +939,10 @@ class EntityIndexerServiceDeleteTest extends TestCase
             $this->markTestSkipped('Klevu API keys are not set in `dev/tests/integration/phpunit.xml`. Test Skipped');
         }
 
-        $this->createStore();
-        $storeFixture = $this->storeFixturesPool->get('test_store');
+        $storeManager = $this->objectManager->get(StoreManagerInterface::class);
+        $store = $storeManager->getDefaultStoreView();
         $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
-        $scopeProvider->setCurrentScope($storeFixture->get());
+        $scopeProvider->setCurrentScope(scope: $store);
         $this->setAuthKeys(
             scopeProvider: $scopeProvider,
             jsApiKey: $jsApiKey,

@@ -41,5 +41,7 @@ stages:
         import: Klevu_IndexingProducts::etc/pipeline/product/attributes/rating.yml
       ratingCount:
         import: Klevu_IndexingProducts::etc/pipeline/product/attributes/rating_count.yml
+      createdAt:
+        import: Klevu_IndexingProducts::etc/pipeline/product/attributes/created_at.yml
   groups:
     import: Klevu_IndexingProducts::etc/pipeline/product/groups/grouped.yml

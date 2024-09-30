@@ -10,6 +10,7 @@ namespace Klevu\IndexingProducts\Test\Integration\Service\Provider;
 
 use Klevu\Configuration\Service\Provider\ScopeProviderInterface;
 use Klevu\IndexingApi\Service\Provider\EntityProviderInterface;
+use Klevu\IndexingProducts\Constants;
 use Klevu\IndexingProducts\Service\Provider\ProductEntityProvider;
 use Klevu\TestFixtures\Catalog\ProductTrait;
 use Klevu\TestFixtures\Store\StoreFixturesPool;
@@ -264,7 +265,7 @@ class ProductEntityProviderTest extends TestCase
         $scopeProvider->setCurrentScope($storeFixture->get());
 
         ConfigFixture::setForStore(
-            path: 'klevu/indexing/enable_product_sync',
+            path: Constants::XML_PATH_PRODUCT_SYNC_ENABLED,
             value: 0,
             storeCode: $storeFixture->getCode(),
         );

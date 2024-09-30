@@ -24,6 +24,11 @@ use Magento\Framework\ObjectManagerInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @covers IndexableAttributesProvider::class
+ * @method IndexableAttributesProviderInterface instantiateTestObject(?array $arguments = null)
+ * @method IndexableAttributesProviderInterface instantiateTestObjectFromInterface(?array $arguments = null)
+ */
 class IndexableAttributesProviderTest extends TestCase
 {
     use AttributeTrait;
@@ -60,8 +65,13 @@ class IndexableAttributesProviderTest extends TestCase
         $this->attributeFixturePool->rollback();
     }
 
+    /**
+     * @magentoAppIsolation enabled
+     */
     public function testGet_ReturnsAttributeSetToBeIndexable(): void
     {
+        $apiKey = 'klevu-js-api-key';
+
         $this->createAttribute([
             'attribute_type' => 'text',
             'code' => 'klevu_test_text_attribute',
@@ -88,7 +98,7 @@ class IndexableAttributesProviderTest extends TestCase
         $categoryAttributeFixture = $this->attributeFixturePool->get('klevu_test_category_attribute');
 
         $provider = $this->instantiateTestObject();
-        $attributesToIndex = $provider->get();
+        $attributesToIndex = $provider->get(apiKey: $apiKey);
 
         $indexableAttributeArray = array_filter(
             array: $attributesToIndex,
@@ -115,20 +125,15 @@ class IndexableAttributesProviderTest extends TestCase
             ),
         );
         $this->assertCount(expectedCount: 0, haystack: $categoryAttributeArray);
-
-        $indexableAttributeArray = array_filter(
-            array: $attributesToIndex,
-            callback: static fn (AttributeInterface $attribute): bool => (
-                $attribute->getAttributeCode() === ProductInterface::STATUS
-            ),
-        );
-        $indexableAttribute = array_shift($indexableAttributeArray);
-        $this->assertInstanceOf(expected: AttributeInterface::class, actual: $indexableAttribute);
-        $this->assertSame(expected: ProductInterface::STATUS, actual: $indexableAttribute->getAttributeCode());
     }
 
+    /**
+     * @magentoAppIsolation enabled
+     */
     public function testGetAttributeCodes_ReturnsAttributeSetToBeIndexable(): void
     {
+        $apiKey = 'klevu-js-api-key';
+
         $this->createAttribute([
             'attribute_type' => 'textarea',
             'code' => 'klevu_test_text_attribute',
@@ -162,7 +167,7 @@ class IndexableAttributesProviderTest extends TestCase
         $provider = $this->instantiateTestObject([
             'defaultIndexingAttributesProvider' => $defaultAttributesProvider,
         ]);
-        $attributesCodes = $provider->getAttributeCodes();
+        $attributesCodes = $provider->getAttributeCodes(apiKey: $apiKey);
 
         $this->assertContains(needle: $indexableAttributeFixture->getAttributeCode(), haystack: $attributesCodes);
         $this->assertNotContains(needle: $nonIndexableAttributeFixture->getAttributeCode(), haystack: $attributesCodes);

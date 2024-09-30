@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace Klevu\IndexingProducts\Test\Integration\Plugin\Catalog\Model\Product\Price;
 
+use Klevu\Configuration\Service\Provider\ScopeProviderInterface;
 use Klevu\Indexing\Model\IndexingEntity;
 use Klevu\Indexing\Test\Integration\Traits\IndexingEntitiesTrait;
 use Klevu\IndexingApi\Model\Source\Actions;
@@ -16,6 +17,7 @@ use Klevu\TestFixtures\Catalog\ProductTrait;
 use Klevu\TestFixtures\Store\StoreFixturesPool;
 use Klevu\TestFixtures\Store\StoreTrait;
 use Klevu\TestFixtures\Traits\ObjectInstantiationTrait;
+use Klevu\TestFixtures\Traits\SetAuthKeysTrait;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Model\AbstractModel;
 use Magento\Catalog\Model\Product\Price\PricePersistence;
@@ -37,6 +39,7 @@ class PricePersistencePluginTest extends TestCase
     use IndexingEntitiesTrait;
     use ObjectInstantiationTrait;
     use ProductTrait;
+    use SetAuthKeysTrait;
     use StoreTrait;
 
     /**
@@ -124,16 +127,21 @@ class PricePersistencePluginTest extends TestCase
 
     /**
      * @magentoDbIsolation disabled
-     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/js_api_key klevu-js-api-key
-     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/rest_auth_key klevu-rest-auth-key
      * @magentoConfigFixture default/klevu/indexing/exclude_disabled_products 1
      */
     public function testUpdateBasePrice_UpdatesIndexingEntity(): void
     {
         $apiKey = 'klevu-js-api-key';
-        $this->cleanIndexingEntities($apiKey);
 
         $this->createStore();
+        $storeFixture = $this->storeFixturesPool->get('test_store');
+        $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
+        $scopeProvider->setCurrentScope($storeFixture->get());
+        $this->setAuthKeys(
+            scopeProvider: $scopeProvider,
+            jsApiKey: $apiKey,
+            restAuthKey: 'klevu-rest-key',
+        );
 
         $this->createProduct(productData: [
             'price' => 12.50,
@@ -184,8 +192,6 @@ class PricePersistencePluginTest extends TestCase
 
     /**
      * @magentoDbIsolation disabled
-     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/js_api_key klevu-js-api-key
-     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/rest_auth_key klevu-rest-auth-key
      * @magentoConfigFixture default/klevu/indexing/exclude_disabled_products 1
      */
     public function testNewStoreScopeBasePrice_UpdatesIndexingEntity(): void
@@ -195,7 +201,13 @@ class PricePersistencePluginTest extends TestCase
 
         $this->createStore();
         $storeFixture = $this->storeFixturesPool->get('test_store');
-        $store = $storeFixture->get();
+        $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
+        $scopeProvider->setCurrentScope($storeFixture->get());
+        $this->setAuthKeys(
+            scopeProvider: $scopeProvider,
+            jsApiKey: $apiKey,
+            restAuthKey: 'klevu-rest-key',
+        );
 
         $this->createProduct(productData: [
             'price' => 12.50,
@@ -220,7 +232,7 @@ class PricePersistencePluginTest extends TestCase
 
         $prices = [
             [
-                'store_id' => $store->getId(),
+                'store_id' => $storeFixture->getId(),
                 $linkField => $product->getData($linkField),
                 'value' => 15.00,
             ],

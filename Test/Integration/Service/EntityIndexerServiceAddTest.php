@@ -15,7 +15,9 @@ use Klevu\Indexing\Service\EntityIndexerService;
 use Klevu\Indexing\Test\Integration\Traits\IndexingEntitiesTrait;
 use Klevu\IndexingApi\Model\Source\Actions;
 use Klevu\IndexingApi\Model\Source\IndexerResultStatuses;
+use Klevu\IndexingApi\Model\Source\IndexType;
 use Klevu\IndexingApi\Service\EntityIndexerServiceInterface;
+use Klevu\IndexingProducts\Constants;
 use Klevu\IndexingProducts\Service\EntityIndexerService\Add as EntityIndexerServiceVirtualType;
 use Klevu\PhpSDK\Model\Indexing\RecordIterator;
 use Klevu\PhpSDKPipelines\Model\ApiPipelineResult;
@@ -38,9 +40,14 @@ use Magento\Catalog\Model\Product\Type;
 use Magento\Catalog\Model\Product\Visibility;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\Downloadable\Model\Product\Type as DownloadableType;
+use Magento\Framework\App\Filesystem\DirectoryList as AppDirectoryList;
 use Magento\Framework\DataObject;
+use Magento\Framework\Exception\FileSystemException;
+use Magento\Framework\Filesystem\DirectoryList;
+use Magento\Framework\Filesystem\Io\File as FileIo;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\GroupedProduct\Model\Product\Type\Grouped;
+use Magento\Store\Model\Store;
 use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
 use TddWizard\Fixtures\Catalog\CategoryFixturePool;
@@ -69,6 +76,14 @@ class EntityIndexerServiceAddTest extends TestCase
      * @var ObjectManagerInterface|null
      */
     private ?ObjectManagerInterface $objectManager = null; // @phpstan-ignore-line
+    /**
+     * @var DirectoryList|null
+     */
+    private ?DirectoryList $directoryList = null;
+    /**
+     * @var FileIo|null
+     */
+    private ?FileIo $fileIo = null;
 
     /**
      * @return void
@@ -81,6 +96,9 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->interfaceFqcn = EntityIndexerServiceInterface::class;
         $this->implementationForVirtualType = EntityIndexerService::class;
         $this->objectManager = Bootstrap::getObjectManager();
+
+        $this->directoryList = $this->objectManager->get(DirectoryList::class);
+        $this->fileIo = $this->objectManager->get(FileIo::class);
 
         $this->storeFixturesPool = $this->objectManager->get(StoreFixturesPool::class);
         $this->attributeFixturePool = $this->objectManager->get(AttributeFixturePool::class);
@@ -190,6 +208,9 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->cleanIndexingEntities(apiKey: $apiKey);
     }
 
+    /**
+     * @magentoAppIsolation enabled
+     */
     public function testExecute_ReturnsNoop_WhenNoProductsToAdd(): void
     {
         $apiKey = 'klevu-js-key';
@@ -218,6 +239,7 @@ class EntityIndexerServiceAddTest extends TestCase
     }
 
     /**
+     * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      */
     public function testExecute_ReturnsNoop_WhenProductSyncDisabled(): void
@@ -236,7 +258,7 @@ class EntityIndexerServiceAddTest extends TestCase
         );
 
         ConfigFixture::setForStore(
-            path: 'klevu/indexing/enable_product_sync',
+            path: Constants::XML_PATH_PRODUCT_SYNC_ENABLED,
             value: 0,
             storeCode: $storeFixture->getCode(),
         );
@@ -360,7 +382,7 @@ class EntityIndexerServiceAddTest extends TestCase
         $categoryFixture = $this->categoryFixturePool->get('test_category');
 
         $this->createProduct([
-            'name' => 'Klevu Simple Product Test',
+            'name' => '  Klevu Simple <strong>Product</strong> Test <script>foo</script>  ',
             'sku' => 'KLEVU-SIMPLE-SKU-001',
             'price' => 9.99,
             'in_stock' => false,
@@ -370,8 +392,8 @@ class EntityIndexerServiceAddTest extends TestCase
                 $categoryFixture->getId(),
             ],
             'data' => [
-                'short_description' => 'This is a short description',
-                'description' => 'This is a longer description than the short description',
+                'short_description' => '  This is a <strong>short</strong> description <script>foo</script>  ',
+                'description' => '  This is a longer description than the <strong>short</strong> description <script>foo</script>  ', // phpcs:ignore Generic.Files.LineLength.TooLong
             ],
             'images' => [
                 'klevu_image' => 'klevu_test_image_name.jpg',
@@ -454,7 +476,7 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->assertArrayHasKey(key: 'name', array: $attributes);
         $this->assertArrayHasKey(key: 'default', array: $attributes['name']);
         $this->assertSame(
-            expected: 'Klevu Simple Product Test',
+            expected: 'Klevu Simple &lt;strong&gt;Product&lt;/strong&gt; Test',
             actual: $attributes['name']['default'],
             message: 'Name: ' . $attributes['name']['default'],
         );
@@ -462,7 +484,7 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->assertArrayHasKey(key: 'shortDescription', array: $attributes);
         $this->assertArrayHasKey(key: 'default', array: $attributes['shortDescription']);
         $this->assertSame(
-            expected: 'This is a short description',
+            expected: 'This is a &lt;strong&gt;short&lt;/strong&gt; description',
             actual: $attributes['shortDescription']['default'],
             message: 'Short Description: ' . $attributes['shortDescription']['default'],
         );
@@ -511,6 +533,205 @@ class EntityIndexerServiceAddTest extends TestCase
 
         $this->assertArrayHasKey(key: 'ratingCount', array: $attributes);
         $this->assertSame(expected: 1, actual: $attributes['ratingCount']);
+
+        $this->cleanIndexingEntities(apiKey: $apiKey);
+    }
+
+    /**
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     */
+    public function testExecute_ReturnsSuccess_WhenSimpleProductAdded_WithCustomAttributes(): void
+    {
+        $apiKey = 'klevu-123456789';
+
+        $this->createStore();
+        $storeFixture = $this->storeFixturesPool->get('test_store');
+        $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
+        $scopeProvider->setCurrentScope($storeFixture->get());
+        $this->setAuthKeys(
+            scopeProvider: $scopeProvider,
+            jsApiKey: $apiKey,
+            restAuthKey: 'SomeValidRestKey123',
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu/indexing/image_width_product',
+            value: 800,
+            storeCode: $storeFixture->getCode(),
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu/indexing/image_height_product',
+            value: 800,
+            storeCode: $storeFixture->getCode(),
+        );
+
+        $expectedPipelineOverridesFiles = $this->getExpectedPipelineOverridesFiles();
+
+        foreach ($expectedPipelineOverridesFiles as $expectedFile) {
+            if ($this->fileIo->fileExists($expectedFile)) {
+                $this->fileIo->rm($expectedFile);
+            }
+            $this->assertFileDoesNotExist($expectedFile);
+        }
+
+        $this->createAttribute([
+            'key' => 'klevu_test_attribute_global',
+            'code' => 'klevu_test_attribute_global',
+            'label' => 'Klevu Test Attribute (Global)',
+            'attribute_type' => 'text',
+            'is_global' => 1,
+            'is_html_allowed_on_front' => 1,
+            'index_as' => IndexType::INDEX,
+            'generate_config_for' => [
+                'simple',
+            ],
+        ]);
+        $this->createAttribute([
+            'key' => 'klevu_test_attribute_config_only',
+            'code' => 'klevu_test_attribute_config_only',
+            'label' => 'Klevu Test Attribute (Config Only)',
+            'attribute_type' => 'text',
+            'is_global' => 0,
+            'is_html_allowed_on_front' => 1,
+            'index_as' => IndexType::INDEX,
+            'generate_config_for' => [
+                'configurable',
+            ],
+        ]);
+        $this->createAttribute([
+            'key' => 'klevu_test_attribute_not_indexable',
+            'code' => 'klevu_test_attribute_not_indexable',
+            'label' => 'Klevu Test Attribute (Not Indexable)',
+            'attribute_type' => 'text',
+            'is_global' => 0,
+            'is_html_allowed_on_front' => 1,
+            'index_as' => IndexType::NO_INDEX,
+            'generate_config_for' => [
+                'simple',
+            ],
+        ]);
+        $this->createAttribute([
+            'key' => 'klevu_test_attribute_store_scope',
+            'code' => 'klevu_test_attribute_store_scope',
+            'label' => 'Klevu Test Attribute (Store Scope)',
+            'attribute_type' => 'text',
+            'is_global' => 0,
+            'is_html_allowed_on_front' => 0,
+            'index_as' => IndexType::INDEX,
+            'generate_config_for' => [
+                'simple',
+                'virtual',
+                'bundle',
+            ],
+        ]);
+
+        $this->createCategory([
+            'key' => 'top_cat',
+        ]);
+        $topCategoryFixture = $this->categoryFixturePool->get('top_cat');
+        $this->createCategory([
+            'key' => 'test_category',
+            'parent' => $topCategoryFixture,
+        ]);
+        $categoryFixture = $this->categoryFixturePool->get('test_category');
+
+        $this->createProduct([
+            'name' => 'Klevu Simple Product Test',
+            'sku' => 'KLEVU-SIMPLE-SKU-001',
+            'price' => 9.99,
+            'in_stock' => false,
+            'qty' => -3,
+            'category_ids' => [
+                $topCategoryFixture->getId(),
+                $categoryFixture->getId(),
+            ],
+            'data' => [
+                'short_description' => 'This is a short description',
+                'description' => 'This is a longer description than the short description',
+                'klevu_test_attribute_global' => ' foo <script>bar</script> <strong>baz</strong>   ',
+                'klevu_test_attribute_config_only' => 'DO NOT SEND',
+                'klevu_test_attribute_not_indexable' => 'DO NOT SEND',
+                'klevu_test_attribute_store_scope' => ' foo <script>bar</script> <strong>baz</strong>   ',
+            ],
+            'images' => [
+                'klevu_image' => 'klevu_test_image_name.jpg',
+                'image' => 'klevu_test_image_symbol.jpg',
+            ],
+        ]);
+        $productFixture = $this->productFixturePool->get('test_product');
+        $ratingIds = $this->getRatingIds();
+        $ratings = [];
+        $value = 3;
+        foreach ($ratingIds as $ratingId) {
+            $ratings[$ratingId] = $value;
+            $value++;
+        }
+        $this->createReview([
+            'product_id' => $productFixture->getId(),
+            'customer_id' => null,
+            'store_id' => $storeFixture->getId(),
+            'ratings' => $ratings,
+        ]);
+
+        $this->cleanIndexingEntities(apiKey: $apiKey);
+        $this->createIndexingEntity([
+            IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::API_KEY => $apiKey,
+            IndexingEntity::TARGET_ID => $productFixture->getId(),
+            IndexingEntity::NEXT_ACTION => Actions::ADD,
+        ]);
+
+        $this->mockBatchServicePutApiCall();
+
+        $service = $this->instantiateTestObject();
+        $result = $service->execute(apiKey: $apiKey);
+
+        $this->assertSame(
+            expected: IndexerResultStatuses::SUCCESS,
+            actual: $result->getStatus(),
+            message: 'Status: ' . $result->getStatus()->name,
+        );
+        $pipelineResults = $result->getPipelineResult();
+        $this->assertCount(expectedCount: 1, haystack: $pipelineResults);
+        /** @var ApiPipelineResult $pipelineResult */
+        $pipelineResult = array_shift($pipelineResults);
+
+        $this->assertTrue(condition: $pipelineResult->success);
+        $this->assertCount(expectedCount: 1, haystack: $pipelineResult->messages);
+        $this->assertContains(needle: 'Batch accepted successfully', haystack: $pipelineResult->messages);
+
+        /** @var RecordIterator $payload */
+        $payload = $pipelineResult->payload;
+        $this->assertCount(expectedCount: 1, haystack: $payload);
+        $record = $payload->current();
+
+        $product = $productFixture->getProduct();
+        $attributes = $record->getAttributes();
+
+        $this->assertSame(
+            expected: 'foo  &lt;strong&gt;baz&lt;/strong&gt;',
+            actual: $attributes['klevu_test_attribute_global'] ?? null,
+        );
+        $this->assertSame(
+            expected: 'DO NOT SEND',
+            actual: $product->getData('klevu_test_attribute_config_only'),
+        );
+        $this->assertArrayNotHasKey(
+            key: 'klevu_test_attribute_config_only',
+            array: $attributes,
+        );
+        $this->assertSame(
+            expected: 'DO NOT SEND',
+            actual: $product->getData('klevu_test_attribute_not_indexable'),
+        );
+        $this->assertArrayNotHasKey(
+            key: 'klevu_test_attribute_not_indexable',
+            array: $attributes,
+        );
+        $this->assertSame(
+            expected: 'foo  baz',
+            actual: $attributes['klevu_test_attribute_store_scope'] ?? null,
+        );
 
         $this->cleanIndexingEntities(apiKey: $apiKey);
     }
@@ -691,6 +912,209 @@ class EntityIndexerServiceAddTest extends TestCase
 
         $this->assertArrayHasKey(key: 'ratingCount', array: $attributes);
         $this->assertSame(expected: 0, actual: $attributes['ratingCount']);
+
+        $this->cleanIndexingEntities(apiKey: $apiKey);
+    }
+
+    /**
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     */
+    public function testExecute_ReturnsSuccess_WhenVirtualProductAdded_WithCustomAttributes(): void
+    {
+        $apiKey = 'klevu-123456789';
+
+        $this->createStore();
+        $storeFixture = $this->storeFixturesPool->get('test_store');
+        $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
+        $scopeProvider->setCurrentScope($storeFixture->get());
+        $this->setAuthKeys(
+            scopeProvider: $scopeProvider,
+            jsApiKey: $apiKey,
+            restAuthKey: 'weign934jt93jg934j',
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu/indexing/image_width_product',
+            value: 800,
+            storeCode: $storeFixture->getCode(),
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu/indexing/image_height_product',
+            value: 800,
+            storeCode: $storeFixture->getCode(),
+        );
+
+        $expectedPipelineOverridesFiles = $this->getExpectedPipelineOverridesFiles();
+
+        foreach ($expectedPipelineOverridesFiles as $expectedFile) {
+            if ($this->fileIo->fileExists($expectedFile)) {
+                $this->fileIo->rm($expectedFile);
+            }
+            $this->assertFileDoesNotExist($expectedFile);
+        }
+
+        $this->createAttribute([
+            'key' => 'klevu_test_attribute_global',
+            'code' => 'klevu_test_attribute_global',
+            'label' => 'Klevu Test Attribute (Global)',
+            'attribute_type' => 'text',
+            'is_global' => 1,
+            'is_html_allowed_on_front' => 1,
+            'index_as' => IndexType::INDEX,
+            'generate_config_for' => [
+                'virtual',
+            ],
+        ]);
+        $this->createAttribute([
+            'key' => 'klevu_test_attribute_config_only',
+            'code' => 'klevu_test_attribute_config_only',
+            'label' => 'Klevu Test Attribute (Config Only)',
+            'attribute_type' => 'text',
+            'is_global' => 0,
+            'is_html_allowed_on_front' => 1,
+            'index_as' => IndexType::INDEX,
+            'generate_config_for' => [
+                'configurable',
+            ],
+        ]);
+        $this->createAttribute([
+            'key' => 'klevu_test_attribute_not_indexable',
+            'code' => 'klevu_test_attribute_not_indexable',
+            'label' => 'Klevu Test Attribute (Not Indexable)',
+            'attribute_type' => 'text',
+            'is_global' => 0,
+            'is_html_allowed_on_front' => 1,
+            'index_as' => IndexType::NO_INDEX,
+            'generate_config_for' => [
+                'simple',
+            ],
+        ]);
+        $this->createAttribute([
+            'key' => 'klevu_test_attribute_store_scope',
+            'code' => 'klevu_test_attribute_store_scope',
+            'label' => 'Klevu Test Attribute (Store Scope)',
+            'attribute_type' => 'text',
+            'is_global' => 0,
+            'is_html_allowed_on_front' => 0,
+            'index_as' => IndexType::INDEX,
+            'generate_config_for' => [
+                'simple',
+                'virtual',
+                'bundle',
+            ],
+        ]);
+
+        $this->createCategory([
+            'key' => 'top_cat',
+        ]);
+        $topCategoryFixture = $this->categoryFixturePool->get('top_cat');
+        $this->createCategory([
+            'key' => 'test_category',
+            'parent' => $topCategoryFixture,
+        ]);
+        $categoryFixture = $this->categoryFixturePool->get('test_category');
+
+        $this->createProduct([
+            'type_id' => Type::TYPE_VIRTUAL,
+            'name' => 'Klevu Virtual Product Test',
+            'sku' => 'KLEVU-VIRTUAL-SKU-001',
+            'price' => 19.99,
+            'visibility' => Visibility::VISIBILITY_IN_CATALOG,
+            'category_ids' => [
+                $topCategoryFixture->getId(),
+                $categoryFixture->getId(),
+            ],
+            'data' => [
+                'short_description' => 'This is a Virtual product short description',
+                'description' => 'This is a Virtual product longer description than the short description',
+                'klevu_test_attribute_global' => ' foo <script>bar</script> <strong>baz</strong>   ',
+                'klevu_test_attribute_config_only' => 'DO NOT SEND',
+                'klevu_test_attribute_not_indexable' => 'DO NOT SEND',
+                'klevu_test_attribute_store_scope' => ' foo <script>bar</script> <strong>baz</strong>   ',
+            ],
+            'images' => [
+                'image' => 'klevu_test_image_symbol.jpg',
+            ],
+        ]);
+        $productFixture = $this->productFixturePool->get('test_product');
+
+        $this->cleanIndexingEntities(apiKey: $apiKey);
+        $this->createIndexingEntity([
+            IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::API_KEY => $apiKey,
+            IndexingEntity::TARGET_ID => $productFixture->getId(),
+            IndexingEntity::NEXT_ACTION => Actions::ADD,
+        ]);
+
+        $this->mockBatchServicePutApiCall();
+
+        $service = $this->instantiateTestObject();
+        $result = $service->execute(apiKey: $apiKey);
+
+        $this->assertSame(
+            expected: IndexerResultStatuses::SUCCESS,
+            actual: $result->getStatus(),
+            message: 'Status: ' . $result->getStatus()->name,
+        );
+        $pipelineResults = $result->getPipelineResult();
+        $this->assertCount(expectedCount: 1, haystack: $pipelineResults);
+        /** @var ApiPipelineResult $pipelineResult */
+        $pipelineResult = array_shift($pipelineResults);
+
+        $this->assertTrue(condition: $pipelineResult->success);
+        $this->assertCount(expectedCount: 1, haystack: $pipelineResult->messages);
+        $this->assertContains(needle: 'Batch accepted successfully', haystack: $pipelineResult->messages);
+
+        /** @var RecordIterator $payload */
+        $payload = $pipelineResult->payload;
+        $this->assertCount(expectedCount: 1, haystack: $payload);
+        $record = $payload->current();
+
+        $this->assertSame(
+            expected: (string)$productFixture->getId(),
+            actual: $record->getId(),
+            message: 'Record ID: ' . $record->getId(),
+        );
+        $this->assertSame(
+            expected: 'KLEVU_PRODUCT',
+            actual: $record->getType(),
+            message: 'Record Type: ' . $record->getType(),
+        );
+
+        $relations = $record->getRelations();
+        $this->assertArrayHasKey(key: 'categories', array: $relations);
+        $categories = $relations['categories'];
+        $this->assertArrayHasKey(key: 'values', array: $categories);
+        $this->assertContains(needle: 'categoryid_' . $topCategoryFixture->getId(), haystack: $categories['values']);
+        $this->assertContains(needle: 'categoryid_' . $categoryFixture->getId(), haystack: $categories['values']);
+
+        $product = $productFixture->getProduct();
+        $attributes = $record->getAttributes();
+
+        $this->assertSame(
+            expected: 'foo  &lt;strong&gt;baz&lt;/strong&gt;',
+            actual: $attributes['klevu_test_attribute_global'] ?? null,
+        );
+        $this->assertSame(
+            expected: 'DO NOT SEND',
+            actual: $product->getData('klevu_test_attribute_config_only'),
+        );
+        $this->assertArrayNotHasKey(
+            key: 'klevu_test_attribute_config_only',
+            array: $attributes,
+        );
+        $this->assertSame(
+            expected: 'DO NOT SEND',
+            actual: $product->getData('klevu_test_attribute_not_indexable'),
+        );
+        $this->assertArrayNotHasKey(
+            key: 'klevu_test_attribute_not_indexable',
+            array: $attributes,
+        );
+        $this->assertSame(
+            expected: 'foo  baz',
+            actual: $attributes['klevu_test_attribute_store_scope'] ?? null,
+        );
 
         $this->cleanIndexingEntities(apiKey: $apiKey);
     }
@@ -1823,8 +2247,6 @@ class EntityIndexerServiceAddTest extends TestCase
     /**
      * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
-     * @magentoConfigFixture klevu_test_store_1_store klevu/indexing/image_width_product 800
-     * @magentoConfigFixture klevu_test_store_1_store klevu/indexing/image_height_product 800
      */
     public function testExecute_ForRealApiKeys(): void
     {
@@ -1842,6 +2264,9 @@ class EntityIndexerServiceAddTest extends TestCase
          *         <env name="KLEVU_API_REST_URL" value="api.ksearchnet.com" force="true" />
          *         // KLEVU_TIERS_URL only required for none production env
          *         <env name="KLEVU_TIERS_URL" value="tiers.klevu.com" force="true" />
+         *         <env name="KLEVU_INDEXING_URL" value="indexing.ksearchnet.com" force="true" />
+         *         // store URL must be a whitelisted in KMC
+         *         <env name="KLEVU_STORE_URL" value="https://magento.test/" force="true" />
          *     </php>
          */
         $restApiKey = getenv('KLEVU_REST_API_KEY');
@@ -1849,6 +2274,7 @@ class EntityIndexerServiceAddTest extends TestCase
         $restApiUrl = getenv('KLEVU_REST_API_URL');
         $tiersApiUrl = getenv('KLEVU_TIERS_URL');
         $indexingUrl = getenv('KLEVU_INDEXING_URL');
+        $storeUrl = getenv('KLEVU_STORE_URL');
         if (!$restApiKey || !$jsApiKey || !$restApiUrl || !$tiersApiUrl || !$indexingUrl) {
             $this->markTestSkipped('Klevu API keys are not set in `dev/tests/integration/phpunit.xml`. Test Skipped');
         }
@@ -1862,6 +2288,7 @@ class EntityIndexerServiceAddTest extends TestCase
             jsApiKey: $jsApiKey,
             restAuthKey: $restApiKey,
         );
+        $scopeProvider->unsetCurrentScope();
 
         ConfigFixture::setGlobal(
             path: BaseUrlsProvider::CONFIG_XML_PATH_URL_INDEXING,
@@ -1874,6 +2301,32 @@ class EntityIndexerServiceAddTest extends TestCase
         ConfigFixture::setGlobal(
             path: BaseUrlsProvider::CONFIG_XML_PATH_URL_TIERS,
             value: $tiersApiUrl,
+        );
+        if ($storeUrl) {
+            ConfigFixture::setGlobal(
+                path: Store::XML_PATH_UNSECURE_BASE_URL,
+                value: $storeUrl,
+            );
+            ConfigFixture::setGlobal(
+                path: Store::XML_PATH_SECURE_BASE_URL,
+                value: $storeUrl,
+            );
+            ConfigFixture::setGlobal(
+                path: Store::XML_PATH_UNSECURE_BASE_LINK_URL,
+                value: $storeUrl,
+            );
+            ConfigFixture::setGlobal(
+                path: Store::XML_PATH_SECURE_BASE_LINK_URL,
+                value: $storeUrl,
+            );
+        }
+        ConfigFixture::setGlobal(
+            path: Constants::XML_PATH_PRODUCT_IMAGE_HEIGHT,
+            value: 800,
+        );
+        ConfigFixture::setGlobal(
+            path: Constants::XML_PATH_PRODUCT_IMAGE_WIDTH,
+            value: 800,
         );
 
         $this->createCategory([
@@ -2037,5 +2490,28 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->assertSame(expected: 1, actual: $attributes['ratingCount']);
 
         $this->cleanIndexingEntities(apiKey: $jsApiKey);
+    }
+
+    /**
+     * @return string[]
+     * @throws FileSystemException
+     */
+    private function getExpectedPipelineOverridesFiles(): array
+    {
+        $baseOverridesDirectory = implode(
+            separator: DIRECTORY_SEPARATOR,
+            array: [
+                $this->directoryList->getPath(AppDirectoryList::VAR_DIR),
+                'klevu',
+                'indexing',
+                'pipeline',
+                'product',
+            ],
+        );
+
+        return [
+            'add_update' => $baseOverridesDirectory . DIRECTORY_SEPARATOR . 'add_update.overrides.yml',
+            'delete' => $baseOverridesDirectory . DIRECTORY_SEPARATOR . 'delete.overrides.yml',
+        ];
     }
 }

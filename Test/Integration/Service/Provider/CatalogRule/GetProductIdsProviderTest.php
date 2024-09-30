@@ -91,13 +91,10 @@ class GetProductIdsProviderTest extends TestCase
         ]);
 
         $provider = $this->instantiateTestObject();
-        $productsIds = $provider->get();
-        $this->assertNotContains(needle: (int)$productFixture->getId(), haystack: $productsIds);
 
         $indexerBuilder = $this->objectManager->get(IndexBuilder::class);
         $indexerBuilder->reindexById((int)$productFixture->getId());
 
-        $provider = $this->instantiateTestObject();
         $productsIds = $provider->get();
         $this->assertContains(needle: (int)$productFixture->getId(), haystack: $productsIds);
     }

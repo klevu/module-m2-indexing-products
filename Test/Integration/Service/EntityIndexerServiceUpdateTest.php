@@ -16,6 +16,7 @@ use Klevu\Indexing\Test\Integration\Traits\IndexingEntitiesTrait;
 use Klevu\IndexingApi\Model\Source\Actions;
 use Klevu\IndexingApi\Model\Source\IndexerResultStatuses;
 use Klevu\IndexingApi\Service\EntityIndexerServiceInterface;
+use Klevu\IndexingProducts\Constants;
 use Klevu\IndexingProducts\Service\EntityIndexerService\Update as EntityIndexerServiceVirtualType;
 use Klevu\PhpSDK\Model\Indexing\RecordIterator;
 use Klevu\PhpSDKPipelines\Model\ApiPipelineResult;
@@ -39,6 +40,8 @@ use Magento\Downloadable\Model\Product\Type as DownloadableType;
 use Magento\Framework\DataObject;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\GroupedProduct\Model\Product\Type\Grouped;
+use Magento\Store\Model\Store;
+use Magento\Store\Model\StoreManagerInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
 use TddWizard\Fixtures\Catalog\CategoryFixturePool;
@@ -237,7 +240,7 @@ class EntityIndexerServiceUpdateTest extends TestCase
         );
 
         ConfigFixture::setForStore(
-            path: 'klevu/indexing/enable_product_sync',
+            path: Constants::XML_PATH_PRODUCT_SYNC_ENABLED,
             value: 0,
             storeCode: $storeFixture->getCode(),
         );
@@ -1629,20 +1632,20 @@ class EntityIndexerServiceUpdateTest extends TestCase
         $restApiUrl = getenv('KLEVU_REST_API_URL');
         $tiersApiUrl = getenv('KLEVU_TIERS_URL');
         $indexingUrl = getenv('KLEVU_INDEXING_URL');
+        $storeUrl = getenv('KLEVU_STORE_URL');
         if (!$restApiKey || !$jsApiKey || !$restApiUrl || !$tiersApiUrl || !$indexingUrl) {
             $this->markTestSkipped('Klevu API keys are not set in `dev/tests/integration/phpunit.xml`. Test Skipped');
         }
 
-        $this->createStore();
-        $storeFixture = $this->storeFixturesPool->get('test_store');
+        $storeManager = $this->objectManager->get(StoreManagerInterface::class);
+        $store = $storeManager->getDefaultStoreView();
         $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
-        $scopeProvider->setCurrentScope($storeFixture->get());
+        $scopeProvider->setCurrentScope(scope: $store);
         $this->setAuthKeys(
             scopeProvider: $scopeProvider,
             jsApiKey: $jsApiKey,
             restAuthKey: $restApiKey,
         );
-        $scopeProvider->unsetCurrentScope();
 
         ConfigFixture::setGlobal(
             path: BaseUrlsProvider::CONFIG_XML_PATH_URL_INDEXING,
@@ -1655,6 +1658,32 @@ class EntityIndexerServiceUpdateTest extends TestCase
         ConfigFixture::setGlobal(
             path: BaseUrlsProvider::CONFIG_XML_PATH_URL_TIERS,
             value: $tiersApiUrl,
+        );
+        if ($storeUrl) {
+            ConfigFixture::setGlobal(
+                path: Store::XML_PATH_UNSECURE_BASE_URL,
+                value: $storeUrl,
+            );
+            ConfigFixture::setGlobal(
+                path: Store::XML_PATH_SECURE_BASE_URL,
+                value: $storeUrl,
+            );
+            ConfigFixture::setGlobal(
+                path: Store::XML_PATH_UNSECURE_BASE_LINK_URL,
+                value: $storeUrl,
+            );
+            ConfigFixture::setGlobal(
+                path: Store::XML_PATH_SECURE_BASE_LINK_URL,
+                value: $storeUrl,
+            );
+        }
+        ConfigFixture::setGlobal(
+            path: Constants::XML_PATH_PRODUCT_IMAGE_HEIGHT,
+            value: 800,
+        );
+        ConfigFixture::setGlobal(
+            path: Constants::XML_PATH_PRODUCT_IMAGE_WIDTH,
+            value: 800,
         );
 
         $this->createCategory([

@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace Klevu\IndexingProducts\Observer;
+namespace Klevu\IndexingProducts\Observer\ProductAttribute;
 
 use Klevu\Indexing\Model\Update\Attribute as AttributeUpdate;
 use Klevu\IndexingApi\Service\AttributeUpdateResponderServiceInterface;
@@ -19,7 +19,7 @@ use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Psr\Log\LoggerInterface;
 
-class ProductAttributeObserver implements ObserverInterface
+class AttributeUpdateResponderObserver implements ObserverInterface
 {
     /**
      * @var AttributeUpdateResponderServiceInterface

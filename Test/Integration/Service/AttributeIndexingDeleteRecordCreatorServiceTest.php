@@ -81,6 +81,7 @@ class AttributeIndexingDeleteRecordCreatorServiceTest extends TestCase
      */
     public function testExecute_ReturnsAttributeInterface_ForTextAttribute(): void
     {
+        $apiKey = 'klevu-js-api-key';
         $this->createAttribute([
             'key' => 'klevu_test_text_attribute',
             'code' => 'klevu_test_text_attribute',
@@ -98,7 +99,10 @@ class AttributeIndexingDeleteRecordCreatorServiceTest extends TestCase
         $magentoAttribute = $attributeFixture->getAttribute();
 
         $service = $this->instantiateTestObject();
-        $indexingAttribute = $service->execute(attributeCode: $attributeFixture->getAttributeCode());
+        $indexingAttribute = $service->execute(
+            attributeCode: $attributeFixture->getAttributeCode(),
+            apiKey: $apiKey,
+        );
 
         $this->assertSame(
             expected: $magentoAttribute->getAttributeCode(),
@@ -202,7 +206,10 @@ class AttributeIndexingDeleteRecordCreatorServiceTest extends TestCase
         $service = $this->instantiateTestObject([
             'attributeMapperService' => $attributeCodeMapper,
         ]);
-        $indexingAttribute = $service->execute(attributeCode: $attributeFixture->getAttributeCode());
+        $indexingAttribute = $service->execute(
+            attributeCode: $attributeFixture->getAttributeCode(),
+            apiKey: $apiKey,
+        );
 
         $this->assertSame(
             expected: 'another_name',

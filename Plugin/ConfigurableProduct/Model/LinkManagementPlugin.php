@@ -10,9 +10,9 @@ namespace Klevu\IndexingProducts\Plugin\ConfigurableProduct\Model;
 
 use Klevu\Indexing\Model\Update\Entity;
 use Klevu\IndexingApi\Service\EntityUpdateResponderServiceInterface;
+use Klevu\IndexingProducts\Model\ResourceModel\Product\Collection as ProductCollection;
+use Klevu\IndexingProducts\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
 use Magento\Catalog\Api\Data\ProductInterface;
-use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
-use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
 use Magento\ConfigurableProduct\Model\LinkManagement;
 use Magento\Eav\Model\Entity as EavEntity;
 
