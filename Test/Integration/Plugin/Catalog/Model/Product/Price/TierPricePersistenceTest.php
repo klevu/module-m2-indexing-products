@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace Klevu\IndexingProducts\Test\Integration\Plugin\Catalog\Model\Product\Price;
 
+use Klevu\Configuration\Service\Provider\ScopeProviderInterface;
 use Klevu\Indexing\Model\IndexingEntity;
 use Klevu\Indexing\Test\Integration\Traits\IndexingEntitiesTrait;
 use Klevu\IndexingApi\Model\Source\Actions;
@@ -18,6 +19,7 @@ use Klevu\TestFixtures\Catalog\ProductTrait;
 use Klevu\TestFixtures\Store\StoreFixturesPool;
 use Klevu\TestFixtures\Store\StoreTrait;
 use Klevu\TestFixtures\Traits\ObjectInstantiationTrait;
+use Klevu\TestFixtures\Traits\SetAuthKeysTrait;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\AbstractModel;
@@ -47,6 +49,7 @@ class TierPricePersistenceTest extends TestCase
     use IndexingEntitiesTrait;
     use ObjectInstantiationTrait;
     use ProductTrait;
+    use SetAuthKeysTrait;
     use StoreTrait;
 
     /**
@@ -58,13 +61,13 @@ class TierPricePersistenceTest extends TestCase
      */
     private ?string $pluginName = 'Klevu_IndexingProducts::TierPricePersistencePlugin';
     /**
-     * @var EntityMetadata|EntityMetadataInterface
+     * @var EntityMetadata|EntityMetadataInterface|null
      */
-    private EntityMetadata|EntityMetadataInterface $productMetadata;
+    private EntityMetadata|EntityMetadataInterface|null $productMetadata = null;
     /**
-     * @var ProductRepositoryInterface
+     * @var ProductRepositoryInterface|null
      */
-    private ProductRepositoryInterface $productRepository;
+    private ?ProductRepositoryInterface $productRepository = null;
 
     /**
      * @return void
@@ -147,8 +150,6 @@ class TierPricePersistenceTest extends TestCase
 
     /**
      * @magentoDbIsolation disabled
-     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/js_api_key klevu-js-api-key
-     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/rest_auth_key klevu-rest-auth-key
      * @magentoConfigFixture default/klevu/indexing/exclude_disabled_products 1
      */
     public function testDelete_UpdatesIndexingEntity(): void
@@ -158,7 +159,13 @@ class TierPricePersistenceTest extends TestCase
 
         $this->createStore();
         $storeFixture = $this->storeFixturesPool->get('test_store');
-        $store = $storeFixture->get();
+        $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
+        $scopeProvider->setCurrentScope($storeFixture->get());
+        $this->setAuthKeys(
+            scopeProvider: $scopeProvider,
+            jsApiKey: $apiKey,
+            restAuthKey: 'klevu-rest-key',
+        );
 
         $this->createProduct();
         $productFixture = $this->productFixturePool->get('test_product');
@@ -168,7 +175,7 @@ class TierPricePersistenceTest extends TestCase
             [
                 'price' => 20.00,
                 'price_qty' => 1,
-                'website_id' => $store->getWebsiteId(),
+                'website_id' => $storeFixture->getWebsiteId(),
                 'cust_group' => 0,
             ],
         ]);
@@ -186,7 +193,7 @@ class TierPricePersistenceTest extends TestCase
 
         $tierPricePersistence = $this->objectManager->get(TierPricePersistence::class);
         $tierPricePersistence->delete(
-            ids: $this->getTierPriceIds($product, $store),
+            ids: $this->getTierPriceIds($product, $storeFixture->get()),
         );
 
         $indexingEntity = $this->getIndexingEntityForEntity(
@@ -215,7 +222,13 @@ class TierPricePersistenceTest extends TestCase
 
         $this->createStore();
         $storeFixture = $this->storeFixturesPool->get('test_store');
-        $store = $storeFixture->get();
+        $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
+        $scopeProvider->setCurrentScope($storeFixture->get());
+        $this->setAuthKeys(
+            scopeProvider: $scopeProvider,
+            jsApiKey: $apiKey,
+            restAuthKey: 'klevu-rest-key',
+        );
 
         $this->createProduct();
         $productFixture = $this->productFixturePool->get('test_product');
@@ -225,7 +238,7 @@ class TierPricePersistenceTest extends TestCase
             [
                 'price' => 20.00,
                 'price_qty' => 1,
-                'website_id' => $store->getWebsiteId(),
+                'website_id' => $storeFixture->getWebsiteId(),
                 'cust_group' => 0,
             ],
         ]);
@@ -250,7 +263,7 @@ class TierPricePersistenceTest extends TestCase
                 'qty' => 1,
                 'value' => '22.00',
                 'percentage_value' => null, // fixed price
-                'website_id' => $store->getWebsiteId(),
+                'website_id' => $storeFixture->getWebsiteId(),
             ],
         ];
 
@@ -279,8 +292,6 @@ class TierPricePersistenceTest extends TestCase
 
     /**
      * @magentoDbIsolation disabled
-     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/js_api_key klevu-js-api-key
-     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/rest_auth_key klevu-rest-auth-key
      * @magentoConfigFixture default/klevu/indexing/exclude_disabled_products 1
      */
     public function testAfterUpdate_UpdatesIndexingEntity(): void
@@ -290,7 +301,13 @@ class TierPricePersistenceTest extends TestCase
 
         $this->createStore();
         $storeFixture = $this->storeFixturesPool->get('test_store');
-        $store = $storeFixture->get();
+        $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
+        $scopeProvider->setCurrentScope($storeFixture->get());
+        $this->setAuthKeys(
+            scopeProvider: $scopeProvider,
+            jsApiKey: $apiKey,
+            restAuthKey: 'klevu-rest-key',
+        );
 
         $this->createProduct();
         $productFixture = $this->productFixturePool->get('test_product');
@@ -300,7 +317,7 @@ class TierPricePersistenceTest extends TestCase
             [
                 'price' => 20.00,
                 'price_qty' => 1,
-                'website_id' => $store->getWebsiteId(),
+                'website_id' => $storeFixture->getWebsiteId(),
                 'cust_group' => 0,
             ],
         ]);
@@ -329,7 +346,7 @@ class TierPricePersistenceTest extends TestCase
                 'qty' => 1,
                 'value' => '20.00',
                 'percentage_value' => null, // fixed price
-                'website_id' => $store->getWebsiteId(),
+                'website_id' => $storeFixture->getWebsiteId(),
             ],
         ];
 

@@ -14,6 +14,7 @@ use Klevu\Indexing\Test\Integration\Traits\IndexingEntitiesTrait;
 use Klevu\IndexingApi\Api\Data\IndexingEntityInterface;
 use Klevu\IndexingApi\Model\Source\Actions;
 use Klevu\IndexingApi\Model\Source\IndexType;
+use Klevu\IndexingProducts\Model\Source\Aspect;
 use Klevu\IndexingProducts\Plugin\Catalog\Model\ResourceModel\ProductPlugin;
 use Klevu\TestFixtures\Catalog\Attribute\AttributeFixturePool;
 use Klevu\TestFixtures\Catalog\AttributeTrait;
@@ -290,6 +291,10 @@ class ProductSavePluginTest extends TestCase
         $this->assertTrue(condition: $indexingEntity->getIsIndexable());
     }
 
+    /**
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     */
     public function testAroundSave_NoChangeForNoneIndexableAttributeChange(): void
     {
         $apiKey = 'klevu-js-api-key';
@@ -298,15 +303,17 @@ class ProductSavePluginTest extends TestCase
         $this->createStore();
 
         $this->createAttribute([
-            'attribute_type' => 'date',
             'code' => 'klevu_test_select_attribute',
             'key' => 'klevu_test_nonindexable_attribute',
             'index_as' => IndexType::NO_INDEX,
+            'aspect' => Aspect::ALL,
         ]);
         $nonIndexableAttributeFixture = $this->attributeFixturePool->get('klevu_test_nonindexable_attribute');
 
         $this->createProduct([
-            'status' => Status::STATUS_DISABLED,
+            'data' => [
+                $nonIndexableAttributeFixture->getAttributeCode() => 'Original Value',
+            ],
         ]);
         $productFixture = $this->productFixturePool->get('test_product');
         /** @var Product&ProductInterface $product */
@@ -322,7 +329,7 @@ class ProductSavePluginTest extends TestCase
             IndexingEntity::IS_INDEXABLE => true,
         ]);
 
-        $product->setData(key: $nonIndexableAttributeFixture->getAttributeCode(), value: Status::STATUS_ENABLED);
+        $product->setData(key: $nonIndexableAttributeFixture->getAttributeCode(), value: 'Updated Value');
         $productResourceModel = $this->objectManager->get(ProductResourceModel::class);
         $productResourceModel->save($product);
 

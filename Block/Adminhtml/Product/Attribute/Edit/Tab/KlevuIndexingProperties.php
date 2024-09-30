@@ -8,10 +8,13 @@ declare(strict_types=1);
 
 namespace Klevu\IndexingProducts\Block\Adminhtml\Product\Attribute\Edit\Tab;
 
+use Klevu\Configuration\Exception\ApiKeyNotFoundException;
 use Klevu\IndexingApi\Model\MagentoAttributeInterface;
 use Klevu\IndexingApi\Service\Provider\DefaultIndexingAttributesProviderInterface;
 use Klevu\IndexingApi\Validator\ValidatorInterface;
+use Klevu\PhpSDK\Exception\ValidationException as SdkValidationException;
 use Magento\Backend\Block\Template\Context;
+use Magento\Backend\Block\Widget\Form\Element\Dependence;
 use Magento\Backend\Block\Widget\Form\Generic;
 use Magento\Catalog\Api\Data\EavAttributeInterface;
 use Magento\Eav\Block\Adminhtml\Attribute\PropertyLocker;
@@ -29,6 +32,14 @@ class KlevuIndexingProperties extends Generic
      */
     private readonly OptionSourceInterface $indexDataType;
     /**
+     * @var OptionSourceInterface
+     */
+    private readonly OptionSourceInterface $aspectOptions;
+    /**
+     * @var OptionSourceInterface
+     */
+    private readonly OptionSourceInterface $entitySubtypeOptions;
+    /**
      * @var PropertyLocker
      */
     private readonly PropertyLocker $propertyLocker;
@@ -36,10 +47,6 @@ class KlevuIndexingProperties extends Generic
      * @var DefaultIndexingAttributesProviderInterface
      */
     private readonly DefaultIndexingAttributesProviderInterface $defaultIndexingAttributesProvider;
-    /**
-     * @var OptionSourceInterface
-     */
-    private readonly OptionSourceInterface $aspectOptions;
     /**
      * @var ValidatorInterface
      */
@@ -59,6 +66,7 @@ class KlevuIndexingProperties extends Generic
      * @param FormFactory $formFactory
      * @param OptionSourceInterface $indexDataType
      * @param OptionSourceInterface $aspectOptions
+     * @param OptionSourceInterface $entitySubtypeOptions
      * @param PropertyLocker $propertyLocker
      * @param DefaultIndexingAttributesProviderInterface $defaultIndexingAttributesProvider
      * @param ValidatorInterface $indexableAttributeValidator
@@ -70,6 +78,7 @@ class KlevuIndexingProperties extends Generic
         FormFactory $formFactory,
         OptionSourceInterface $indexDataType,
         OptionSourceInterface $aspectOptions,
+        OptionSourceInterface $entitySubtypeOptions,
         PropertyLocker $propertyLocker,
         DefaultIndexingAttributesProviderInterface $defaultIndexingAttributesProvider,
         ValidatorInterface $indexableAttributeValidator,
@@ -77,6 +86,7 @@ class KlevuIndexingProperties extends Generic
     ) {
         $this->indexDataType = $indexDataType;
         $this->aspectOptions = $aspectOptions;
+        $this->entitySubtypeOptions = $entitySubtypeOptions;
         $this->propertyLocker = $propertyLocker;
         $this->defaultIndexingAttributesProvider = $defaultIndexingAttributesProvider;
         $this->indexableAttributeValidator = $indexableAttributeValidator;
@@ -119,19 +129,28 @@ class KlevuIndexingProperties extends Generic
             ],
         ]);
         $fieldset = $this->createIndexingFieldset($form);
+
         $this->createDefaultIndexedInformation($fieldset, $attribute);
         $this->createUnsupportedAttributeInformation($fieldset, $attribute);
         $this->createIsIndexableField($fieldset, $attribute);
+        $this->createGenerateConfigurationForEntitySubtypesField($fieldset, $attribute);
         $this->createAspectMappingField($fieldset, $attribute);
 
         $this->_eventManager->dispatch(
             'adminhtml_catalog_product_attribute_edit_klevu_prepare_form',
-            ['form' => $form],
+            ['form' => $form, 'attribute' => $attribute],
         );
-        $this->setForm($form);
-        $this->propertyLocker->lock($form);
 
-        return $this;
+        // define field dependencies
+        $this->setChild(
+            alias: 'form_after',
+            block: $this->getDependenceBlock(),
+        );
+
+        $this->setForm(form: $form);
+        $this->propertyLocker->lock(form: $form);
+
+        return parent::_prepareForm();
     }
 
     /**
@@ -167,9 +186,11 @@ class KlevuIndexingProperties extends Generic
      *
      * @return void
      */
-    private function createDefaultIndexedInformation(Fieldset $fieldset, EavAttributeInterface $attribute): void
-    {
-        if (!$this->isDefaultAttribute($attribute)) {
+    private function createDefaultIndexedInformation(
+        Fieldset $fieldset,
+        EavAttributeInterface $attribute,
+    ): void {
+        if (!$this->isDefaultAttribute(attribute: $attribute)) {
             return;
         }
         $fieldset->addField(
@@ -192,10 +213,12 @@ class KlevuIndexingProperties extends Generic
      *
      * @return void
      */
-    private function createUnsupportedAttributeInformation(Fieldset $fieldset, EavAttributeInterface $attribute): void
-    {
+    private function createUnsupportedAttributeInformation(
+        Fieldset $fieldset,
+        EavAttributeInterface $attribute,
+    ): void {
         if (
-            $this->isDefaultAttribute($attribute)
+            $this->isDefaultAttribute(attribute: $attribute)
             || $this->isAttributeSupported($attribute)
         ) {
             return;
@@ -218,9 +241,11 @@ class KlevuIndexingProperties extends Generic
      *
      * @return void
      */
-    private function createIsIndexableField(Fieldset $fieldset, EavAttributeInterface $attribute): void
-    {
-        if (!$this->isValidAttribute($attribute)) {
+    private function createIsIndexableField(
+        Fieldset $fieldset,
+        EavAttributeInterface $attribute,
+    ): void {
+        if (!$this->isValidAttribute(attribute: $attribute)) {
             return;
         }
 
@@ -247,9 +272,41 @@ class KlevuIndexingProperties extends Generic
      *
      * @return void
      */
-    private function createAspectMappingField(Fieldset $fieldset, EavAttributeInterface $attribute): void
-    {
+    private function createGenerateConfigurationForEntitySubtypesField(
+        Fieldset $fieldset,
+        EavAttributeInterface $attribute,
+    ): void {
         if (!$this->isValidAttribute($attribute)) {
+            return;
+        }
+
+        $fieldset->addField(
+            elementId: MagentoAttributeInterface::ATTRIBUTE_PROPERTY_GENERATE_CONFIGURATION_FOR_ENTITY_SUBTYPES,
+            type: 'multiselect',
+            config: [
+                'name' => MagentoAttributeInterface::ATTRIBUTE_PROPERTY_GENERATE_CONFIGURATION_FOR_ENTITY_SUBTYPES,
+                'label' => __('Automatically Generate Pipeline Configuration For'),
+                'title' => __('Automatically Generate Pipeline Configuration For'),
+                'values' => $this->entitySubtypeOptions->toOptionArray(),
+                'value' => $attribute->getData( // @phpstan-ignore-line
+                    MagentoAttributeInterface::ATTRIBUTE_PROPERTY_GENERATE_CONFIGURATION_FOR_ENTITY_SUBTYPES,
+                ),
+                'note' => __(''),
+            ],
+        );
+    }
+
+    /**
+     * @param Fieldset $fieldset
+     * @param EavAttributeInterface $attribute
+     *
+     * @return void
+     */
+    private function createAspectMappingField(
+        Fieldset $fieldset,
+        EavAttributeInterface $attribute,
+    ): void {
+        if (!$this->isValidAttribute(attribute: $attribute)) {
             return;
         }
 
@@ -280,7 +337,7 @@ class KlevuIndexingProperties extends Generic
      */
     private function isValidAttribute(EavAttributeInterface $attribute): bool
     {
-        if ($this->isDefaultAttribute($attribute)) {
+        if ($this->isDefaultAttribute(attribute: $attribute)) {
             return false;
         }
 
@@ -295,10 +352,17 @@ class KlevuIndexingProperties extends Generic
     private function isDefaultAttribute(EavAttributeInterface $attribute): bool
     {
         if (null === $this->isDefaultAttribute) {
-            $this->isDefaultAttribute = array_key_exists(
-                key: $attribute->getAttributeCode(),
-                array: $this->defaultIndexingAttributesProvider->get(),
-            );
+            try {
+                $this->isDefaultAttribute = array_key_exists(
+                    key: $attribute->getAttributeCode(),
+                    array: $this->defaultIndexingAttributesProvider->get(),
+                );
+            } catch (SdkValidationException | ApiKeyNotFoundException) {
+                // Misconfigurations of API key will be caught and reported in other,
+                //  more relevant, places. For now, assume it to be core to prevent
+                //  potential attempts to modify immutables
+                $this->isDefaultAttribute = true;
+            }
         }
 
         return $this->isDefaultAttribute;
@@ -324,5 +388,33 @@ class KlevuIndexingProperties extends Generic
     private function getAspectMappingOptions(): array
     {
         return $this->aspectOptions->toOptionArray();
+    }
+
+    /**
+     * @return Dependence
+     * @throws LocalizedException
+     */
+    private function getDependenceBlock(): Dependence
+    {
+        $layout = $this->getLayout();
+        /** @var Dependence $block */
+        $block = $layout->createBlock(
+            type: Dependence::class,
+        );
+        $block->addFieldMap(
+            fieldId: MagentoAttributeInterface::ATTRIBUTE_PROPERTY_IS_INDEXABLE,
+            fieldName: MagentoAttributeInterface::ATTRIBUTE_PROPERTY_IS_INDEXABLE,
+        );
+        $block->addFieldMap(
+            fieldId: MagentoAttributeInterface::ATTRIBUTE_PROPERTY_GENERATE_CONFIGURATION_FOR_ENTITY_SUBTYPES,
+            fieldName: MagentoAttributeInterface::ATTRIBUTE_PROPERTY_GENERATE_CONFIGURATION_FOR_ENTITY_SUBTYPES,
+        );
+        $block->addFieldDependence(
+            fieldName: MagentoAttributeInterface::ATTRIBUTE_PROPERTY_GENERATE_CONFIGURATION_FOR_ENTITY_SUBTYPES,
+            fieldNameFrom: MagentoAttributeInterface::ATTRIBUTE_PROPERTY_IS_INDEXABLE,
+            refField: '1',
+        );
+
+        return $block;
     }
 }

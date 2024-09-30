@@ -10,9 +10,11 @@ namespace Klevu\IndexingProducts\Test\Integration\Observer\Sync\Attribute;
 
 use Klevu\Indexing\Model\IndexingAttribute;
 use Klevu\Indexing\Observer\Sync\Attributes\AddAttributeObserver;
+use Klevu\Indexing\Service\Provider\MagentoToKlevuAttributeMapperProvider;
 use Klevu\Indexing\Test\Integration\Traits\IndexingAttributesTrait;
 use Klevu\IndexingApi\Model\Source\Actions;
 use Klevu\IndexingApi\Service\Action\UpdateIndexingAttributeActionsActionInterface;
+use Klevu\IndexingApi\Service\Provider\MagentoToKlevuAttributeMapperProviderInterface;
 use Klevu\IndexingProducts\Observer\Sync\Attributes\AddAttributeObserver as AddAttributeObserverVirtualType;
 use Klevu\IndexingProducts\Service\Mapper\MagentoToKlevuAttributeMapper as MagentoToKlevuAttributeMapperVirtualType;
 use Klevu\TestFixtures\Catalog\Attribute\AttributeFixturePool;
@@ -26,6 +28,7 @@ use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\TestFramework\Helper\Bootstrap;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -102,6 +105,7 @@ class AddAttributeObserverTest extends TestCase
                     : 'something';
             });
 
+        /** @var Observer&MockObject $mockObserver */
         $mockObserver = $this->getMockBuilder(Observer::class)
             ->disableOriginalConstructor()
             ->getMock();
@@ -137,6 +141,7 @@ class AddAttributeObserverTest extends TestCase
                 };
             });
 
+        /** @var Observer&MockObject $mockObserver */
         $mockObserver = $this->getMockBuilder(Observer::class)
             ->disableOriginalConstructor()
             ->getMock();
@@ -187,14 +192,23 @@ class AddAttributeObserverTest extends TestCase
             IndexingAttribute::LAST_ACTION => Actions::NO_ACTION,
         ]);
 
-        $mapper = $this->objectManager->create(MagentoToKlevuAttributeMapperVirtualType::class, [
+        $productMapper = $this->objectManager->create(MagentoToKlevuAttributeMapperVirtualType::class, [
             'attributeMapping' => [
                 $attributeFixture->getAttributeCode() => 'new_attribute_name',
             ],
         ]);
+        $mapperProvider = $this->objectManager->create(
+            type: MagentoToKlevuAttributeMapperProviderInterface::class,
+            arguments: [
+                'magentoToKlevuAttributeMappers' => [
+                    'KLEVU_PRODUCT' => $productMapper,
+                ],
+            ],
+        );
+
         $this->objectManager->addSharedInstance(
-            $mapper,
-            MagentoToKlevuAttributeMapperVirtualType::class,
+            $mapperProvider,
+            MagentoToKlevuAttributeMapperProvider::class,
         );
 
         $this->dispatchEvent(

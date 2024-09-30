@@ -18,8 +18,8 @@ use Klevu\TestFixtures\Catalog\Attribute\AttributeFixturePool;
 use Klevu\TestFixtures\Catalog\AttributeTrait;
 use Klevu\TestFixtures\Store\StoreFixturesPool;
 use Klevu\TestFixtures\Store\StoreTrait;
+use Klevu\TestFixtures\Traits\AttributeApiCallTrait;
 use Klevu\TestFixtures\Traits\ObjectInstantiationTrait;
-use Klevu\TestFixtures\Traits\PipelineAttributeApiCallTrait;
 use Klevu\TestFixtures\Traits\SetAuthKeysTrait;
 use Magento\Catalog\Api\Data\CategoryAttributeInterface;
 use Magento\Framework\ObjectManagerInterface;
@@ -37,7 +37,7 @@ class SyncAttributesCommandTest extends TestCase
     use AttributeTrait;
     use IndexingAttributesTrait;
     use ObjectInstantiationTrait;
-    use PipelineAttributeApiCallTrait;
+    use AttributeApiCallTrait;
     use SetAuthKeysTrait;
     use StoreTrait;
 
@@ -160,7 +160,7 @@ class SyncAttributesCommandTest extends TestCase
 
         $isFailure = $tester->execute(
             input: [
-                '--api-key' => $apiKey1,
+                '--api-keys' => $apiKey1,
             ],
             options: [
                 'verbosity' => OutputInterface::VERBOSITY_DEBUG,
@@ -271,7 +271,7 @@ class SyncAttributesCommandTest extends TestCase
 
         $isFailure = $tester->execute(
             input: [
-                '--attribute-type' => 'KLEVU_PRODUCT',
+                '--attribute-types' => 'KLEVU_PRODUCT',
             ],
             options: [
                 'verbosity' => OutputInterface::VERBOSITY_DEBUG,
@@ -401,7 +401,7 @@ class SyncAttributesCommandTest extends TestCase
 
         $isFailure = $tester->execute(
             input: [
-                '--api-key' => $apiKey1,
+                '--api-keys' => $apiKey1,
             ],
             options: [
                 'verbosity' => OutputInterface::VERBOSITY_DEBUG,

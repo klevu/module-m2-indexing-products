@@ -21,8 +21,8 @@ use Klevu\TestFixtures\Catalog\Attribute\AttributeFixturePool;
 use Klevu\TestFixtures\Catalog\AttributeTrait;
 use Klevu\TestFixtures\Store\StoreFixturesPool;
 use Klevu\TestFixtures\Store\StoreTrait;
+use Klevu\TestFixtures\Traits\AttributeApiCallTrait;
 use Klevu\TestFixtures\Traits\ObjectInstantiationTrait;
-use Klevu\TestFixtures\Traits\PipelineAttributeApiCallTrait;
 use Klevu\TestFixtures\Traits\SetAuthKeysTrait;
 use Klevu\TestFixtures\Traits\TestImplementsInterfaceTrait;
 use Magento\Eav\Api\AttributeRepositoryInterface;
@@ -37,10 +37,11 @@ use PHPUnit\Framework\TestCase;
  */
 class AttributeIndexerServiceDeleteTest extends TestCase
 {
+    use AttributeApiCallTrait;
     use AttributeTrait;
     use IndexingAttributesTrait;
     use ObjectInstantiationTrait;
-    Use PipelineAttributeApiCallTrait;
+    Use AttributeApiCallTrait;
     use SetAuthKeysTrait;
     use StoreTrait;
     use TestImplementsInterfaceTrait;
@@ -128,19 +129,19 @@ class AttributeIndexerServiceDeleteTest extends TestCase
             IndexingAttribute::TARGET_CODE => $attributeFixture->getAttributeCode(),
             IndexingAttribute::API_KEY => $apiKey1,
             IndexingAttribute::NEXT_ACTION => Actions::DELETE,
-            IndexingAttribute::LAST_ACTION => Actions::NO_ACTION,
+            IndexingAttribute::LAST_ACTION => Actions::ADD,
         ]);
         $this->createIndexingAttribute(data: [
             IndexingAttribute::TARGET_ID => $attributeFixture->getAttributeId(),
             IndexingAttribute::API_KEY => $apiKey2,
             IndexingAttribute::NEXT_ACTION => Actions::DELETE,
-            IndexingAttribute::LAST_ACTION => Actions::NO_ACTION,
+            IndexingAttribute::LAST_ACTION => Actions::UPDATE,
         ]);
         $this->createIndexingAttribute(data: [
             IndexingAttribute::TARGET_ID => $attributeFixture2->getAttributeId(),
             IndexingAttribute::API_KEY => $apiKey1,
             IndexingAttribute::NEXT_ACTION => Actions::UPDATE,
-            IndexingAttribute::LAST_ACTION => Actions::NO_ACTION,
+            IndexingAttribute::LAST_ACTION => Actions::ADD,
         ]);
 
         $accountCredentials = $this->objectManager->create(AccountCredentials::class, [
@@ -181,7 +182,7 @@ class AttributeIndexerServiceDeleteTest extends TestCase
             type: 'KLEVU_PRODUCT',
         );
         $this->assertSame(expected: Actions::DELETE, actual: $indexingAttribute2->getNextAction());
-        $this->assertSame(expected: Actions::NO_ACTION, actual: $indexingAttribute2->getLastAction());
+        $this->assertSame(expected: Actions::UPDATE, actual: $indexingAttribute2->getLastAction());
         $this->assertNull(actual: $indexingAttribute2->getLastActionTimestamp());
         $this->assertTrue(condition: $indexingAttribute2->getIsIndexable());
 
@@ -191,7 +192,7 @@ class AttributeIndexerServiceDeleteTest extends TestCase
             type: 'KLEVU_PRODUCT',
         );
         $this->assertSame(expected: Actions::UPDATE, actual: $indexingAttribute3->getNextAction());
-        $this->assertSame(expected: Actions::NO_ACTION, actual: $indexingAttribute3->getLastAction());
+        $this->assertSame(expected: Actions::ADD, actual: $indexingAttribute3->getLastAction());
         $this->assertNull(actual: $indexingAttribute3->getLastActionTimestamp());
         $this->assertTrue(condition: $indexingAttribute3->getIsIndexable());
 
@@ -242,6 +243,11 @@ class AttributeIndexerServiceDeleteTest extends TestCase
             'code' => 'klevu_test_attribute_2',
         ]);
         $attributeFixture2 = $this->attributeFixturePool->get('test_attribute_2');
+        $this->createAttribute([
+            'key' => 'test_attribute_3',
+            'code' => 'klevu_test_attribute_3',
+        ]);
+        $attributeFixture3 = $this->attributeFixturePool->get('test_attribute_3');
 
         $this->cleanIndexingAttributes(apiKey: $apiKey1);
         $this->cleanIndexingAttributes(apiKey: $apiKey2);
@@ -250,19 +256,41 @@ class AttributeIndexerServiceDeleteTest extends TestCase
             IndexingAttribute::TARGET_CODE => $attributeFixture->getAttributeCode(),
             IndexingAttribute::API_KEY => $apiKey1,
             IndexingAttribute::NEXT_ACTION => Actions::DELETE,
-            IndexingAttribute::LAST_ACTION => Actions::NO_ACTION,
-        ]);
-        $this->createIndexingAttribute(data: [
-            IndexingAttribute::TARGET_ID => $attributeFixture->getAttributeId(),
-            IndexingAttribute::API_KEY => $apiKey2,
-            IndexingAttribute::NEXT_ACTION => Actions::DELETE,
-            IndexingAttribute::LAST_ACTION => Actions::NO_ACTION,
+            IndexingAttribute::LAST_ACTION => Actions::ADD,
+            IndexingAttribute::LAST_ACTION_TIMESTAMP => date('Y-m-d H:i:s'),
         ]);
         $this->createIndexingAttribute(data: [
             IndexingAttribute::TARGET_ID => $attributeFixture2->getAttributeId(),
+            IndexingAttribute::TARGET_CODE => $attributeFixture2->getAttributeCode(),
             IndexingAttribute::API_KEY => $apiKey1,
             IndexingAttribute::NEXT_ACTION => Actions::UPDATE,
-            IndexingAttribute::LAST_ACTION => Actions::NO_ACTION,
+            IndexingAttribute::LAST_ACTION => Actions::ADD,
+            IndexingAttribute::LAST_ACTION_TIMESTAMP => date('Y-m-d H:i:s'),
+        ]);
+        $this->createIndexingAttribute(data: [
+            IndexingAttribute::TARGET_ID => $attributeFixture3->getAttributeId(),
+            IndexingAttribute::TARGET_CODE => $attributeFixture3->getAttributeCode(),
+            IndexingAttribute::API_KEY => $apiKey1,
+            IndexingAttribute::NEXT_ACTION => Actions::NO_ACTION,
+            IndexingAttribute::LAST_ACTION => Actions::DELETE,
+            IndexingAttribute::LAST_ACTION_TIMESTAMP => date('Y-m-d H:i:s'),
+            IndexingAttribute::IS_INDEXABLE => false,
+        ]);
+        $this->createIndexingAttribute(data: [
+            IndexingAttribute::TARGET_ID => $attributeFixture->getAttributeId(),
+            IndexingAttribute::TARGET_CODE => $attributeFixture->getAttributeCode(),
+            IndexingAttribute::API_KEY => $apiKey2,
+            IndexingAttribute::NEXT_ACTION => Actions::DELETE,
+            IndexingAttribute::LAST_ACTION => Actions::UPDATE,
+            IndexingAttribute::LAST_ACTION_TIMESTAMP => date('Y-m-d H:i:s'),
+        ]);
+        $this->createIndexingAttribute(data: [
+            IndexingAttribute::TARGET_ID => $attributeFixture2->getAttributeId(),
+            IndexingAttribute::TARGET_CODE => $attributeFixture2->getAttributeCode(),
+            IndexingAttribute::API_KEY => $apiKey2,
+            IndexingAttribute::NEXT_ACTION => Actions::NO_ACTION,
+            IndexingAttribute::LAST_ACTION => Actions::ADD,
+            IndexingAttribute::LAST_ACTION_TIMESTAMP => date('Y-m-d H:i:s'),
         ]);
 
         $accountCredentials = $this->objectManager->create(AccountCredentials::class, [
@@ -306,8 +334,8 @@ class AttributeIndexerServiceDeleteTest extends TestCase
             type: 'KLEVU_PRODUCT',
         );
         $this->assertSame(expected: Actions::DELETE, actual: $indexingAttribute2->getNextAction());
-        $this->assertSame(expected: Actions::NO_ACTION, actual: $indexingAttribute2->getLastAction());
-        $this->assertNull(actual: $indexingAttribute2->getLastActionTimestamp());
+        $this->assertSame(expected: Actions::UPDATE, actual: $indexingAttribute2->getLastAction());
+        $this->assertNotNull(actual: $indexingAttribute2->getLastActionTimestamp());
         $this->assertTrue(condition: $indexingAttribute2->getIsIndexable());
 
         $indexingAttribute3 = $this->getIndexingAttributeForAttribute(
@@ -316,9 +344,29 @@ class AttributeIndexerServiceDeleteTest extends TestCase
             type: 'KLEVU_PRODUCT',
         );
         $this->assertSame(expected: Actions::UPDATE, actual: $indexingAttribute3->getNextAction());
-        $this->assertSame(expected: Actions::NO_ACTION, actual: $indexingAttribute3->getLastAction());
-        $this->assertNull(actual: $indexingAttribute3->getLastActionTimestamp());
+        $this->assertSame(expected: Actions::ADD, actual: $indexingAttribute3->getLastAction());
+        $this->assertNotNull(actual: $indexingAttribute3->getLastActionTimestamp());
         $this->assertTrue(condition: $indexingAttribute3->getIsIndexable());
+
+        $indexingAttribute4 = $this->getIndexingAttributeForAttribute(
+            apiKey: $apiKey2,
+            attribute: $attributeFixture2->getAttribute(),
+            type: 'KLEVU_PRODUCT',
+        );
+        $this->assertSame(expected: Actions::NO_ACTION, actual: $indexingAttribute4->getNextAction());
+        $this->assertSame(expected: Actions::ADD, actual: $indexingAttribute4->getLastAction());
+        $this->assertNotNull(actual: $indexingAttribute4->getLastActionTimestamp());
+        $this->assertTrue(condition: $indexingAttribute4->getIsIndexable());
+
+        $indexingAttribute5 = $this->getIndexingAttributeForAttribute(
+            apiKey: $apiKey1,
+            attribute: $attributeFixture3->getAttribute(),
+            type: 'KLEVU_PRODUCT',
+        );
+        $this->assertSame(expected: Actions::NO_ACTION, actual: $indexingAttribute5->getNextAction());
+        $this->assertSame(expected: Actions::DELETE, actual: $indexingAttribute5->getLastAction());
+        $this->assertNotNull(actual: $indexingAttribute5->getLastActionTimestamp());
+        $this->assertFalse(condition: $indexingAttribute5->getIsIndexable());
 
         $this->cleanIndexingAttributes(apiKey: $apiKey1);
         $this->cleanIndexingAttributes(apiKey: $apiKey2);
@@ -353,7 +401,7 @@ class AttributeIndexerServiceDeleteTest extends TestCase
             IndexingAttribute::TARGET_CODE => $attributeFixture->getAttributeCode(),
             IndexingAttribute::API_KEY => $apiKey,
             IndexingAttribute::NEXT_ACTION => Actions::DELETE,
-            IndexingAttribute::LAST_ACTION => Actions::NO_ACTION,
+            IndexingAttribute::LAST_ACTION => Actions::ADD,
         ]);
 
         $accountCredentials = $this->objectManager->create(AccountCredentials::class, [
@@ -369,6 +417,9 @@ class AttributeIndexerServiceDeleteTest extends TestCase
                 $accountCredentials->restAuthKey,
             ),
         );
+
+        // call real SDK and let that throw the exception
+        $this->removeSharedApiInstances();
 
         $service = $this->instantiateTestObject();
         $service->execute($accountCredentials, 'KLEVU_PRODUCT');

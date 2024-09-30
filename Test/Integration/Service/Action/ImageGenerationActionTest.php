@@ -8,9 +8,9 @@ declare(strict_types=1);
 
 namespace Klevu\IndexingProducts\Test\Integration\Service\Action;
 
-use Klevu\IndexingApi\Service\Action\ImageResizeActionInterface;
+use Klevu\IndexingApi\Service\Action\ImageGenerationActionInterface;
 use Klevu\IndexingApi\Service\Provider\Image\FrameworkImageProviderInterface;
-use Klevu\IndexingProducts\Service\Action\ImageResizeAction;
+use Klevu\IndexingProducts\Service\Action\ImageGenerationAction;
 use Klevu\TestFixtures\Catalog\ProductTrait;
 use Klevu\TestFixtures\Traits\ObjectInstantiationTrait;
 use Klevu\TestFixtures\Traits\TestImplementsInterfaceTrait;
@@ -25,11 +25,11 @@ use PHPUnit\Framework\TestCase;
 use TddWizard\Fixtures\Catalog\ProductFixturePool;
 
 /**
- * @covers ImageResizeAction
- * @method ImageResizeActionInterface instantiateTestObject(?array $arguments = null)
- * @method ImageResizeActionInterface instantiateTestObjectFromInterface(?array $arguments = null)
+ * @covers ImageGenerationAction
+ * @method ImageGenerationActionInterface instantiateTestObject(?array $arguments = null)
+ * @method ImageGenerationActionInterface instantiateTestObjectFromInterface(?array $arguments = null)
  */
-class ImageResizeActionTest extends TestCase
+class ImageGenerationActionTest extends TestCase
 {
     use ObjectInstantiationTrait;
     use ProductTrait;
@@ -48,8 +48,8 @@ class ImageResizeActionTest extends TestCase
     {
         parent::setUp();
 
-        $this->implementationFqcn = ImageResizeAction::class;
-        $this->interfaceFqcn = ImageResizeActionInterface::class;
+        $this->implementationFqcn = ImageGenerationAction::class;
+        $this->interfaceFqcn = ImageGenerationActionInterface::class;
         $this->objectManager = Bootstrap::getObjectManager();
         $this->productFixturePool = $this->objectManager->get(ProductFixturePool::class);
     }

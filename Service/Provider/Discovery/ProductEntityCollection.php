@@ -9,10 +9,10 @@ declare(strict_types=1);
 namespace Klevu\IndexingProducts\Service\Provider\Discovery;
 
 use Klevu\IndexingApi\Service\Provider\Discovery\ProductEntityCollectionInterface;
+use Klevu\IndexingProducts\Model\ResourceModel\Product\Collection as ProductCollection;
+use Klevu\IndexingProducts\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Model\Product\Type;
-use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
-use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
 use Magento\CatalogInventory\Helper\Stock as StockHelper;
 use Magento\Eav\Model\Entity;
 use Magento\Store\Api\Data\StoreInterface;
@@ -63,7 +63,8 @@ class ProductEntityCollection implements ProductEntityCollectionInterface
         /**
          * Used collection over ProductRepository as it enables us to pass store id to the status and visibility
          * joins without having to setCurrentStore as is required via Repository::GetList.
-         * Also enables us to return a generator, Repository::GetList loads the collection before returning it.
+         * Also enables us to use a generator on the returned collection,
+         * Repository::GetList loads the collection before returning it.
          */
         /** @var ProductCollection $collection */
         $collection = $this->productCollectionFactory->create();
@@ -79,6 +80,11 @@ class ProductEntityCollection implements ProductEntityCollectionInterface
                 ['in' => implode(',', array_filter($entityIds))],
             );
         }
+        /**
+         * Would rather not use this deprecated method,
+         * however MSI has a plugin on this method to set the right data
+         * and this allows us to be compatible if MSI is removed from the codebase
+         */
         $this->stockHelper->addStockStatusToProducts($collection);
 
         return $collection;

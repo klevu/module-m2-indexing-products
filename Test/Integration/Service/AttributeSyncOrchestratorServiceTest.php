@@ -22,6 +22,7 @@ use Klevu\TestFixtures\Catalog\Attribute\AttributeFixturePool;
 use Klevu\TestFixtures\Catalog\AttributeTrait;
 use Klevu\TestFixtures\Store\StoreFixturesPool;
 use Klevu\TestFixtures\Store\StoreTrait;
+use Klevu\TestFixtures\Traits\AttributeApiCallTrait;
 use Klevu\TestFixtures\Traits\ObjectInstantiationTrait;
 use Klevu\TestFixtures\Traits\SetAuthKeysTrait;
 use Klevu\TestFixtures\Traits\TestImplementsInterfaceTrait;
@@ -37,6 +38,7 @@ use TddWizard\Fixtures\Core\ConfigFixture;
  */
 class AttributeSyncOrchestratorServiceTest extends TestCase
 {
+    use AttributeApiCallTrait;
     use AttributeTrait;
     use IndexingAttributesTrait;
     use ObjectInstantiationTrait;
@@ -139,6 +141,7 @@ class AttributeSyncOrchestratorServiceTest extends TestCase
             'code' => 'klevu_test_attribute_1',
             'index_as' => IndexType::INDEX,
             'aspect' => Aspect::ATTRIBUTES,
+            'trigger_real_api' => true,
         ]);
         $attributeFixture = $this->attributeFixturePool->get('test_attribute_1');
 
@@ -153,10 +156,12 @@ class AttributeSyncOrchestratorServiceTest extends TestCase
             IndexingAttribute::IS_INDEXABLE => true,
         ]);
 
+        $this->removeSharedApiInstances();
+
         $service = $this->instantiateTestObject();
         $responses = $service->execute(
-            attributeType: 'KLEVU_PRODUCT',
-            apiKey: $jsApiKey,
+            attributeTypes: ['KLEVU_PRODUCT'],
+            apiKeys: [$jsApiKey],
         );
 
         $this->assertCount(expectedCount: 1, haystack: $responses);

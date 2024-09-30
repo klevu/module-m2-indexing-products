@@ -57,7 +57,7 @@ class EntityUpdateResponderServiceTest extends TestCase
                 'Method: {method}, Debug: {message}',
                 [
                     'method' => 'Klevu\IndexingProducts\Service\EntityUpdateResponderService::execute',
-                    'message' => 'No entity Ids provided for KLEVU_PRODUCT entity update.',
+                    'message' => 'No entity Ids or sub types provided for KLEVU_PRODUCT entity update.',
                 ],
             );
 
@@ -75,6 +75,7 @@ class EntityUpdateResponderServiceTest extends TestCase
             EntityUpdate::STORE_IDS => [1, 2],
             EntityUpdate::CUSTOMER_GROUP_IDS => [10, 11],
             EntityUpdate::ATTRIBUTES => ['price', 'stock'],
+            EntityUpdate::ENTITY_SUBTYPES => ['simple', 'bundle'],
         ];
 
         $entityUpdateFactory = $this->objectManager->get(EntityUpdateInterfaceFactory::class);
@@ -101,6 +102,7 @@ class EntityUpdateResponderServiceTest extends TestCase
             EntityUpdate::STORE_IDS => [1, 2],
             EntityUpdate::CUSTOMER_GROUP_IDS => [10, 11],
             EntityUpdateResponderServiceInterface::CHANGED_ATTRIBUTES => ['price', 'stock'],
+            EntityUpdate::ENTITY_SUBTYPES => ['simple', 'bundle'],
         ];
 
         $service = $this->instantiateTestObject([
@@ -123,6 +125,7 @@ class EntityUpdateResponderServiceTest extends TestCase
                     EntityUpdate::STORE_IDS => [],
                     EntityUpdate::CUSTOMER_GROUP_IDS => [],
                     EntityUpdate::ATTRIBUTES => [],
+                    EntityUpdate::ENTITY_SUBTYPES => [],
                 ],
                 $data,
             ),
@@ -194,6 +197,7 @@ class EntityUpdateResponderServiceTest extends TestCase
             'storeIds' => [1, 2],
             'customerGroupIds' => [1, 2],
             'attributes' => ["price", "stock", "categories"],
+            EntityUpdate::ENTITY_SUBTYPES => ['virtual', 'configurable'],
         ];
         $data[$invalidKey] = $data[$key];
         unset($data[$key]);

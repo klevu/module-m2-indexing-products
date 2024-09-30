@@ -230,13 +230,13 @@ class ConfigurableProductEntityProviderTest extends TestCase
         foreach ($searchResults1 as $searchResult) {
             $items1[] = $searchResult;
         }
-        $this->assertCount(expectedCount: 1, haystack: $items1);
         $product1Array = array_filter(
             array: $items1,
             callback: static function (ProductInterface $product) use ($productConfigurable): bool {
                 return (int)$product->getId() === (int)$productConfigurable->getId();
             },
         );
+        $this->assertCount(expectedCount: 1, haystack: $product1Array);
         $productConfigurable1Store1 = array_shift($product1Array);
         $this->assertSame(
             expected: 'Configurable Product 1 Store 1',

@@ -143,8 +143,8 @@ class EntitySyncOrchestratorServiceTest extends TestCase
                 'Method: {method}, Warning: {message}',
                 [
                     'method' => 'Klevu\Indexing\Service\EntitySyncOrchestratorService::getCredentialsArray',
-                    'message' => 'No Account found for provided API Key. '
-                        . 'Check the JS API Key (incorrect-key) provided.',
+                    'message' => 'No Account found for provided API Keys. '
+                        . 'Check the JS API Keys (incorrect-key) provided.',
                 ],
             );
 
@@ -152,7 +152,7 @@ class EntitySyncOrchestratorServiceTest extends TestCase
             'logger' => $mockLogger,
             'entityIndexerServices' => [],
         ]);
-        $service->execute(apiKey: 'incorrect-key');
+        $service->execute(apiKeys: ['incorrect-key']);
 
         $this->cleanIndexingEntities(apiKey: $apiKey);
     }
@@ -214,8 +214,8 @@ class EntitySyncOrchestratorServiceTest extends TestCase
 
         $service = $this->instantiateTestObject();
         $result = $service->execute(
-            entityType: 'KLEVU_PRODUCT',
-            apiKey: $apiKey,
+            entityTypes: ['KLEVU_PRODUCT'],
+            apiKeys: [$apiKey],
             via: 'CLI::klevu:indexing:entity-sync',
         );
 
@@ -391,8 +391,8 @@ class EntitySyncOrchestratorServiceTest extends TestCase
 
         $service = $this->instantiateTestObject();
         $result = $service->execute(
-            entityType: 'KLEVU_PRODUCT',
-            apiKey: $apiKey,
+            entityTypes: ['KLEVU_PRODUCT'],
+            apiKeys: [$apiKey],
             via: 'CLI::klevu:indexing:entity-sync',
         );
 
@@ -543,8 +543,8 @@ class EntitySyncOrchestratorServiceTest extends TestCase
 
         $service = $this->instantiateTestObject();
         $result = $service->execute(
-            entityType: 'KLEVU_PRODUCT',
-            apiKey: $apiKey,
+            entityTypes: ['KLEVU_PRODUCT'],
+            apiKeys: [$apiKey],
             via: 'CLI::klevu:indexing:entity-sync',
         );
 

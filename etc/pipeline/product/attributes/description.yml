@@ -8,5 +8,4 @@ stages:
           extraction: currentProduct::getDescription()
           transformations:
             - StripTags(null, ["script"])
-            - EscapeHtml
             - Trim

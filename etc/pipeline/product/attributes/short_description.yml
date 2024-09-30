@@ -7,5 +7,6 @@ stages:
         args:
           extraction: currentProduct::getShortDescription()
           transformations:
-            - StripTags(null, ["script"])
+            - StripTags(["p", "br", "hr", "h1", "h2", "h3", "h4", "h5", "h6", "strong", "em", "ul", "ol", "li", "dl", "dt", "dd", "img", "sub", "sup", "small"], ["script"])
             - EscapeHtml
+            - Trim

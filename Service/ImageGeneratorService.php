@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace Klevu\IndexingProducts\Service;
 
-use Klevu\IndexingApi\Service\Action\ImageResizeActionInterface;
+use Klevu\IndexingApi\Service\Action\ImageGenerationActionInterface;
 use Klevu\IndexingApi\Service\ImageGeneratorServiceInterface;
 use Magento\Catalog\Model\Product\Image\ParamsBuilder;
 use Magento\Catalog\Model\Product\Image\ParamsBuilderFactory;
@@ -23,9 +23,9 @@ class ImageGeneratorService implements ImageGeneratorServiceInterface
      */
     private readonly ParamsBuilderFactory $paramsBuilderFactory;
     /**
-     * @var ImageResizeActionInterface
+     * @var ImageGenerationActionInterface
      */
-    private readonly ImageResizeActionInterface $imageResizeAction;
+    private readonly ImageGenerationActionInterface $imageResizeAction;
     /**
      * @var State
      */
@@ -37,13 +37,13 @@ class ImageGeneratorService implements ImageGeneratorServiceInterface
 
     /**
      * @param ParamsBuilderFactory $paramsBuilderFactory
-     * @param ImageResizeActionInterface $imageResizeAction
+     * @param ImageGenerationActionInterface $imageResizeAction
      * @param State $state
      * @param mixed[] $imageParams
      */
     public function __construct(
         ParamsBuilderFactory $paramsBuilderFactory,
-        ImageResizeActionInterface $imageResizeAction,
+        ImageGenerationActionInterface $imageResizeAction,
         State $state,
         array $imageParams = [],
     ) {

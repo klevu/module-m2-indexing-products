@@ -245,8 +245,8 @@ class KlevuIndexingPropertiesOutputTest extends AbstractBackendControllerTestCas
 
         $matches = [];
         $pattern = '#<select id="klevu_is_indexable" name="klevu_is_indexable" title="Register with Klevu".*>\s*'
-            . '<option value="0".*>No</option>\s*'
             . '<option value="1".*selected="selected">Yes</option>\s*'
+            . '<option value="0".*>No</option>\s*'
             . '</select>#';
         preg_match(
             pattern: $pattern,

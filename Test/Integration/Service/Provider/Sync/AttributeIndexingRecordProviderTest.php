@@ -15,6 +15,7 @@ use Klevu\Indexing\Service\Provider\Sync\AttributeIndexingRecordProvider;
 use Klevu\Indexing\Test\Integration\Traits\IndexingAttributesTrait;
 use Klevu\IndexingApi\Model\Source\Actions;
 use Klevu\IndexingApi\Model\Source\IndexType;
+use Klevu\IndexingApi\Service\AttributeIndexingRecordCreatorServiceInterface;
 use Klevu\IndexingApi\Service\Provider\Sync\AttributeIndexingRecordProviderInterface;
 use Klevu\IndexingProducts\Model\Source\Aspect;
 use Klevu\IndexingProducts\Service\AttributeIndexingRecordCreatorService;
@@ -85,6 +86,8 @@ class AttributeIndexingRecordProviderTest extends TestCase
     }
 
     /**
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
      * @magentoConfigFixture default/general/locale/code en_US
      * @magentoConfigFixture klevu_test_store_1_store general/locale/code en_GB
      */
@@ -92,19 +95,15 @@ class AttributeIndexingRecordProviderTest extends TestCase
     {
         $apiKey = 'klevu-test-api-key';
 
-        $this->createStore([
-            'key' => 'test_store_1',
-            'code' => 'klevu_test_store_1',
-        ]);
-        $storeFixture1 = $this->storeFixturesPool->get('test_store_1');
-        $scopeProvider1 = $this->objectManager->create(ScopeProviderInterface::class);
-        $scopeProvider1->setCurrentScope(scope: $storeFixture1->get());
+        $this->createStore();
+        $storeFixture = $this->storeFixturesPool->get('test_store');
+        $scopeProvider = $this->objectManager->create(ScopeProviderInterface::class);
+        $scopeProvider->setCurrentScope(scope: $storeFixture->get());
         $this->setAuthKeys(
-            scopeProvider: $scopeProvider1,
+            scopeProvider: $scopeProvider,
             jsApiKey: $apiKey,
             restAuthKey: 'klevu-rest-key-1',
         );
-        $scopeProvider1->unsetCurrentScope();
 
         $this->createAttribute([
             'key' => 'klevu_product_text_attribute',
@@ -112,7 +111,7 @@ class AttributeIndexingRecordProviderTest extends TestCase
             'attribute_type' => 'text',
             'label' => 'TEST ATTRIBUTE',
             'labels' => [
-                $storeFixture1->getId() => 'Label Store 1',
+                $storeFixture->getId() => 'Label Store 1',
             ],
             'data' => [
                 'is_searchable' => true,
@@ -204,9 +203,12 @@ class AttributeIndexingRecordProviderTest extends TestCase
             ),
         );
         $this->assertCount(expectedCount: 0, haystack: $filteredResult);
+
+        $this->cleanIndexingAttributes(apiKey: $apiKey);
     }
 
     /**
+     * @magentoAppIsolation enabled
      * @magentoConfigFixture default/general/locale/code en_US
      * @magentoConfigFixture klevu_test_store_1_store general/locale/code en_GB
      */
@@ -226,7 +228,6 @@ class AttributeIndexingRecordProviderTest extends TestCase
             jsApiKey: $apiKey,
             restAuthKey: 'klevu-rest-key-1',
         );
-        $scopeProvider1->unsetCurrentScope();
 
         $this->createAttribute([
             'key' => 'klevu_attribute_1',
@@ -269,7 +270,7 @@ class AttributeIndexingRecordProviderTest extends TestCase
         $mockLogger->expects($this->once())
             ->method('error')
             ->with(
-                'Method: {method}, Error: {message}',
+                'Method: {method}, Error: {message}, Attribute: {attribute_code}',
                 [
                     // phpcs:ignore Generic.Files.LineLength.TooLong
                     'method' => 'Klevu\Indexing\Service\Provider\Sync\AttributeIndexingRecordProvider::syncAttributes',
@@ -278,11 +279,12 @@ class AttributeIndexingRecordProviderTest extends TestCase
                         . 'Klevu attribute %s is mapped to Magento attribute %s. '
                         . '2 Magento attributes can not be mapped to the same Klevu attribute. '
                         . 'Either add mapping for Magento attribute %s or set it not to be indexable.',
-                        'klevu_attribute_2',
-                        'klevu_attribute_2',
-                        'klevu_attribute_1',
-                        'klevu_attribute_2',
+                        $productAttribute2->getAttributeCode(),
+                        $productAttribute2->getAttributeCode(),
+                        $productAttribute1->getAttributeCode(),
+                        $productAttribute2->getAttributeCode(),
                     ),
+                    'attribute_code' => $productAttribute2->getAttributeCode(),
                 ],
             );
 
@@ -311,9 +313,11 @@ class AttributeIndexingRecordProviderTest extends TestCase
             $indexingRecords[] = $indexingRecord;
         }
         $this->assertCount(expectedCount: 1, haystack: $indexingRecords);
+        $this->cleanIndexingAttributes(apiKey: $apiKey);
     }
 
     /**
+     * @magentoAppIsolation enabled
      * @magentoConfigFixture default/general/locale/code en_US
      * @magentoConfigFixture klevu_test_store_1_store general/locale/code en_GB
      */
@@ -333,7 +337,6 @@ class AttributeIndexingRecordProviderTest extends TestCase
             jsApiKey: $apiKey,
             restAuthKey: 'klevu-rest-key-1',
         );
-        $scopeProvider1->unsetCurrentScope();
 
         $this->createAttribute([
             'key' => 'klevu_attribute_1',
@@ -401,5 +404,88 @@ class AttributeIndexingRecordProviderTest extends TestCase
             $indexingRecords[] = $indexingRecord;
         }
         $this->assertCount(expectedCount: 1, haystack: $indexingRecords);
+    }
+
+    /**
+     * @magentoAppIsolation enabled
+     * @magentoConfigFixture default/general/locale/code en_US
+     * @magentoConfigFixture klevu_test_store_1_store general/locale/code en_GB
+     */
+    public function testGet_LogsError_WhenTypeErrorThrown(): void
+    {
+        $apiKey = 'klevu-test-api-key';
+
+        $typeErrorMessage = 'Klevu\PhpSDK\Model\Indexing\Attribute::addLabel(): '
+            . 'Argument #1 ($label) must be of type string, null given, called in '
+            . '/var/www/html/magento2-plugin/php-sdk/src/Model/Indexing/Attribute.php on line 224';
+
+        $this->createStore([
+            'key' => 'test_store_1',
+            'code' => 'klevu_test_store_1',
+        ]);
+        $storeFixture1 = $this->storeFixturesPool->get('test_store_1');
+        $scopeProvider1 = $this->objectManager->create(ScopeProviderInterface::class);
+        $scopeProvider1->setCurrentScope(scope: $storeFixture1->get());
+        $this->setAuthKeys(
+            scopeProvider: $scopeProvider1,
+            jsApiKey: $apiKey,
+            restAuthKey: 'klevu-rest-key-1',
+        );
+
+        $this->createAttribute([
+            'key' => 'klevu_attribute_1',
+            'code' => 'klevu_attribute_1',
+            'attribute_type' => 'text',
+            'index_as' => IndexType::INDEX,
+            'aspect' => Aspect::ATTRIBUTES,
+        ]);
+        $attributeFixture1 = $this->attributeFixturePool->get('klevu_attribute_1');
+        $productAttribute1 = $attributeFixture1->getAttribute();
+
+        $this->cleanIndexingAttributes(apiKey: $apiKey);
+        $this->createIndexingAttribute([
+            IndexingAttribute::API_KEY => $apiKey,
+            IndexingAttribute::TARGET_ID => $productAttribute1->getAttributeId(),
+            IndexingAttribute::TARGET_CODE => $productAttribute1->getAttributeCode(),
+            IndexingAttribute::TARGET_ATTRIBUTE_TYPE => 'KLEVU_PRODUCT',
+            IndexingAttribute::NEXT_ACTION => Actions::ADD,
+        ]);
+
+        $mockLogger = $this->getMockBuilder(LoggerInterface::class)
+            ->getMock();
+        $mockLogger->expects($this->once())
+            ->method('error')
+            ->with(
+                'Method: {method}, Error: {message}, Attribute: {attribute_code}',
+                [
+                    // phpcs:ignore Generic.Files.LineLength.TooLong
+                    'method' => 'Klevu\Indexing\Service\Provider\Sync\AttributeIndexingRecordProvider::syncAttributes',
+                    'message' => $typeErrorMessage,
+                    'attribute_code' => $productAttribute1->getAttributeCode(),
+                ],
+            );
+
+        $mockAttributeIndexingRecordCreatorService = $this->getMockBuilder(
+            className: AttributeIndexingRecordCreatorServiceInterface::class,
+        )
+            ->disableOriginalConstructor()
+            ->getMock();
+        $mockAttributeIndexingRecordCreatorService->method('execute')
+            ->willThrowException(
+                new \TypeError($typeErrorMessage),
+            );
+
+        $provider = $this->instantiateTestObject([
+            'indexingRecordCreatorService' => $mockAttributeIndexingRecordCreatorService,
+            'logger' => $mockLogger,
+            'action' => 'Add',
+        ]);
+        $result = $provider->get($apiKey);
+
+        $indexingRecords = [];
+        foreach ($result as $indexingRecord) {
+            $indexingRecords[] = $indexingRecord;
+        }
+        $this->assertCount(expectedCount: 0, haystack: $indexingRecords);
     }
 }

@@ -148,7 +148,7 @@ class AttributesToWatchProvider implements AttributesToWatchProviderInterface
         /** @var FilterGroupBuilder $filterGroupBuilder */
         $filterGroupBuilder = $this->filterGroupBuilderFactory->create();
         $filterGroupBuilder->addFilter(
-            filter: $this->getFilterForIndexableCustomAttributes(),
+            filter: $this->getFilterForIndexableCustomAttributesAspects(),
         );
         /** @var FilterGroup $filterGroup */
         $filterGroup = $filterGroupBuilder->create();
@@ -160,7 +160,7 @@ class AttributesToWatchProvider implements AttributesToWatchProviderInterface
     /***
      * @return Filter
      */
-    private function getFilterForIndexableCustomAttributes(): Filter
+    private function getFilterForIndexableCustomAttributesAspects(): Filter
     {
         /** @var FilterBuilder $filterBuilder */
         $filterBuilder = $this->filterBuilderFactory->create();

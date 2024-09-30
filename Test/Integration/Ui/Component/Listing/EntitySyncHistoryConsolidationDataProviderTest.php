@@ -229,10 +229,13 @@ class EntitySyncHistoryConsolidationDataProviderTest extends TestCase
             expected: date('M j, Y'),
             actual: $record1[SyncHistoryEntityConsolidationRecord::DATE] ?? null,
         );
+        $history1 = $record1[SyncHistoryEntityConsolidationRecord::HISTORY]
+            ? str_replace("\u{202F}", ' ', $record1[SyncHistoryEntityConsolidationRecord::HISTORY])
+            : null;
         $this->assertSame(
             expected: 'May 18, 2024, 4:07:30 AM - Add - Success - Accepted<br/>'
                 . 'May 18, 2024, 5:12:42 AM - Update - Failed - Rejected<br/>',
-            actual: $record1[SyncHistoryEntityConsolidationRecord::HISTORY] ?? null,
+            actual: $history1,
         );
 
         $record2Array = array_filter(
@@ -264,9 +267,12 @@ class EntitySyncHistoryConsolidationDataProviderTest extends TestCase
             expected: date('M j, Y'),
             actual: $record2[SyncHistoryEntityConsolidationRecord::DATE] ?? null,
         );
+        $history2 = $record2[SyncHistoryEntityConsolidationRecord::HISTORY]
+            ? str_replace("\u{202F}", ' ', $record2[SyncHistoryEntityConsolidationRecord::HISTORY])
+            : null;
         $this->assertSame(
             expected: 'May 18, 2024, 6:32:21 AM - Add - Success - Accepted<br/>',
-            actual: $record2[SyncHistoryEntityConsolidationRecord::HISTORY] ?? null,
+            actual: $history2,
         );
 
         $this->clearSyncHistoryConsolidationEntities(apiKey: $apiKey);
@@ -318,9 +324,12 @@ class EntitySyncHistoryConsolidationDataProviderTest extends TestCase
             expected: date('n/j/y'),
             actual: $record[SyncHistoryEntityConsolidationRecord::DATE] ?? null,
         );
+        $history = $record[SyncHistoryEntityConsolidationRecord::HISTORY]
+            ? str_replace("\u{202F}", ' ', $record[SyncHistoryEntityConsolidationRecord::HISTORY])
+            : null;
         $this->assertSame(
             expected: '5/18/24, 6:32:21 AM - Add - Success - Accepted<br/>',
-            actual: $record[SyncHistoryEntityConsolidationRecord::HISTORY] ?? null,
+            actual: $history,
         );
 
         $this->clearSyncHistoryConsolidationEntities(apiKey: $apiKey);

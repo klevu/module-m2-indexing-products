@@ -95,6 +95,7 @@ class ProductAttributeProviderTest extends TestCase
         $provider = $this->instantiateTestObject();
         $searchResults = $provider->get();
 
+        /** @var AttributeInterface[] $items */
         $items = [];
         foreach ($searchResults as $searchResult) {
             $items[] = $searchResult;
@@ -125,7 +126,7 @@ class ProductAttributeProviderTest extends TestCase
         $this->assertSame(
             expected: IndexType::INDEX->value,
             actual: (int)$attribute1->getData(// @phpstan-ignore-line
-            MagentoAttributeInterface::ATTRIBUTE_PROPERTY_IS_INDEXABLE,
+                MagentoAttributeInterface::ATTRIBUTE_PROPERTY_IS_INDEXABLE,
             ),
         );
 

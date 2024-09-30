@@ -9,12 +9,8 @@ declare(strict_types=1);
 namespace Klevu\IndexingProducts\Service\Provider\Discovery;
 
 use Klevu\IndexingApi\Service\Provider\Discovery\ProductEntityCollectionInterface;
-use Klevu\IndexingProducts\Model\ResourceModel\Catalog\ConfigurableProduct\Collection as ConfigurableProductCollection;
-// phpcs:ignore Generic.Files.LineLength.TooLong
-use Klevu\IndexingProducts\Model\ResourceModel\Catalog\ConfigurableProduct\CollectionFactory as ConfigurableProductCollectionFactory;
-use Magento\Catalog\Api\Data\ProductAttributeInterface;
-use Magento\Catalog\Api\Data\ProductInterface;
-use Magento\Catalog\Api\ProductAttributeRepositoryInterface;
+use Klevu\IndexingProducts\Model\ResourceModel\Catalog\ConfigurableVariantProduct\Collection as ConfigurableProductCollection; // phpcs:ignore Generic.Files.LineLength.TooLong
+use Klevu\IndexingProducts\Model\ResourceModel\Catalog\ConfigurableVariantProduct\CollectionFactory as ConfigurableProductCollectionFactory; // phpcs:ignore Generic.Files.LineLength.TooLong
 use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
 use Magento\Eav\Model\Entity;
 use Magento\Framework\Exception\LocalizedException;
@@ -29,26 +25,19 @@ class ConfigurableVariantProductEntityCollection implements ProductEntityCollect
      */
     private readonly ConfigurableProductCollectionFactory $configurableProductCollectionFactory;
     /**
-     * @var ProductAttributeRepositoryInterface
-     */
-    private ProductAttributeRepositoryInterface $productAttributeRepository;
-    /**
      * @var LoggerInterface
      */
     private readonly LoggerInterface $logger;
 
     /**
      * @param ConfigurableProductCollectionFactory $configurableProductCollectionFactory
-     * @param ProductAttributeRepositoryInterface $productAttributeRepository
      * @param LoggerInterface $logger
      */
     public function __construct(
         ConfigurableProductCollectionFactory $configurableProductCollectionFactory,
-        ProductAttributeRepositoryInterface $productAttributeRepository,
         LoggerInterface $logger,
     ) {
         $this->configurableProductCollectionFactory = $configurableProductCollectionFactory;
-        $this->productAttributeRepository = $productAttributeRepository;
         $this->logger = $logger;
     }
 
@@ -65,13 +54,7 @@ class ConfigurableVariantProductEntityCollection implements ProductEntityCollect
     {
         /** @var ConfigurableProductCollection $collection */
         $collection = $this->configurableProductCollectionFactory->create();
-        $collection->getConfigurableCollection(
-            store: $store,
-        );
-        $collection->joinProductParentAttributes(
-            attributes: $this->getParentAttributesToJoin(),
-            store: $store,
-        );
+        $collection->getConfigurableCollection(store: $store);
         if ($entityIds) {
             $collection->addFieldToFilter(
                 Entity::DEFAULT_ENTITY_ID_FIELD,
@@ -88,18 +71,5 @@ class ConfigurableVariantProductEntityCollection implements ProductEntityCollect
         );
 
         return $collection;
-    }
-
-    /**
-     * @return ProductAttributeInterface[]
-     * @throws NoSuchEntityException
-     */
-    private function getParentAttributesToJoin(): array
-    {
-        $statusAttribute = $this->productAttributeRepository->get(
-            attributeCode: ProductInterface::STATUS,
-        );
-
-        return [$statusAttribute];
     }
 }

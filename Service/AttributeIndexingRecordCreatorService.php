@@ -62,16 +62,17 @@ class AttributeIndexingRecordCreatorService implements AttributeIndexingRecordCr
      *
      * @return SdkAttributeInterface
      * @throws AttributeMappingMissingException
+     * @throws \TypeError
      */
     public function execute(AttributeInterface $attribute, string $apiKey): SdkAttributeInterface
     {
         return $this->attributeFactory->create(data: [
-            'attributeName' => $this->getAttributeName($attribute),
-            'datatype' => $this->getDataType($attribute),
-            'label' => $this->getLabels($attribute, $apiKey),
-            'searchable' => $this->getIsSearchable($attribute),
-            'filterable' => $this->getIsFilterable($attribute),
-            'returnable' => $this->getIsReturnable($attribute),
+            'attributeName' => $this->getAttributeName(attribute: $attribute, apiKey: $apiKey),
+            'datatype' => $this->getDataType(attribute: $attribute),
+            'label' => $this->getLabels(attribute: $attribute, apiKey: $apiKey),
+            'searchable' => $this->getIsSearchable(attribute: $attribute),
+            'filterable' => $this->getIsFilterable(attribute: $attribute),
+            'returnable' => $this->getIsReturnable(attribute: $attribute),
         ]);
     }
 
@@ -81,9 +82,9 @@ class AttributeIndexingRecordCreatorService implements AttributeIndexingRecordCr
      * @return string
      * @throws AttributeMappingMissingException
      */
-    private function getAttributeName(AttributeInterface $attribute): string
+    private function getAttributeName(AttributeInterface $attribute, string $apiKey): string
     {
-        return $this->attributeMapperService->get($attribute);
+        return $this->attributeMapperService->get(attribute: $attribute, apiKey: $apiKey);
     }
 
     /**
@@ -93,7 +94,7 @@ class AttributeIndexingRecordCreatorService implements AttributeIndexingRecordCr
      */
     private function getDataType(AttributeInterface $attribute): DataType
     {
-        return $this->attributeTypeMapperService->execute($attribute);
+        return $this->attributeTypeMapperService->execute(attribute: $attribute);
     }
 
     /**

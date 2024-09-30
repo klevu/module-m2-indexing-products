@@ -102,7 +102,6 @@ class AddEntityIndexingRecordProviderTest extends TestCase
             jsApiKey: $apiKey,
             restAuthKey: 'klevu-test-auth-key',
         );
-        $scopeProvider->unsetCurrentScope();
 
         $this->createProduct([
             'type_id' => $productType,
@@ -136,7 +135,6 @@ class AddEntityIndexingRecordProviderTest extends TestCase
     {
         $apiKey = 'klevu-test-api-key';
         $authKey = 'klevu-test-auth-key';
-        $this->cleanIndexingEntities(apiKey: $apiKey);
 
         $this->createStore([
             'key' => 'test_store_1',
@@ -158,7 +156,6 @@ class AddEntityIndexingRecordProviderTest extends TestCase
                 restAuthKey: $authKey,
                 removeApiKeys: false,
             );
-            $scopeProvider->unsetCurrentScope();
         }
 
         $this->createAttribute([
@@ -256,7 +253,6 @@ class AddEntityIndexingRecordProviderTest extends TestCase
     {
         $apiKey = 'klevu-test-api-key';
         $authKey = 'klevu-test-auth-key';
-        $this->cleanIndexingEntities(apiKey: $apiKey);
 
         $this->createStore([
             'key' => 'test_store_1',
@@ -278,7 +274,6 @@ class AddEntityIndexingRecordProviderTest extends TestCase
                 restAuthKey: $authKey,
                 removeApiKeys: false,
             );
-            $scopeProvider->unsetCurrentScope();
         }
 
         $this->createProduct([

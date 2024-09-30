@@ -24,5 +24,11 @@
                 identity="false"
                 default="0"
                 comment="Map To Klevu Aspect"/>
+        <column xsi:type="varchar"
+                name="klevu_generate_config_for"
+                length="255"
+                nullable="false"
+                default=""
+                comment="Automatically generate indexing YAML configuration for selected entity subtypes"/>
     </table>
 </schema>
