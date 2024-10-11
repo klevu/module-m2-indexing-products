@@ -1245,7 +1245,7 @@
         </arguments>
     </type>
 
-    <type name="Klevu\Indexing\Console\Command\ConfigurationDumpPipelineCommand">
+    <type name="Klevu\Indexing\Service\Provider\PipelineConfigurationProvider">
         <arguments>
             <argument name="entityIndexerServices" xsi:type="array">
                 <item name="KLEVU_PRODUCT::add"
@@ -1266,7 +1266,7 @@
         </arguments>
     </type>
 
-    <type name="Klevu\Indexing\Console\Command\ConfigurationOverridesRegenerateCommand">
+    <type name="Klevu\Indexing\Service\Provider\PipelineConfigurationOverridesHandlerProvider">
         <arguments>
             <argument name="configurationOverridesHandlers" xsi:type="array">
                 <item name="KLEVU_PRODUCT" xsi:type="array">

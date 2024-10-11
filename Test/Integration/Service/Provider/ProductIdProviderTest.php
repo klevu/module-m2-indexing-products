@@ -213,10 +213,10 @@ class ProductIdProviderTest extends TestCase
         $product = $productFixture->getProduct();
 
         $provider = $this->instantiateTestObject();
-        $result = $provider->getByLinkFields([(int)$product->getId()]);
+        $result = $provider->getByLinkFields([(int)$product->getData($productMetadata->getLinkField())]);
 
         $this->assertSame(
-            expected: [(int)$product->getData($productMetadata->getLinkField())],
+            expected: [(int)$product->getId()],
             actual: $result,
         );
     }

@@ -17,6 +17,7 @@ use Magento\Catalog\Model\ResourceModel\ProductFactory as ProductResourceModelFa
 use Magento\Eav\Model\Entity\Attribute\Source\AbstractSource;
 use Magento\Framework\DataObject;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Phrase;
 
 class AttributeTextProvider implements AttributeTextProviderInterface
 {
@@ -53,6 +54,9 @@ class AttributeTextProvider implements AttributeTextProviderInterface
             return null;
         }
         $optionText = $attributeSource->getOptionText($value);
+        if ($optionText instanceof Phrase) { // @phpstan-ignore-line incorrect return type docBlock in Magento core
+            $optionText = $optionText->render();
+        }
 
         return false === $optionText
             ? null

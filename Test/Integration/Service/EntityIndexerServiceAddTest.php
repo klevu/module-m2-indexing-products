@@ -1598,8 +1598,10 @@ class EntityIndexerServiceAddTest extends TestCase
         $ratingIds = $this->getRatingIds();
         $ratings = [];
         $value = 2;
+        $total = 0;
         foreach ($ratingIds as $ratingId) {
             $ratings[$ratingId] = $value;
+            $total += $value;
             $value++;
         }
         $this->createReview([
@@ -1758,7 +1760,7 @@ class EntityIndexerServiceAddTest extends TestCase
         );
 
         $this->assertArrayHasKey(key: 'rating', array: $attributes);
-        $this->assertSame(expected: 3.0, actual: $attributes['rating']);
+        $this->assertSame(expected: $total / count($ratingIds), actual: $attributes['rating']);
 
         $this->assertArrayHasKey(key: 'ratingCount', array: $attributes);
         $this->assertSame(expected: 1, actual: $attributes['ratingCount']);
@@ -1912,8 +1914,10 @@ class EntityIndexerServiceAddTest extends TestCase
         $ratingIds = $this->getRatingIds();
         $ratings = [];
         $value = 2;
+        $total = 0;
         foreach ($ratingIds as $ratingId) {
             $ratings[$ratingId] = $value;
+            $total += $value;
             $value++;
         }
         $this->createReview([
@@ -2037,7 +2041,7 @@ class EntityIndexerServiceAddTest extends TestCase
         );
 
         $this->assertArrayHasKey(key: 'rating', array: $attributes);
-        $this->assertSame(expected: 3.0, actual: $attributes['rating']);
+        $this->assertSame(expected: $total / count($ratingIds), actual: $attributes['rating']);
 
         $this->assertArrayHasKey(key: 'ratingCount', array: $attributes);
         $this->assertSame(expected: 1, actual: $attributes['ratingCount']);

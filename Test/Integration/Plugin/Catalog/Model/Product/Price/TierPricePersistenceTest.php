@@ -459,7 +459,7 @@ class TierPricePersistenceTest extends TestCase
     ): array {
         $tierPriceResourceModel = $this->objectManager->get(TierpriceResourceModel::class);
         $priceDataArray = $tierPriceResourceModel->loadPriceData(
-            productId: $product->getId(),
+            productId: $product->getData($this->productMetadata->getLinkField()),
             websiteId: $store->getWebsiteId(),
         );
 

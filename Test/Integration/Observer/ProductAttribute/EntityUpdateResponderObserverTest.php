@@ -121,7 +121,7 @@ class EntityUpdateResponderObserverTest extends TestCase
     /**
      * @magentoDbIsolation disabled
      */
-    public function testAttributeSave_DoesNothing_WhenNoDataChanges(): void // phpcs:ignore Generic.Files.LineLength.TooLong
+    public function testAttributeSave_DoesNothing_WhenNoDataChanges(): void
     {
         $apiKey = 'klevu-js-api-key';
 
@@ -182,7 +182,7 @@ class EntityUpdateResponderObserverTest extends TestCase
     /**
      * @magentoDbIsolation disabled
      */
-    public function testAttributeSave_AddEntitySubTypes(): void // phpcs:ignore Generic.Files.LineLength.TooLong
+    public function testAttributeSave_AddEntitySubTypes(): void
     {
         $apiKey = 'klevu-js-api-key';
 
@@ -277,7 +277,7 @@ class EntityUpdateResponderObserverTest extends TestCase
     /**
      * @magentoDbIsolation disabled
      */
-    public function testAttributeSave_RemoveEntitySubTypes(): void // phpcs:ignore Generic.Files.LineLength.TooLong
+    public function testAttributeSave_RemoveEntitySubTypes(): void
     {
         $apiKey = 'klevu-js-api-key';
 
@@ -405,7 +405,7 @@ class EntityUpdateResponderObserverTest extends TestCase
     /**
      * @magentoDbIsolation disabled
      */
-    public function testAttributeSave_EanbleRegisterWithKlevu(): void // phpcs:ignore Generic.Files.LineLength.TooLong
+    public function testAttributeSave_EnableRegisterWithKlevu(): void
     {
         $apiKey = 'klevu-js-api-key';
 
@@ -531,7 +531,7 @@ class EntityUpdateResponderObserverTest extends TestCase
     /**
      * @magentoDbIsolation disabled
      */
-    public function testAttributeSave_DisableRegisterWithKlevu(): void // phpcs:ignore Generic.Files.LineLength.TooLong
+    public function testAttributeSave_DisableRegisterWithKlevu(): void
     {
         $apiKey = 'klevu-js-api-key';
 
@@ -697,7 +697,7 @@ class EntityUpdateResponderObserverTest extends TestCase
     /**
      * @magentoDbIsolation disabled
      */
-    public function testAttributeSave_EnableRegisterWithKlevu_UpdateSubTypesChanges(): void // phpcs:ignore Generic.Files.LineLength.TooLong
+    public function testAttributeSave_EnableRegisterWithKlevu_UpdateSubTypesChanges(): void
     {
         $apiKey = 'klevu-js-api-key';
 
@@ -826,7 +826,7 @@ class EntityUpdateResponderObserverTest extends TestCase
     /**
      * @magentoDbIsolation disabled
      */
-    public function testAttributeSave_DisableRegisterWithKlevu_UpdateSubTypesChanges(): void // phpcs:ignore Generic.Files.LineLength.TooLong
+    public function testAttributeSave_DisableRegisterWithKlevu_UpdateSubTypesChanges(): void
     {
         $apiKey = 'klevu-js-api-key';
 
@@ -919,6 +919,129 @@ class EntityUpdateResponderObserverTest extends TestCase
             ['grouped'],
         );
         $this->resourceModel->save($attribute); // @phpstan-ignore-line
+
+        $indexingEntity1 = $this->getIndexingEntityForEntity(
+            apiKey: $apiKey,
+            entity: $productFixture1->getProduct(),
+            type: 'KLEVU_PRODUCT',
+        );
+        $this->assertSame(
+            expected: Actions::UPDATE,
+            actual: $indexingEntity1->getNextAction(),
+            message: 'Expected ' . Actions::UPDATE->value . ', received ' . $indexingEntity1->getNextAction()->value,
+        );
+
+        $indexingEntity2 = $this->getIndexingEntityForEntity(
+            apiKey: $apiKey,
+            entity: $productFixture2->getProduct(),
+            type: 'KLEVU_PRODUCT',
+        );
+        $this->assertSame(
+            expected: Actions::UPDATE,
+            actual: $indexingEntity2->getNextAction(),
+            message: 'Expected ' . Actions::UPDATE->value . ', received ' . $indexingEntity2->getNextAction()->value,
+        );
+
+        $indexingEntity3 = $this->getIndexingEntityForEntity(
+            apiKey: $apiKey,
+            entity: $productFixture3->getProduct(),
+            type: 'KLEVU_PRODUCT',
+        );
+        $this->assertSame(
+            expected: Actions::UPDATE,
+            actual: $indexingEntity3->getNextAction(),
+            message: 'Expected ' . Actions::UPDATE->value . ', received ' . $indexingEntity3->getNextAction()->value,
+        );
+    }
+
+    /**
+     * @magentoDbIsolation disabled
+     */
+    public function testAttributeDelete_UpdateSubTypes(): void
+    {
+        $apiKey = 'klevu-js-api-key';
+
+        $this->createStore();
+        $storeFixture = $this->storeFixturesPool->get('test_store');
+        $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
+        $scopeProvider->setCurrentScope($storeFixture->get());
+        $this->setAuthKeys(
+            scopeProvider: $scopeProvider,
+            jsApiKey: $apiKey,
+            restAuthKey: 'klevu-rest-key',
+        );
+
+        $this->createAttribute([
+            'index_as' => IndexType::INDEX,
+            'generate_config_for' => [
+                'simple',
+                'virtual',
+                'grouped',
+            ],
+            'aspect' => Aspect::ATTRIBUTES,
+        ]);
+        $attributeFixture = $this->attributeFixturePool->get('test_attribute');
+        /** @var AttributeInterface&DataObject $attribute */
+        $attribute = $attributeFixture->getAttribute();
+
+        $this->createProduct([
+            'data' => [
+                $attribute->getAttributeCode() => 'Some Value',
+            ],
+        ]);
+        $productFixture1 = $this->productFixturePool->get('test_product');
+
+        $this->createProduct([
+            'key' => 'test_product_2',
+            'type_id' => 'virtual',
+            'data' => [
+                $attribute->getAttributeCode() => 'Some Other Value',
+            ],
+        ]);
+        $productFixture2 = $this->productFixturePool->get('test_product_2');
+
+        $this->createProduct([
+            'key' => 'test_product_3',
+            'type_id' => 'grouped',
+            'data' => [
+                $attribute->getAttributeCode() => 'Another Value',
+            ],
+        ]);
+        $productFixture3 = $this->productFixturePool->get('test_product_3');
+
+        $this->cleanIndexingEntities($apiKey);
+        $this->createIndexingEntity([
+            IndexingEntity::TARGET_ID => $productFixture1->getId(),
+            IndexingEntity::API_KEY => $apiKey,
+            IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
+            IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
+            IndexingEntity::LAST_ACTION => Actions::ADD,
+            IndexingEntity::LAST_ACTION_TIMESTAMP => date('Y-m-d H:i:s'),
+            IndexingEntity::IS_INDEXABLE => true,
+        ]);
+        $this->createIndexingEntity([
+            IndexingEntity::TARGET_ID => $productFixture2->getId(),
+            IndexingEntity::API_KEY => $apiKey,
+            IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'virtual',
+            IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
+            IndexingEntity::LAST_ACTION => Actions::ADD,
+            IndexingEntity::LAST_ACTION_TIMESTAMP => date('Y-m-d H:i:s'),
+            IndexingEntity::IS_INDEXABLE => true,
+        ]);
+        $this->createIndexingEntity([
+            IndexingEntity::TARGET_ID => $productFixture3->getId(),
+            IndexingEntity::API_KEY => $apiKey,
+            IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'grouped',
+            IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
+            IndexingEntity::LAST_ACTION => Actions::ADD,
+            IndexingEntity::LAST_ACTION_TIMESTAMP => date('Y-m-d H:i:s'),
+            IndexingEntity::IS_INDEXABLE => true,
+        ]);
+
+        $this->resourceModel->delete($attribute); // @phpstan-ignore-line
 
         $indexingEntity1 = $this->getIndexingEntityForEntity(
             apiKey: $apiKey,

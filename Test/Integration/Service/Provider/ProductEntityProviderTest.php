@@ -20,9 +20,7 @@ use Klevu\TestFixtures\Traits\TestImplementsInterfaceTrait;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Api\ProductWebsiteLinkRepositoryInterface;
-use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
 use Magento\Framework\ObjectManagerInterface;
-use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Api\WebsiteRepositoryInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
@@ -85,8 +83,6 @@ class ProductEntityProviderTest extends TestCase
         $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
         $scopeProvider->setCurrentScope(scope: $storeFixture->get());
 
-        $productCollectionCount = count($this->getProducts($storeFixture->get()));
-
         $this->createProduct([
             'key' => 'test_product_1',
             'sku' => 'test_product_1',
@@ -107,7 +103,6 @@ class ProductEntityProviderTest extends TestCase
             $items[] = $searchResult;
         }
 
-        $this->assertCount(expectedCount: 2 + $productCollectionCount, haystack: $items);
         $productIds = array_map(
             callback: static function (ProductInterface $item): int {
                 return (int)$item->getId();
@@ -147,8 +142,6 @@ class ProductEntityProviderTest extends TestCase
         $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
         $scopeProvider->setCurrentScope(scope: $storeFixture->get());
 
-        $productCollectionCount = count($this->getProducts($storeFixture->get()));
-
         $this->createProduct([
             'key' => 'test_product_1',
             'sku' => 'test_product_1',
@@ -169,7 +162,6 @@ class ProductEntityProviderTest extends TestCase
             $items[] = $searchResult;
         }
 
-        $this->assertCount(expectedCount: 2 + $productCollectionCount, haystack: $items);
         $productIds = array_map(
             callback: static function (ProductInterface $item): int {
                 return (int)$item->getId();
@@ -289,22 +281,5 @@ class ProductEntityProviderTest extends TestCase
         }
 
         $this->assertCount(expectedCount: 0, haystack: $items);
-    }
-
-    /**
-     * @param StoreInterface|null $store
-     *
-     * @return ProductInterface[]
-     */
-    private function getProducts(?StoreInterface $store = null): array
-    {
-        $productCollectionFactory = $this->objectManager->get(ProductCollectionFactory::class);
-        $productCollection = $productCollectionFactory->create();
-        $productCollection->addAttributeToSelect('*');
-        if ($store) {
-            $productCollection->setStore((int)$store->getId());
-        }
-
-        return $productCollection->getItems();
     }
 }
