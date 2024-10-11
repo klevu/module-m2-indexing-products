@@ -89,7 +89,7 @@ class EntityUpdateResponderObserver implements ObserverInterface
             return false;
         }
 
-        return $attribute->hasDataChanges();
+        return $attribute->hasDataChanges() || $attribute->isDeleted();
     }
 
     /**
@@ -185,12 +185,12 @@ class EntityUpdateResponderObserver implements ObserverInterface
      */
     private function getOriginalSubtypes(EavAttribute $attribute): array
     {
-        $originalSubTypesString = (string)$this->getStoredData(
+        $originalSubTypesString = $this->getStoredData(
             attribute: $attribute,
             key: MagentoAttributeInterface::ATTRIBUTE_PROPERTY_GENERATE_CONFIGURATION_FOR_ENTITY_SUBTYPES,
         );
 
-        return $originalSubTypesString
+        return is_string($originalSubTypesString)
             ? explode(separator: ',', string: $originalSubTypesString)
             : [];
     }
@@ -206,7 +206,7 @@ class EntityUpdateResponderObserver implements ObserverInterface
             key: MagentoAttributeInterface::ATTRIBUTE_PROPERTY_GENERATE_CONFIGURATION_FOR_ENTITY_SUBTYPES,
         );
 
-        return $newSubTypesString
+        return is_string($newSubTypesString)
             ? explode(separator: ',', string: $newSubTypesString)
             : [];
     }

@@ -226,4 +226,29 @@ class AttributeTextProviderTest extends TestCase
         $this->assertContains(needle: 'Option 1', haystack: $result);
         $this->assertContains(needle: 'Option 3', haystack: $result);
     }
+
+    /**
+     * @magentoDbIsolation disabled
+     */
+    public function testGet_ReturnsString_WhenYesNoAttributeIsSet(): void
+    {
+        $this->createAttribute([
+            'attribute_type' => 'yes_no',
+        ]);
+        $attributeFixture = $this->attributeFixturePool->get('test_attribute');
+        $this->createProduct([
+            'data' => [
+                $attributeFixture->getAttributeCode() => 1,
+            ],
+        ]);
+        $productFixture = $this->productFixturePool->get('test_product');
+
+        $provider = $this->instantiateTestObject();
+        $result = $provider->get(
+            product: $productFixture->getProduct(),
+            attributeCode: $attributeFixture->getAttributeCode(),
+        );
+
+        $this->assertSame(expected: 'Yes', actual: $result);
+    }
 }

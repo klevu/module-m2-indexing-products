@@ -21,9 +21,7 @@ use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Api\ProductWebsiteLinkRepositoryInterface;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
-use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
 use Magento\Framework\ObjectManagerInterface;
-use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Api\WebsiteRepositoryInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
@@ -83,8 +81,6 @@ class SimpleProductEntityProviderTest extends TestCase
         $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
         $scopeProvider->setCurrentScope(scope: $storeFixture->get());
 
-        $productCollectionCount = count($this->getProducts($storeFixture->get()));
-
         $this->createProduct([
             'key' => 'test_product_1',
             'sku' => 'test_product_1',
@@ -111,7 +107,6 @@ class SimpleProductEntityProviderTest extends TestCase
             $items[] = $searchResult;
         }
 
-        $this->assertCount(expectedCount: 2 + $productCollectionCount, haystack: $items);
         $productIds = array_map(
             callback: static function (ProductInterface $item): int {
                 return (int)$item->getId();
@@ -160,8 +155,6 @@ class SimpleProductEntityProviderTest extends TestCase
         $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
         $scopeProvider->setCurrentScope(scope: $storeFixture->get());
 
-        $productCollectionCount = count($this->getProducts($storeFixture->get()));
-
         $this->createProduct([
             'key' => 'test_product_1',
             'sku' => 'test_product_1',
@@ -182,7 +175,6 @@ class SimpleProductEntityProviderTest extends TestCase
             $items[] = $searchResult;
         }
 
-        $this->assertCount(expectedCount: 2 + $productCollectionCount, haystack: $items);
         $productIds = array_map(
             callback: static function (ProductInterface $item): int {
                 return (int)$item->getId();
@@ -223,13 +215,12 @@ class SimpleProductEntityProviderTest extends TestCase
         $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
         $scopeProvider->setCurrentScope(scope: $storeFixture->get());
 
-        $productCollectionCount = count($this->getProducts($storeFixture->get()));
-
         $this->createProduct([
             'key' => 'test_product_1',
             'sku' => 'test_product_1',
             'website_ids' => [$store->getWebsiteId()],
         ], $storeFixture->getId());
+        $productFixture1 = $this->productFixturePool->get('test_product_1');
 
         $this->createProduct([
             'key' => 'test_product_2',
@@ -250,23 +241,20 @@ class SimpleProductEntityProviderTest extends TestCase
         foreach ($searchResults as $searchResult) {
             $items[] = $searchResult;
         }
-        $this->assertCount(expectedCount: 1 + $productCollectionCount, haystack: $items);
-    }
+        $product1Array = array_filter(
+            array: $items,
+            callback: static function (ProductInterface $product) use ($productFixture1): bool {
+                return (int)$product->getId() === (int)$productFixture1->getId();
+            },
+        );
+        $this->assertCount(expectedCount: 1, haystack: $product1Array);
 
-    /**
-     * @param StoreInterface|null $store
-     *
-     * @return ProductInterface[]
-     */
-    private function getProducts(?StoreInterface $store = null): array
-    {
-        $productCollectionFactory = $this->objectManager->get(ProductCollectionFactory::class);
-        $productCollection = $productCollectionFactory->create();
-        $productCollection->addAttributeToSelect('*');
-        if ($store) {
-            $productCollection->setStore((int)$store->getId());
-        }
-
-        return $productCollection->getItems();
+        $product2Array = array_filter(
+            array: $items,
+            callback: static function (ProductInterface $product) use ($productFixture2): bool {
+                return (int)$product->getId() === (int)$productFixture2->getId();
+            },
+        );
+        $this->assertCount(expectedCount: 0, haystack: $product2Array);
     }
 }

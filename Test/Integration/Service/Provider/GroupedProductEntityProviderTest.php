@@ -108,7 +108,6 @@ class GroupedProductEntityProviderTest extends TestCase
             $items[] = $searchResult;
         }
 
-        $this->assertCount(expectedCount: 2, haystack: $items);
         $productIds = array_map(
             callback: static function (ProductInterface $item): int {
                 return (int)$item->getId();
@@ -170,7 +169,6 @@ class GroupedProductEntityProviderTest extends TestCase
             $items[] = $searchResult;
         }
 
-        $this->assertCount(expectedCount: 2, haystack: $items);
         $productIds = array_map(
             callback: static function (ProductInterface $item): int {
                 return (int)$item->getId();
@@ -217,6 +215,7 @@ class GroupedProductEntityProviderTest extends TestCase
             'website_ids' => [$store->getWebsiteId()],
             'type_id' => Grouped::TYPE_CODE,
         ], $storeFixture->getId());
+        $productFixture1 = $this->productFixturePool->get('test_product_1');
 
         $this->createProduct([
             'key' => 'test_product_2',
@@ -238,6 +237,20 @@ class GroupedProductEntityProviderTest extends TestCase
         foreach ($searchResults as $searchResult) {
             $items[] = $searchResult;
         }
-        $this->assertCount(expectedCount: 1, haystack: $items);
+        $product1Array = array_filter(
+            array: $items,
+            callback: static function (ProductInterface $product) use ($productFixture1): bool {
+                return (int)$product->getId() === (int)$productFixture1->getId();
+            },
+        );
+        $this->assertCount(expectedCount: 1, haystack: $product1Array);
+
+        $product2Array = array_filter(
+            array: $items,
+            callback: static function (ProductInterface $product) use ($productFixture2): bool {
+                return (int)$product->getId() === (int)$productFixture2->getId();
+            },
+        );
+        $this->assertCount(expectedCount: 0, haystack: $product2Array);
     }
 }

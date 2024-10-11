@@ -10,6 +10,7 @@ namespace Klevu\IndexingProducts\Plugin\Catalog\Model\ResourceModel\Product;
 
 use Klevu\Indexing\Model\Update\Entity;
 use Klevu\IndexingApi\Service\EntityUpdateResponderServiceInterface;
+use Klevu\IndexingApi\Service\Provider\ProductIdProviderInterface;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Model\ResourceModel\Product\Link as ProductLinkResourceModel;
 use Magento\CatalogInventory\Model\Stock\Status;
@@ -21,13 +22,21 @@ class ProductLinkResourceModelPlugin
      * @var EntityUpdateResponderServiceInterface
      */
     private readonly EntityUpdateResponderServiceInterface $responderService;
+    /**
+     * @var ProductIdProviderInterface
+     */
+    private readonly ProductIdProviderInterface $productIdProvider;
 
     /**
      * @param EntityUpdateResponderServiceInterface $responderService
+     * @param ProductIdProviderInterface $productIdProvider
      */
-    public function __construct(EntityUpdateResponderServiceInterface $responderService)
-    {
+    public function __construct(
+        EntityUpdateResponderServiceInterface $responderService,
+        ProductIdProviderInterface $productIdProvider,
+    ) {
         $this->responderService = $responderService;
+        $this->productIdProvider = $productIdProvider;
     }
 
     /**
@@ -50,7 +59,9 @@ class ProductLinkResourceModelPlugin
     ): ProductLinkResourceModel {
         if ($this->isGroupedProductLink($typeId)) {
             $this->responderService->execute([
-                Entity::ENTITY_IDS => [(int)$parentId],
+                Entity::ENTITY_IDS => $this->productIdProvider->getByLinkFields(
+                    linkFieldIds: [(int)$parentId],
+                ),
                 EntityUpdateResponderServiceInterface::CHANGED_ATTRIBUTES => [
                     ProductInterface::PRICE,
                     Status::STOCK_STATUS,
