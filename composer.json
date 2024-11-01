@@ -2,7 +2,7 @@
     "name": "klevu/module-m2-indexing-products",
     "description": "Provides product data and configuration for Klevu indexing",
     "type": "magento2-module",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "require": {
         "klevu/module-m2-indexing": "^1.0.1",
         "klevu/php-pipelines": "^1.0.0",

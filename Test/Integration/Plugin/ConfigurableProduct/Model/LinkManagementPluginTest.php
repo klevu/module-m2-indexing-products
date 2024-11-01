@@ -207,6 +207,8 @@ class LinkManagementPluginTest extends TestCase
             expected: (int)$configurableProductFixture->getId(),
             actual: (int)$simple1Variant->getTargetParentId(),
         );
+
+        $this->cleanIndexingEntities(apiKey: $apiKey);
     }
 
     /**
@@ -363,5 +365,7 @@ class LinkManagementPluginTest extends TestCase
             expected: (int)$configurableProductFixture->getId(),
             actual: (int)$simple1Variant->getTargetParentId(),
         );
+
+        $this->cleanIndexingEntities(apiKey: $apiKey);
     }
 }

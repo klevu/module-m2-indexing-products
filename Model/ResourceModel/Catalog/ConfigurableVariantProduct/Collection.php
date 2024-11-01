@@ -181,6 +181,32 @@ class Collection extends ProductCollection
     }
 
     /**
+     * @param DataObject $object
+     *
+     * @return Collection
+     * @throws LocalizedException
+     */
+    public function addItem(DataObject $object): Collection
+    {
+        // Lifted from \Magento\Eav\Model\Entity\Collection\AbstractCollection::addItem
+        if (!$object instanceof $this->_itemObjectClass) {
+            throw new LocalizedException(
+                __(
+                    "The object wasn't added because it's invalid. "
+                    . "To continue, enter a valid object and try again.",
+                ),
+            );
+        }
+
+        // Ref: KS-22991
+        // We may have duplicate item ids where a variant belongs to multiple parents
+        // In the parent method, the item id's presence in _items is checked if
+        //  an item id is returned by $item->getId(), otherwise _addItem() adds without
+        //  an id key (ie $this->_items[] = $item)
+        return $this->_addItem($object);
+    }
+
+    /**
      * @param DataObject $item
      *
      * @return DataObject
@@ -220,7 +246,8 @@ class Collection extends ProductCollection
     private function setProductId(DataObject $item): void
     {
         $value = $item->getData(Entity::DEFAULT_ENTITY_ID_FIELD)
-            . '-' . $item->getData(self::FIELD_PLACEHOLDER_PARENT_ID);
+            . '-'
+            . $item->getData(self::FIELD_PLACEHOLDER_PARENT_ID);
         $item->setData(
             key: Entity::DEFAULT_ENTITY_ID_FIELD,
             value: $value,
