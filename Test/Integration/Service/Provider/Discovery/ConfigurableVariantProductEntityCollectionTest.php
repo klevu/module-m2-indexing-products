@@ -155,24 +155,77 @@ class ConfigurableVariantProductEntityCollectionTest extends TestCase
 
         $provider = $this->instantiateTestObject();
         $collection = $provider->get($store);
+        /** @var ProductInterface[] $items */
         $items = $collection->getItems();
 
-        $this->assertArrayHasKey(key: $productSimple1->getId(), array: $items);
+        $itemIdSimple1 = sprintf(
+            '%d-%d',
+            $productSimple1->getId(),
+            $productConfigurable->getId(),
+        );
+        $foundItemsForSimple1 = array_filter(
+            array: $items,
+            callback: static fn (ProductInterface $collectionItem): bool => (
+                (string)$collectionItem->getId() === $itemIdSimple1
+            ),
+        );
+        $this->assertCount(
+            expectedCount: 1,
+            haystack: $foundItemsForSimple1,
+            message: sprintf(
+                'Collection contains itemId %s',
+                $itemIdSimple1,
+            ),
+        );
+
         /** @var ProductInterface $item1 */
-        $item1 = $items[$productSimple1->getId()];
+        $item1 = current($foundItemsForSimple1);
         $this->assertSame(expected: Status::STATUS_ENABLED, actual: (int)$item1->getStatus());
 
-        $this->assertArrayHasKey(key: $productSimple2->getId(), array: $items);
+        $itemIdSimple2 = sprintf(
+            '%d-%d',
+            $productSimple2->getId(),
+            $productConfigurable->getId(),
+        );
+        $foundItemsForSimple2 = array_filter(
+            array: $items,
+            callback: static fn (ProductInterface $collectionItem): bool => (
+                (string)$collectionItem->getId() === $itemIdSimple2
+            ),
+        );
+        $this->assertCount(
+            expectedCount: 1,
+            haystack: $foundItemsForSimple2,
+            message: sprintf(
+                'Collection contains itemId %s',
+                $itemIdSimple2,
+            ),
+        );
+
         /** @var ProductInterface $item2 */
-        $item2 = $items[$productSimple2->getId()];
+        $item2 = current($foundItemsForSimple2);
         $this->assertSame(expected: Status::STATUS_DISABLED, actual: (int)$item2->getStatus());
 
-        $this->assertArrayNotHasKey(key: $productConfigurable->getId(), array: $items);
+        $foundItemsForConfigurable = array_filter(
+            array: $items,
+            callback: static fn (ProductInterface $collectionItem): bool => (
+                $collectionItem->getId() === $productConfigurable->getId()
+            ),
+        );
+        $this->assertCount(
+            expectedCount: 0,
+            haystack: $foundItemsForConfigurable,
+            message: sprintf(
+                'Collection does not contain itemId %s',
+                $productConfigurable->getId(),
+            ),
+        );
     }
 
     /**
      * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
+     * @group wip
      */
     public function testGet_ReturnsCollection_FilteredByType_AndStore_AndEntityId(): void
     {
@@ -254,15 +307,229 @@ class ConfigurableVariantProductEntityCollectionTest extends TestCase
 
         $provider = $this->instantiateTestObject();
         $collection = $provider->get($store, [(int)$productSimple2->getId()]);
+        /** @var ProductInterface[] $items */
         $items = $collection->getItems();
 
-        $this->assertArrayNotHasKey(key: $productSimple1->getId(), array: $items);
+        $itemIdSimple1 = sprintf(
+            '%d-%d',
+            $productSimple1->getId(),
+            $productConfigurable->getId(),
+        );
+        $foundItemsForSimple1 = array_filter(
+            array: $items,
+            callback: static fn (ProductInterface $collectionItem): bool => (
+                (string)$collectionItem->getId() === $itemIdSimple1
+            ),
+        );
+        $this->assertCount(
+            expectedCount: 0,
+            haystack: $foundItemsForSimple1,
+            message: sprintf(
+                'Collection does not contain itemId %s',
+                $itemIdSimple1,
+            ),
+        );
 
-        $this->assertArrayHasKey(key: $productSimple2->getId(), array: $items);
+        $itemIdSimple2 = sprintf(
+            '%d-%d',
+            $productSimple2->getId(),
+            $productConfigurable->getId(),
+        );
+        $foundItemsForSimple2 = array_filter(
+            array: $items,
+            callback: static fn (ProductInterface $collectionItem): bool => (
+                (string)$collectionItem->getId() === $itemIdSimple2
+            ),
+        );
+        $this->assertCount(
+            expectedCount: 1,
+            haystack: $foundItemsForSimple2,
+            message: sprintf(
+                'Collection contains itemId %s',
+                $itemIdSimple2,
+            ),
+        );
+
         /** @var ProductInterface $item2 */
-        $item2 = $items[$productSimple2->getId()];
+        $item2 = current($foundItemsForSimple2);
         $this->assertSame(expected: Status::STATUS_DISABLED, actual: (int)$item2->getStatus());
 
-        $this->assertArrayNotHasKey(key: $productConfigurable->getId(), array: $items);
+        $foundItemsForConfigurable = array_filter(
+            array: $items,
+            callback: static fn (ProductInterface $collectionItem): bool => (
+                $collectionItem->getId() === $productConfigurable->getId()
+            ),
+        );
+        $this->assertCount(
+            expectedCount: 0,
+            haystack: $foundItemsForConfigurable,
+            message: sprintf(
+                'Collection does not contain itemId %s',
+                $productConfigurable->getId(),
+            ),
+        );
+    }
+
+    /**
+     * Ref: KS-22991
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     */
+    public function testGet_ReturnsCollection_WhereVariantsWithMultipleParentsExist(): void
+    {
+        $this->createStore();
+        $storeFixture = $this->storeFixturesPool->get('test_store');
+        $store = $storeFixture->get();
+
+        $this->createAttribute([
+            'key' => 'klevu_test_attribute',
+            'attribute_type' => 'configurable',
+            'options' => [
+                '1' => 'Option 1',
+                '2' => 'Option 2',
+                '3' => 'Option 3',
+            ],
+        ]);
+        $configurableAttribute = $this->attributeFixturePool->get('klevu_test_attribute');
+
+        $this->createProduct([
+            'key' => 'test_simple_product',
+            'sku' => 'test_simple_product',
+            'status' => Status::STATUS_ENABLED,
+            'website_ids' => [
+                $store->getWebsiteId(),
+            ],
+            'data' => [
+                $configurableAttribute->getAttributeCode() => '1',
+            ],
+            'stores' => [
+                $store->getId() => [
+                    'name' => 'Simple Product 1 Store 1',
+                    'status' => Status::STATUS_ENABLED,
+                ],
+            ],
+        ]);
+        $productSimple = $this->productFixturePool->get('test_simple_product');
+
+        $this->createProduct([
+            'key' => 'test_configurable_product_1',
+            'sku' => 'test_configurable_product_1',
+            'status' => Status::STATUS_ENABLED,
+            'website_ids' => [
+                $store->getWebsiteId(),
+            ],
+            'type_id' => Configurable::TYPE_CODE,
+            'configurable_attributes' => [
+                $configurableAttribute->getAttribute(),
+            ],
+            'variants' => [
+                $productSimple->getProduct(),
+            ],
+            'stores' => [
+                $store->getId() => [
+                    'name' => 'Configurable Product 1 Store 1',
+                    'status' => Status::STATUS_ENABLED,
+                ],
+            ],
+        ]);
+        $productConfigurable1 = $this->productFixturePool->get('test_configurable_product_1');
+
+        $this->createProduct([
+            'key' => 'test_configurable_product_2',
+            'sku' => 'test_configurable_product_2',
+            'status' => Status::STATUS_ENABLED,
+            'website_ids' => [
+                $store->getWebsiteId(),
+            ],
+            'type_id' => Configurable::TYPE_CODE,
+            'configurable_attributes' => [
+                $configurableAttribute->getAttribute(),
+            ],
+            'variants' => [
+                $productSimple->getProduct(),
+            ],
+            'stores' => [
+                $store->getId() => [
+                    'name' => 'Configurable Product 2 Store 1',
+                    'status' => Status::STATUS_ENABLED,
+                ],
+            ],
+        ]);
+        $productConfigurable2 = $this->productFixturePool->get('test_configurable_product_2');
+
+        $provider = $this->instantiateTestObject();
+        $collection = $provider->get($store);
+        /** @var ProductInterface[] $items */
+        $items = $collection->getItems();
+
+        $itemIdSimpleConfig1 = sprintf(
+            '%d-%d',
+            $productSimple->getId(),
+            $productConfigurable1->getId(),
+        );
+        $foundItemsForSimpleConfig1 = array_filter(
+            array: $items,
+            callback: static fn (ProductInterface $collectionItem): bool => (
+                (string)$collectionItem->getId() === $itemIdSimpleConfig1
+            ),
+        );
+        $this->assertCount(
+            expectedCount: 1,
+            haystack: $foundItemsForSimpleConfig1,
+            message: sprintf(
+                'Collection contains itemId %s',
+                $itemIdSimpleConfig1,
+            ),
+        );
+
+        $foundItemsForConfigurable1 = array_filter(
+            array: $items,
+            callback: static fn (ProductInterface $collectionItem): bool => (
+                $collectionItem->getId() === $productConfigurable1->getId()
+            ),
+        );
+        $this->assertCount(
+            expectedCount: 0,
+            haystack: $foundItemsForConfigurable1,
+            message: sprintf(
+                'Collection does not contain itemId %s',
+                $productConfigurable1->getId(),
+            ),
+        );
+
+        $itemIdSimpleConfig2 = sprintf(
+            '%d-%d',
+            $productSimple->getId(),
+            $productConfigurable2->getId(),
+        );
+        $foundItemsForSimpleConfig2 = array_filter(
+            array: $items,
+            callback: static fn (ProductInterface $collectionItem): bool => (
+                (string)$collectionItem->getId() === $itemIdSimpleConfig2
+            ),
+        );
+        $this->assertCount(
+            expectedCount: 1,
+            haystack: $foundItemsForSimpleConfig2,
+            message: sprintf(
+                'Collection contains itemId %s',
+                $itemIdSimpleConfig2,
+            ),
+        );
+
+        $foundItemsForConfigurable2 = array_filter(
+            array: $items,
+            callback: static fn (ProductInterface $collectionItem): bool => (
+                $collectionItem->getId() === $productConfigurable2->getId()
+            ),
+        );
+        $this->assertCount(
+            expectedCount: 0,
+            haystack: $foundItemsForConfigurable2,
+            message: sprintf(
+                'Collection does not contain itemId %s',
+                $productConfigurable2->getId(),
+            ),
+        );
     }
 }

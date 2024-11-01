@@ -111,10 +111,11 @@ class ImageGenerationAction implements ImageGenerationActionInterface
                     absolutePath: $absolutePath,
                     relativePath: $relativePath,
                 );
-            } catch (FileSystemException $exception) {
+            } catch (FileSystemException | \InvalidArgumentException $exception) {
                 $this->logger->error(
                     message: 'Method: {method}, Error: {message}',
                     context: [
+                        'exception' => $exception,
                         'method' => __METHOD__,
                         'message' => $exception->getMessage(),
                     ],

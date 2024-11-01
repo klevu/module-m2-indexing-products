@@ -10,15 +10,18 @@ namespace Klevu\IndexingProducts\Test\Integration\Service\Action;
 
 use Klevu\IndexingApi\Service\Action\ImageGenerationActionInterface;
 use Klevu\IndexingApi\Service\Provider\Image\FrameworkImageProviderInterface;
+use Klevu\IndexingApi\Service\Provider\Image\IsDbStorageUsedProviderInterface;
 use Klevu\IndexingProducts\Service\Action\ImageGenerationAction;
 use Klevu\TestFixtures\Catalog\ProductTrait;
 use Klevu\TestFixtures\Traits\ObjectInstantiationTrait;
 use Klevu\TestFixtures\Traits\TestImplementsInterfaceTrait;
 use Klevu\TestFixtures\Traits\TestInterfacePreferenceTrait;
 use Magento\Catalog\Model\Product;
-use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\App\Filesystem\DirectoryList as AppDirectoryList;
 use Magento\Framework\Filesystem;
 use Magento\Framework\Filesystem\Directory\WriteInterface;
+use Magento\Framework\Filesystem\DirectoryList;
+use Magento\Framework\Filesystem\Io\File as FileIo;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
@@ -40,6 +43,14 @@ class ImageGenerationActionTest extends TestCase
      * @var ObjectManagerInterface|null
      */
     private ?ObjectManagerInterface $objectManager = null; // @phpstan-ignore-line
+    /**
+     * @var DirectoryList|null
+     */
+    private ?DirectoryList $directoryList = null;
+    /**
+     * @var FileIo|null
+     */
+    private ?FileIo $fileIo = null;
 
     /**
      * @return void
@@ -51,6 +62,8 @@ class ImageGenerationActionTest extends TestCase
         $this->implementationFqcn = ImageGenerationAction::class;
         $this->interfaceFqcn = ImageGenerationActionInterface::class;
         $this->objectManager = Bootstrap::getObjectManager();
+        $this->directoryList = $this->objectManager->get(DirectoryList::class);
+        $this->fileIo = $this->objectManager->get(FileIo::class);
         $this->productFixturePool = $this->objectManager->get(ProductFixturePool::class);
     }
 
@@ -100,7 +113,7 @@ class ImageGenerationActionTest extends TestCase
             ->getMock();
         $mockFilesystem->expects($this->once())
             ->method('getDirectoryWrite')
-            ->with(DirectoryList::MEDIA)
+            ->with(AppDirectoryList::MEDIA)
             ->willReturn($mockMediaDirectory);
 
         $action = $this->instantiateTestObject([
@@ -145,7 +158,7 @@ class ImageGenerationActionTest extends TestCase
             ->getMock();
         $mockFilesystem->expects($this->once())
             ->method('getDirectoryWrite')
-            ->with(DirectoryList::MEDIA)
+            ->with(AppDirectoryList::MEDIA)
             ->willReturn($mockMediaDirectory);
 
         $action = $this->instantiateTestObject([
@@ -153,5 +166,196 @@ class ImageGenerationActionTest extends TestCase
             'filesystem' => $mockFilesystem,
         ]);
         $action->execute(imageParams: [], imagePath: $product->getImage());
+    }
+
+    public function testExecute_ReturnsEmptyString_WhenDbStorageNotUsed_AndFileExists(): void
+    {
+        $this->createProduct([
+            'images' => [
+                'image' => 'klevu_test_image_name.jpg',
+            ],
+        ]);
+        $productFixture = $this->productFixturePool->get('test_product');
+        /** @var Product $product */
+        $product = $productFixture->getProduct();
+
+        $mockIsDbStorageUsedImageProvider = $this->getMockBuilder(IsDbStorageUsedProviderInterface::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $mockIsDbStorageUsedImageProvider->method('get')
+            ->willReturn(false);
+
+        $action = $this->instantiateTestObject([
+            'isDbStorageUsedProvider' => $mockIsDbStorageUsedImageProvider,
+        ]);
+        $return = $action->execute(imageParams: [], imagePath: $product->getImage());
+
+        $this->assertMatchesRegularExpression(
+            pattern: '#^catalog/product/cache/[a-f0-9]+/k/l/klevu_test_image_name(_\d+)*\.jpg$#',
+            string: $return,
+        );
+    }
+
+    public function testExecute_ReturnsEmptyString_WhenDbStorageNotUsed_AndFileDoesNotExist(): void
+    {
+        $this->createProduct([
+            'images' => [
+                'image' => 'klevu_test_image_name.jpg',
+            ],
+        ]);
+        $productFixture = $this->productFixturePool->get('test_product');
+        /** @var Product $product */
+        $product = $productFixture->getProduct();
+        $product->setData('image', 'klevu_test_image_name--not-exists.jpg');
+
+        $mockIsDbStorageUsedImageProvider = $this->getMockBuilder(IsDbStorageUsedProviderInterface::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $mockIsDbStorageUsedImageProvider->method('get')
+            ->willReturn(false);
+
+        $action = $this->instantiateTestObject([
+            'isDbStorageUsedProvider' => $mockIsDbStorageUsedImageProvider,
+        ]);
+        $return = $action->execute(imageParams: [], imagePath: $product->getImage());
+
+        $this->assertSame(
+            expected: '',
+            actual: $return,
+        );
+    }
+
+    public function testExecute_ReturnsEmptyString_WhenDbStorageUsed_AndFileExists(): void
+    {
+        $this->createProduct([
+            'images' => [
+                'image' => 'klevu_test_image_name.jpg',
+            ],
+        ]);
+        $productFixture = $this->productFixturePool->get('test_product');
+        /** @var Product $product */
+        $product = $productFixture->getProduct();
+
+        $mockIsDbStorageUsedImageProvider = $this->getMockBuilder(IsDbStorageUsedProviderInterface::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $mockIsDbStorageUsedImageProvider->method('get')
+            ->willReturn(true);
+
+        $action = $this->instantiateTestObject([
+            'isDbStorageUsedProvider' => $mockIsDbStorageUsedImageProvider,
+        ]);
+        $return = $action->execute(imageParams: [], imagePath: $product->getImage());
+
+        $this->assertMatchesRegularExpression(
+            pattern: '#^catalog/product/cache/[a-f0-9]+/k/l/klevu_test_image_name(_\d+)*\.jpg$#',
+            string: $return,
+        );
+    }
+
+    public function testExecute_ReturnsEmptyString_WhenDbStorageUsed_AndFileDoesNotExist(): void
+    {
+        $this->createProduct([
+            'images' => [
+                'image' => 'klevu_test_image_name.jpg',
+            ],
+        ]);
+        $productFixture = $this->productFixturePool->get('test_product');
+        /** @var Product $product */
+        $product = $productFixture->getProduct();
+        $product->setData('image', 'klevu_test_image_name--not-exists.jpg');
+
+        $mockIsDbStorageUsedImageProvider = $this->getMockBuilder(IsDbStorageUsedProviderInterface::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $mockIsDbStorageUsedImageProvider->method('get')
+            ->willReturn(true);
+
+        $action = $this->instantiateTestObject([
+            'isDbStorageUsedProvider' => $mockIsDbStorageUsedImageProvider,
+        ]);
+        $return = $action->execute(imageParams: [], imagePath: $product->getImage());
+
+        $this->assertSame(
+            expected: '',
+            actual: $return,
+        );
+    }
+
+    /**
+     * Ref: KS-22988
+     */
+    public function testExecute_ReturnsEmptyString_WhenDbStorageUsed_AndFileExists_AndFileIsEmpty(): void
+    {
+        $this->createProduct([
+            'images' => [
+                'image' => 'klevu_test_image_name.jpg',
+            ],
+        ]);
+        $productFixture = $this->productFixturePool->get('test_product');
+        /** @var Product $product */
+        $product = $productFixture->getProduct();
+
+        $this->fileIo->write(
+            filename: $this->directoryList->getPath('media')
+                . '/catalog/product'
+                . $product->getImage(),
+            src: '',
+        );
+
+        $mockIsDbStorageUsedImageProvider = $this->getMockBuilder(IsDbStorageUsedProviderInterface::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $mockIsDbStorageUsedImageProvider->method('get')
+            ->willReturn(true);
+
+        $action = $this->instantiateTestObject([
+            'isDbStorageUsedProvider' => $mockIsDbStorageUsedImageProvider,
+        ]);
+        $return = $action->execute(imageParams: [], imagePath: $product->getImage());
+
+        $this->assertSame(
+            expected: '',
+            actual: $return,
+        );
+    }
+
+    /**
+     * Ref: KS-22988
+     * @group wip
+     */
+    public function testExecute_ReturnsEmptyString_WhenDbStorageNotUsed_AndFileExists_AndFileIsEmpty(): void
+    {
+        $this->createProduct([
+            'images' => [
+                'image' => 'klevu_test_image_symbol.jpg',
+            ],
+        ]);
+        $productFixture = $this->productFixturePool->get('test_product');
+        /** @var Product $product */
+        $product = $productFixture->getProduct();
+
+        $this->fileIo->write(
+            filename: $this->directoryList->getPath('media')
+                . '/catalog/product'
+                . $product->getImage(),
+            src: '',
+        );
+
+        $mockIsDbStorageUsedImageProvider = $this->getMockBuilder(IsDbStorageUsedProviderInterface::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $mockIsDbStorageUsedImageProvider->method('get')
+            ->willReturn(false);
+
+        $action = $this->instantiateTestObject([
+            'isDbStorageUsedProvider' => $mockIsDbStorageUsedImageProvider,
+        ]);
+        $return = $action->execute(imageParams: [], imagePath: $product->getImage());
+
+        $this->assertSame(
+            expected: '',
+            actual: $return,
+        );
     }
 }
