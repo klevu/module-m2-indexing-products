@@ -10,6 +10,7 @@ namespace Klevu\IndexingProducts\Plugin\ConfigurableProduct\Model\ResourceModel\
 
 use Klevu\Indexing\Model\Update\Entity;
 use Klevu\IndexingApi\Service\EntityUpdateResponderServiceInterface;
+use Klevu\IndexingProducts\Model\Source\EntitySubtypeOptions;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable;
 use Magento\ConfigurableProduct\Pricing\Price\ConfigurableOptionsProviderInterface;
@@ -67,6 +68,7 @@ class ConfigurablePlugin
         if (!empty($productIdsToSend)) {
             $this->responderService->execute([
                 Entity::ENTITY_IDS => array_map('intval', $productIdsToSend),
+                Entity::ENTITY_SUBTYPES => [EntitySubtypeOptions::CONFIGURABLE_VARIANTS],
             ]);
         }
 

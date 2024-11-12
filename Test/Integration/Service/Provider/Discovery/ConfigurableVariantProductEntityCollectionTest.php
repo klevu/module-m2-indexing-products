@@ -158,23 +158,20 @@ class ConfigurableVariantProductEntityCollectionTest extends TestCase
         /** @var ProductInterface[] $items */
         $items = $collection->getItems();
 
-        $itemIdSimple1 = sprintf(
-            '%d-%d',
-            $productSimple1->getId(),
-            $productConfigurable->getId(),
-        );
         $foundItemsForSimple1 = array_filter(
             array: $items,
             callback: static fn (ProductInterface $collectionItem): bool => (
-                (string)$collectionItem->getId() === $itemIdSimple1
+                (int)$collectionItem->getId() === $productSimple1->getId()
+                && (int)$collectionItem->getData('parent_id') === $productConfigurable->getId()
             ),
         );
         $this->assertCount(
             expectedCount: 1,
             haystack: $foundItemsForSimple1,
             message: sprintf(
-                'Collection contains itemId %s',
-                $itemIdSimple1,
+                'Collection contains itemId %s with parentId %s',
+                $productSimple1->getId(),
+                $productConfigurable->getId(),
             ),
         );
 
@@ -182,23 +179,20 @@ class ConfigurableVariantProductEntityCollectionTest extends TestCase
         $item1 = current($foundItemsForSimple1);
         $this->assertSame(expected: Status::STATUS_ENABLED, actual: (int)$item1->getStatus());
 
-        $itemIdSimple2 = sprintf(
-            '%d-%d',
-            $productSimple2->getId(),
-            $productConfigurable->getId(),
-        );
         $foundItemsForSimple2 = array_filter(
             array: $items,
             callback: static fn (ProductInterface $collectionItem): bool => (
-                (string)$collectionItem->getId() === $itemIdSimple2
+                (int)$collectionItem->getId() === $productSimple2->getId()
+                && (int)$collectionItem->getData('parent_id') === $productConfigurable->getId()
             ),
         );
         $this->assertCount(
             expectedCount: 1,
             haystack: $foundItemsForSimple2,
             message: sprintf(
-                'Collection contains itemId %s',
-                $itemIdSimple2,
+                'Collection contains itemId %s with parentId %s',
+                $productSimple2->getId(),
+                $productConfigurable->getId(),
             ),
         );
 
@@ -209,7 +203,7 @@ class ConfigurableVariantProductEntityCollectionTest extends TestCase
         $foundItemsForConfigurable = array_filter(
             array: $items,
             callback: static fn (ProductInterface $collectionItem): bool => (
-                $collectionItem->getId() === $productConfigurable->getId()
+                (int)$collectionItem->getId() === $productConfigurable->getId()
             ),
         );
         $this->assertCount(
@@ -310,43 +304,37 @@ class ConfigurableVariantProductEntityCollectionTest extends TestCase
         /** @var ProductInterface[] $items */
         $items = $collection->getItems();
 
-        $itemIdSimple1 = sprintf(
-            '%d-%d',
-            $productSimple1->getId(),
-            $productConfigurable->getId(),
-        );
         $foundItemsForSimple1 = array_filter(
             array: $items,
             callback: static fn (ProductInterface $collectionItem): bool => (
-                (string)$collectionItem->getId() === $itemIdSimple1
+                (int)$collectionItem->getId() === $productSimple1->getId()
+                && (int)$collectionItem->getData('parent_id') === $productConfigurable->getId()
             ),
         );
         $this->assertCount(
             expectedCount: 0,
             haystack: $foundItemsForSimple1,
             message: sprintf(
-                'Collection does not contain itemId %s',
-                $itemIdSimple1,
+                'Collection does not contain itemId %s with parentId %s',
+                $productSimple1->getId(),
+                $productConfigurable->getId(),
             ),
         );
 
-        $itemIdSimple2 = sprintf(
-            '%d-%d',
-            $productSimple2->getId(),
-            $productConfigurable->getId(),
-        );
         $foundItemsForSimple2 = array_filter(
             array: $items,
             callback: static fn (ProductInterface $collectionItem): bool => (
-                (string)$collectionItem->getId() === $itemIdSimple2
+                (int)$collectionItem->getId() === $productSimple2->getId()
+                && (int)$collectionItem->getData('parent_id') === $productConfigurable->getId()
             ),
         );
         $this->assertCount(
             expectedCount: 1,
             haystack: $foundItemsForSimple2,
             message: sprintf(
-                'Collection contains itemId %s',
-                $itemIdSimple2,
+                'Collection contains itemId %s with parentId %s',
+                $productSimple2->getId(),
+                $productConfigurable->getId(),
             ),
         );
 
@@ -357,7 +345,7 @@ class ConfigurableVariantProductEntityCollectionTest extends TestCase
         $foundItemsForConfigurable = array_filter(
             array: $items,
             callback: static fn (ProductInterface $collectionItem): bool => (
-                $collectionItem->getId() === $productConfigurable->getId()
+                (int)$collectionItem->getId() === $productConfigurable->getId()
             ),
         );
         $this->assertCount(
@@ -462,30 +450,27 @@ class ConfigurableVariantProductEntityCollectionTest extends TestCase
         /** @var ProductInterface[] $items */
         $items = $collection->getItems();
 
-        $itemIdSimpleConfig1 = sprintf(
-            '%d-%d',
-            $productSimple->getId(),
-            $productConfigurable1->getId(),
-        );
         $foundItemsForSimpleConfig1 = array_filter(
             array: $items,
             callback: static fn (ProductInterface $collectionItem): bool => (
-                (string)$collectionItem->getId() === $itemIdSimpleConfig1
+                (int)$collectionItem->getId() === $productSimple->getId()
+                && (int)$collectionItem->getData('parent_id') === $productConfigurable1->getId()
             ),
         );
         $this->assertCount(
             expectedCount: 1,
             haystack: $foundItemsForSimpleConfig1,
             message: sprintf(
-                'Collection contains itemId %s',
-                $itemIdSimpleConfig1,
+                'Collection contains itemId %s with parentId %s',
+                $productSimple->getId(),
+                $productConfigurable1->getId(),
             ),
         );
 
         $foundItemsForConfigurable1 = array_filter(
             array: $items,
             callback: static fn (ProductInterface $collectionItem): bool => (
-                $collectionItem->getId() === $productConfigurable1->getId()
+                (int)$collectionItem->getId() === $productConfigurable1->getId()
             ),
         );
         $this->assertCount(
@@ -497,30 +482,27 @@ class ConfigurableVariantProductEntityCollectionTest extends TestCase
             ),
         );
 
-        $itemIdSimpleConfig2 = sprintf(
-            '%d-%d',
-            $productSimple->getId(),
-            $productConfigurable2->getId(),
-        );
         $foundItemsForSimpleConfig2 = array_filter(
             array: $items,
             callback: static fn (ProductInterface $collectionItem): bool => (
-                (string)$collectionItem->getId() === $itemIdSimpleConfig2
+                (int)$collectionItem->getId() === $productSimple->getId()
+                && (int)$collectionItem->getData('parent_id') === $productConfigurable2->getId()
             ),
         );
         $this->assertCount(
             expectedCount: 1,
             haystack: $foundItemsForSimpleConfig2,
             message: sprintf(
-                'Collection contains itemId %s',
-                $itemIdSimpleConfig2,
+                'Collection contains itemId %s with parentId %s',
+                $productSimple->getId(),
+                $productConfigurable2->getId(),
             ),
         );
 
         $foundItemsForConfigurable2 = array_filter(
             array: $items,
             callback: static fn (ProductInterface $collectionItem): bool => (
-                $collectionItem->getId() === $productConfigurable2->getId()
+                (int)$collectionItem->getId() === $productConfigurable2->getId()
             ),
         );
         $this->assertCount(

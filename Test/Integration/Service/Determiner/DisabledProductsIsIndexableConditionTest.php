@@ -9,8 +9,8 @@ declare(strict_types=1);
 namespace Klevu\IndexingProducts\Test\Integration\Service\Determiner;
 
 use Klevu\Configuration\Service\Provider\ScopeProviderInterface;
-use Klevu\IndexingApi\Service\Determiner\IsIndexableDeterminerInterface;
-use Klevu\IndexingProducts\Service\Determiner\DisabledProductsIsIndexableDeterminer;
+use Klevu\IndexingApi\Service\Determiner\IsIndexableConditionInterface;
+use Klevu\IndexingProducts\Service\Determiner\DisabledProductsIsIndexableCondition;
 use Klevu\TestFixtures\Catalog\ProductTrait;
 use Klevu\TestFixtures\Store\StoreFixturesPool;
 use Klevu\TestFixtures\Store\StoreTrait;
@@ -26,11 +26,11 @@ use Psr\Log\LoggerInterface;
 use TddWizard\Fixtures\Catalog\ProductFixturePool;
 
 /**
- * @covers \Klevu\IndexingProducts\Service\Determiner\DisabledProductsIsIndexableDeterminer::class
- * @method IsIndexableDeterminerInterface instantiateTestObject(?array $arguments = null)
- * @method IsIndexableDeterminerInterface instantiateTestObjectFromInterface(?array $arguments = null)
+ * @covers \Klevu\IndexingProducts\Service\Determiner\DisabledProductsIsIndexableCondition::class
+ * @method IsIndexableConditionInterface instantiateTestObject(?array $arguments = null)
+ * @method IsIndexableConditionInterface instantiateTestObjectFromInterface(?array $arguments = null)
  */
-class DisabledProductsIsIndexableDeterminerTest extends TestCase
+class DisabledProductsIsIndexableConditionTest extends TestCase
 {
     use ObjectInstantiationTrait;
     use ProductTrait;
@@ -49,8 +49,8 @@ class DisabledProductsIsIndexableDeterminerTest extends TestCase
     {
         parent::setUp();
 
-        $this->implementationFqcn = DisabledProductsIsIndexableDeterminer::class;
-        $this->interfaceFqcn = IsIndexableDeterminerInterface::class;
+        $this->implementationFqcn = DisabledProductsIsIndexableCondition::class;
+        $this->interfaceFqcn = IsIndexableConditionInterface::class;
         $this->objectManager = Bootstrap::getObjectManager();
         $this->storeFixturesPool = $this->objectManager->get(StoreFixturesPool::class);
         $this->productFixturePool = $this->objectManager->get(ProductFixturePool::class);
@@ -69,6 +69,7 @@ class DisabledProductsIsIndexableDeterminerTest extends TestCase
     }
 
     /**
+     * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      * @magentoConfigFixture default/klevu/indexing/exclude_disabled_products 0
      */
@@ -90,6 +91,7 @@ class DisabledProductsIsIndexableDeterminerTest extends TestCase
     }
 
     /**
+     * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      * @magentoConfigFixture default/klevu/indexing/exclude_disabled_products 1
      */
@@ -144,7 +146,7 @@ class DisabledProductsIsIndexableDeterminerTest extends TestCase
                     'productId' => (string)$productFixture->getId(),
                     'status' => $productFixture->getProduct()->getStatus(),
                     // phpcs:ignore Generic.Files.LineLength.TooLong
-                    'method' => 'Klevu\IndexingProducts\Service\Determiner\DisabledProductsIsIndexableDeterminer::isIndexable',
+                    'method' => 'Klevu\IndexingProducts\Service\Determiner\DisabledProductsIsIndexableCondition::isIndexable',
                 ],
             );
 

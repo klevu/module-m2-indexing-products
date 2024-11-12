@@ -12,6 +12,7 @@ use Klevu\Indexing\Model\Update\Entity;
 use Klevu\IndexingApi\Service\EntityUpdateResponderServiceInterface;
 use Klevu\IndexingProducts\Model\ResourceModel\Product\Collection as ProductCollection;
 use Klevu\IndexingProducts\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
+use Klevu\IndexingProducts\Model\Source\EntitySubtypeOptions;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\ConfigurableProduct\Model\LinkManagement;
 use Magento\Eav\Model\Entity as EavEntity;
@@ -57,6 +58,7 @@ class LinkManagementPlugin
     ): bool {
         $this->responderService->execute([
             Entity::ENTITY_IDS => $this->getEntityIds($childSku),
+            Entity::ENTITY_SUBTYPES => [EntitySubtypeOptions::CONFIGURABLE_VARIANTS],
         ]);
 
         return $result;
@@ -80,6 +82,7 @@ class LinkManagementPlugin
     ): bool {
         $this->responderService->execute([
             Entity::ENTITY_IDS => $this->getEntityIds($childSku),
+            Entity::ENTITY_SUBTYPES => [EntitySubtypeOptions::CONFIGURABLE_VARIANTS],
         ]);
 
         return $result;

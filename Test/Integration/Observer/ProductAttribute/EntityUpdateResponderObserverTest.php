@@ -199,7 +199,7 @@ class EntityUpdateResponderObserverTest extends TestCase
         $this->createAttribute([
             'index_as' => IndexType::INDEX,
             'generate_config_for' => [
-                'configurable_variant',
+                'configurable_variants',
             ],
             'aspect' => Aspect::ATTRIBUTES,
         ]);
@@ -247,7 +247,7 @@ class EntityUpdateResponderObserverTest extends TestCase
 
         $attribute->setData(
             MagentoAttributeInterface::ATTRIBUTE_PROPERTY_GENERATE_CONFIGURATION_FOR_ENTITY_SUBTYPES,
-            ['simple', 'configurable_variant'],
+            ['simple', 'configurable_variants'],
         );
         $this->resourceModel->save($attribute); // @phpstan-ignore-line
 
@@ -297,7 +297,7 @@ class EntityUpdateResponderObserverTest extends TestCase
                 'simple',
                 'virtual',
                 'downloadable',
-                'configurable_variant',
+                'configurable_variants',
             ],
             'aspect' => Aspect::ATTRIBUTES,
         ]);
@@ -364,7 +364,7 @@ class EntityUpdateResponderObserverTest extends TestCase
 
         $attribute->setData(
             MagentoAttributeInterface::ATTRIBUTE_PROPERTY_GENERATE_CONFIGURATION_FOR_ENTITY_SUBTYPES,
-            ['simple', 'configurable_variant'],
+            ['simple', 'configurable_variants'],
         );
         $this->resourceModel->save($attribute); // @phpstan-ignore-line
 
@@ -584,12 +584,12 @@ class EntityUpdateResponderObserverTest extends TestCase
         $attributeSource = $configurableAttribute->getSource();
 
         $this->createProduct([
-            'key' => 'varitant_product_1',
+            'key' => 'variant_product_1',
             'data' => [
                 $configurableAttributeFixture->getAttributeCode() => $attributeSource->getOptionId('Option 1'),
             ],
         ]);
-        $variantProductFixture = $this->productFixturePool->get('varitant_product_1');
+        $variantProductFixture = $this->productFixturePool->get('variant_product_1');
         $this->createProduct([
             'key' => 'test_product_3',
             'type_id' => 'configurable',
@@ -635,7 +635,7 @@ class EntityUpdateResponderObserverTest extends TestCase
             IndexingEntity::TARGET_PARENT_ID => $productFixture3->getId(),
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
-            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'configurable_variant',
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'configurable_variants',
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
             IndexingEntity::LAST_ACTION => Actions::ADD,
             IndexingEntity::LAST_ACTION_TIMESTAMP => date('Y-m-d H:i:s'),

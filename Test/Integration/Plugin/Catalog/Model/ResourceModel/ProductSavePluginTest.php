@@ -110,7 +110,11 @@ class ProductSavePluginTest extends TestCase
             product: $productFixture->getProduct(),
         );
         $this->assertNotNull($indexingEntity);
-        $this->assertSame(expected: Actions::ADD, actual: $indexingEntity->getNextAction());
+        $this->assertSame(
+            expected: Actions::ADD,
+            actual: $indexingEntity->getNextAction(),
+            message: 'expected: ' . Actions::ADD->value . ', actual: ' . $indexingEntity->getNextAction()->value,
+        );
         $this->assertTrue(condition: $indexingEntity->getIsIndexable());
     }
 
@@ -140,7 +144,11 @@ class ProductSavePluginTest extends TestCase
 
         $indexingEntity = $this->getIndexingEntityForProduct(apiKey: $apiKey, product: $product);
         $this->assertNotNull($indexingEntity);
-        $this->assertSame(expected: Actions::ADD, actual: $indexingEntity->getNextAction());
+        $this->assertSame(
+            expected: Actions::ADD,
+            actual: $indexingEntity->getNextAction(),
+            message: 'expected: ' . Actions::ADD->value . ', actual: ' . $indexingEntity->getNextAction()->value,
+        );
         $this->assertTrue(condition: $indexingEntity->getIsIndexable());
     }
 
@@ -166,7 +174,10 @@ class ProductSavePluginTest extends TestCase
             IndexingEntity::TARGET_ID => $product->getId(),
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
+            IndexingEntity::LAST_ACTION => Actions::ADD,
+            IndexingEntity::LAST_ACTION_TIMESTAMP => date('Y-m-d H:i:s'),
             IndexingEntity::IS_INDEXABLE => true,
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
         ]);
 
         $product->setName('Test Product UPDATE TITLE ' . random_int(0, 99999999));
@@ -175,7 +186,11 @@ class ProductSavePluginTest extends TestCase
 
         $indexingEntity = $this->getIndexingEntityForProduct(apiKey: $apiKey, product: $product);
         $this->assertNotNull($indexingEntity);
-        $this->assertSame(expected: Actions::UPDATE, actual: $indexingEntity->getNextAction());
+        $this->assertSame(
+            expected: Actions::UPDATE,
+            actual: $indexingEntity->getNextAction(),
+            message: 'expected: ' . Actions::UPDATE->value . ', actual: ' . $indexingEntity->getNextAction()->value,
+        );
         $this->assertTrue(condition: $indexingEntity->getIsIndexable());
     }
 
@@ -209,15 +224,23 @@ class ProductSavePluginTest extends TestCase
 
         $indexingEntity = $this->getIndexingEntityForProduct(apiKey: $apiKey, product: $product);
         $this->assertNotNull($indexingEntity);
-        $this->assertSame(expected: Actions::NO_ACTION, actual: $indexingEntity->getNextAction());
-        $this->assertFalse(condition: $indexingEntity->getIsIndexable());
+        $this->assertSame(
+            expected: Actions::NO_ACTION,
+            actual: $indexingEntity->getNextAction(),
+            message: 'expected: ' . Actions::NO_ACTION->value . ', actual: ' . $indexingEntity->getNextAction()->value,
+        );
+        $this->assertFalse(condition: $indexingEntity->getIsIndexable(),);
 
         $product->setStatus(Status::STATUS_ENABLED);
         $productResourceModel->save($product);
 
         $indexingEntity = $this->getIndexingEntityForProduct(apiKey: $apiKey, product: $product);
         $this->assertNotNull($indexingEntity);
-        $this->assertSame(expected: Actions::ADD, actual: $indexingEntity->getNextAction());
+        $this->assertSame(
+            expected: Actions::ADD,
+            actual: $indexingEntity->getNextAction(),
+            message: 'expected: ' . Actions::ADD->value . ', actual: ' . $indexingEntity->getNextAction()->value,
+        );
         $this->assertTrue(condition: $indexingEntity->getIsIndexable());
     }
 
@@ -245,6 +268,7 @@ class ProductSavePluginTest extends TestCase
             IndexingEntity::NEXT_ACTION => Actions::DELETE,
             IndexingEntity::LAST_ACTION => Actions::UPDATE,
             IndexingEntity::IS_INDEXABLE => true,
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
         ]);
 
         $product->setName('Test Product UPDATE TITLE ' . random_int(0, 99999999));
@@ -253,7 +277,11 @@ class ProductSavePluginTest extends TestCase
 
         $indexingEntity = $this->getIndexingEntityForProduct(apiKey: $apiKey, product: $product);
         $this->assertNotNull($indexingEntity);
-        $this->assertSame(expected: Actions::UPDATE, actual: $indexingEntity->getNextAction());
+        $this->assertSame(
+            expected: Actions::UPDATE,
+            actual: $indexingEntity->getNextAction(),
+            message: 'expected: ' . Actions::UPDATE->value . ', actual: ' . $indexingEntity->getNextAction()->value,
+        );
         $this->assertTrue(condition: $indexingEntity->getIsIndexable());
     }
 
@@ -278,7 +306,11 @@ class ProductSavePluginTest extends TestCase
 
         $indexingEntity = $this->getIndexingEntityForProduct(apiKey: $apiKey, product: $product);
         $this->assertNotNull($indexingEntity);
-        $this->assertSame(expected: Actions::NO_ACTION, actual: $indexingEntity->getNextAction());
+        $this->assertSame(
+            expected: Actions::NO_ACTION,
+            actual: $indexingEntity->getNextAction(),
+            message: 'expected: ' . Actions::NO_ACTION->value . ', actual: ' . $indexingEntity->getNextAction()->value,
+        );
         $this->assertFalse(condition: $indexingEntity->getIsIndexable());
 
         $product->setStatus(Status::STATUS_ENABLED);
@@ -287,26 +319,30 @@ class ProductSavePluginTest extends TestCase
 
         $indexingEntity = $this->getIndexingEntityForProduct(apiKey: $apiKey, product: $product);
         $this->assertNotNull($indexingEntity);
-        $this->assertSame(expected: Actions::ADD, actual: $indexingEntity->getNextAction());
+        $this->assertSame(
+            expected: Actions::ADD,
+            actual: $indexingEntity->getNextAction(),
+            message: 'expected: ' . Actions::ADD->value . ', actual: ' . $indexingEntity->getNextAction()->value,
+        );
         $this->assertTrue(condition: $indexingEntity->getIsIndexable());
     }
 
     /**
      * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
+     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/js_api_key klevu-js-api-key
+     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/rest_auth_key klevu-rest-auth-key
      */
     public function testAroundSave_NoChangeForNoneIndexableAttributeChange(): void
     {
         $apiKey = 'klevu-js-api-key';
-        $this->cleanIndexingEntities($apiKey);
-
         $this->createStore();
 
         $this->createAttribute([
             'code' => 'klevu_test_select_attribute',
             'key' => 'klevu_test_nonindexable_attribute',
             'index_as' => IndexType::NO_INDEX,
-            'aspect' => Aspect::ALL,
+            'aspect' => Aspect::NONE,
         ]);
         $nonIndexableAttributeFixture = $this->attributeFixturePool->get('klevu_test_nonindexable_attribute');
 
@@ -327,6 +363,7 @@ class ProductSavePluginTest extends TestCase
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
             IndexingEntity::LAST_ACTION => Actions::UPDATE,
             IndexingEntity::IS_INDEXABLE => true,
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
         ]);
 
         $product->setData(key: $nonIndexableAttributeFixture->getAttributeCode(), value: 'Updated Value');
@@ -335,7 +372,11 @@ class ProductSavePluginTest extends TestCase
 
         $indexingEntity = $this->getIndexingEntityForProduct(apiKey: $apiKey, product: $product);
         $this->assertNotNull($indexingEntity);
-        $this->assertSame(expected: Actions::NO_ACTION, actual: $indexingEntity->getNextAction());
+        $this->assertSame(
+            expected: Actions::NO_ACTION,
+            actual: $indexingEntity->getNextAction(),
+            message: 'expected: ' . Actions::NO_ACTION->value . ', actual: ' . $indexingEntity->getNextAction()->value,
+        );
         $this->assertTrue(condition: $indexingEntity->getIsIndexable());
     }
 
@@ -419,6 +460,7 @@ class ProductSavePluginTest extends TestCase
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
             IndexingEntity::LAST_ACTION => Actions::ADD,
             IndexingEntity::LAST_ACTION_TIMESTAMP => date('Y-m-d H:i:s'),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'configurable',
         ]);
         $this->createIndexingEntity([
             IndexingEntity::API_KEY => $apiKey,
@@ -428,6 +470,7 @@ class ProductSavePluginTest extends TestCase
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
             IndexingEntity::LAST_ACTION => Actions::ADD,
             IndexingEntity::LAST_ACTION_TIMESTAMP => date('Y-m-d H:i:s'),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'configurable_variants',
         ]);
         $this->createIndexingEntity([
             IndexingEntity::API_KEY => $apiKey,
@@ -437,6 +480,7 @@ class ProductSavePluginTest extends TestCase
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
             IndexingEntity::LAST_ACTION => Actions::ADD,
             IndexingEntity::LAST_ACTION_TIMESTAMP => date('Y-m-d H:i:s'),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'configurable_variants',
         ]);
 
         $configurableProduct->setName($configurableProduct->getName() . ' TEST');
@@ -533,6 +577,181 @@ class ProductSavePluginTest extends TestCase
     }
 
     /**
+     * @magentoDbIsolation disabled
+     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/js_api_key klevu-js-api-key
+     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/rest_auth_key klevu-rest-auth-key
+     * @magentoConfigFixture default/klevu/indexing/exclude_disabled_products 1
+     */
+    public function testSavingSimple_AlsoUpdatesVariants(): void
+    {
+        $apiKey = 'klevu-js-api-key';
+
+        $this->createStore();
+        $storeFixture = $this->storeFixturesPool->get('test_store');
+        $store = $storeFixture->get();
+
+        $this->createAttribute([
+            'key' => 'klevu_test_attribute',
+            'attribute_type' => 'configurable',
+            'options' => [
+                '1' => 'Option 1',
+                '2' => 'Option 2',
+                '3' => 'Option 3',
+            ],
+        ]);
+        $configurableAttribute = $this->attributeFixturePool->get('klevu_test_attribute');
+
+        $this->createProduct([
+            'key' => 'test_simple_product_1',
+            'sku' => 'test_simple_product_1',
+            'status' => Status::STATUS_ENABLED,
+            'website_ids' => [
+                $store->getWebsiteId(),
+            ],
+            'data' => [
+                $configurableAttribute->getAttributeCode() => '1',
+            ],
+        ]);
+        $simple1ProductFixture = $this->productFixturePool->get('test_simple_product_1');
+        /** @var Product $simple1Product */
+        $simple1Product = $simple1ProductFixture->getProduct();
+
+        $this->createProduct([
+            'key' => 'test_simple_product_2',
+            'sku' => 'test_simple_product_2',
+            'status' => Status::STATUS_ENABLED,
+            'website_ids' => [
+                $store->getWebsiteId(),
+            ],
+            'data' => [
+                $configurableAttribute->getAttributeCode() => '2',
+            ],
+        ]);
+        $simple2ProductFixture = $this->productFixturePool->get('test_simple_product_2');
+
+        $this->createProduct([
+            'key' => 'test_configurable_product',
+            'sku' => 'test_configurable_product',
+            'status' => Status::STATUS_ENABLED,
+            'website_ids' => [
+                $store->getWebsiteId(),
+            ],
+            'type_id' => Configurable::TYPE_CODE,
+            'configurable_attributes' => [
+                $configurableAttribute->getAttribute(),
+            ],
+            'variants' => [
+                $simple1ProductFixture->getProduct(),
+                $simple2ProductFixture->getProduct(),
+            ],
+        ]);
+        $configurableProductFixture = $this->productFixturePool->get('test_configurable_product');
+        /** @var Product $configurableProduct */
+        $configurableProduct = $configurableProductFixture->getProduct();
+
+        $this->cleanIndexingEntities(apiKey: $apiKey);
+        $this->createIndexingEntity([
+            IndexingEntity::API_KEY => $apiKey,
+            IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ID => $simple1ProductFixture->getId(),
+            IndexingEntity::TARGET_PARENT_ID => null,
+            IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
+            IndexingEntity::LAST_ACTION => Actions::ADD,
+            IndexingEntity::LAST_ACTION_TIMESTAMP => date('Y-m-d H:i:s'),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
+        ]);
+        $this->createIndexingEntity([
+            IndexingEntity::API_KEY => $apiKey,
+            IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ID => $simple2ProductFixture->getId(),
+            IndexingEntity::TARGET_PARENT_ID => null,
+            IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
+            IndexingEntity::LAST_ACTION => Actions::ADD,
+            IndexingEntity::LAST_ACTION_TIMESTAMP => date('Y-m-d H:i:s'),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
+        ]);
+        $this->createIndexingEntity([
+            IndexingEntity::API_KEY => $apiKey,
+            IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ID => $configurableProduct->getId(),
+            IndexingEntity::TARGET_PARENT_ID => null,
+            IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
+            IndexingEntity::LAST_ACTION => Actions::ADD,
+            IndexingEntity::LAST_ACTION_TIMESTAMP => date('Y-m-d H:i:s'),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'configurable',
+        ]);
+        $this->createIndexingEntity([
+            IndexingEntity::API_KEY => $apiKey,
+            IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ID => $simple1ProductFixture->getId(),
+            IndexingEntity::TARGET_PARENT_ID => $configurableProduct->getId(),
+            IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
+            IndexingEntity::LAST_ACTION => Actions::ADD,
+            IndexingEntity::LAST_ACTION_TIMESTAMP => date('Y-m-d H:i:s'),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'configurable_variants',
+        ]);
+        $this->createIndexingEntity([
+            IndexingEntity::API_KEY => $apiKey,
+            IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ID => $simple2ProductFixture->getId(),
+            IndexingEntity::TARGET_PARENT_ID => $configurableProduct->getId(),
+            IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
+            IndexingEntity::LAST_ACTION => Actions::ADD,
+            IndexingEntity::LAST_ACTION_TIMESTAMP => date('Y-m-d H:i:s'),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'configurable_variants',
+        ]);
+
+        $simple1Product->setName($simple1Product->getName() . ' TEST');
+        $productResourceModel = $this->objectManager->get(ProductResourceModel::class);
+        $productResourceModel->save($simple1Product);
+
+        $indexingEntities = $this->getIndexingEntities(
+            type: 'KLEVU_PRODUCT',
+            apiKey: $apiKey,
+        );
+
+        $simple1Variants = array_filter(
+            array: $indexingEntities,
+            callback: static fn (IndexingEntityInterface $indexingEntity) => (
+                (int)$indexingEntity->getTargetId() === (int)$simple1ProductFixture->getId()
+                && (int)$indexingEntity->getTargetParentId() === (int)$configurableProductFixture->getId()
+            ),
+        );
+        $this->assertCount(expectedCount: 1, haystack: $simple1Variants);
+        $simple1Variant = array_shift($simple1Variants);
+
+        $this->assertSame(
+            expected: Actions::UPDATE,
+            actual: $simple1Variant->getNextAction(),
+            message: sprintf(
+                'Expected %s, Received %s',
+                Actions::UPDATE->value,
+                $simple1Variant->getNextAction()->value,
+            ),
+        );
+
+        $simple1Products = array_filter(
+            array: $indexingEntities,
+            callback: static fn (IndexingEntityInterface $indexingEntity) => (
+                (int)$indexingEntity->getTargetId() === (int)$simple1ProductFixture->getId()
+                && $indexingEntity->getTargetParentId() === null
+            ),
+        );
+        $this->assertCount(expectedCount: 1, haystack: $simple1Products);
+        $simple1Product = array_shift($simple1Products);
+
+        $this->assertSame(
+            expected: Actions::UPDATE,
+            actual: $simple1Product->getNextAction(),
+            message: sprintf(
+                'Expected %s, Received %s',
+                Actions::UPDATE->value,
+                $simple1Product->getNextAction()->value,
+            ),
+        );
+    }
+
+        /**
      * @return mixed[]|null
      */
     private function getSystemConfigPluginInfo(): ?array

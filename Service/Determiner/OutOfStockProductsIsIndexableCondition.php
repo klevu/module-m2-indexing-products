@@ -9,7 +9,7 @@ declare(strict_types=1);
 namespace Klevu\IndexingProducts\Service\Determiner;
 
 use Klevu\Configuration\Service\Provider\ScopeProviderInterface;
-use Klevu\IndexingApi\Service\Determiner\IsIndexableDeterminerInterface;
+use Klevu\IndexingApi\Service\Determiner\IsIndexableConditionInterface;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\CatalogInventory\Api\Data\StockItemInterface;
 use Magento\CatalogInventory\Model\Spi\StockRegistryProviderInterface;
@@ -21,7 +21,7 @@ use Magento\Framework\DataObject;
 use Magento\Store\Api\Data\StoreInterface;
 use Psr\Log\LoggerInterface;
 
-class OutOfStockProductsIsIndexableDeterminer implements IsIndexableDeterminerInterface
+class OutOfStockProductsIsIndexableCondition implements IsIndexableConditionInterface
 {
     public const XML_PATH_EXCLUDE_OOS_PRODUCTS = 'klevu/indexing/exclude_oos_products';
 

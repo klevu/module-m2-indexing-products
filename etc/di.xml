@@ -65,11 +65,11 @@
     <virtualType name="Klevu\IndexingProducts\Service\Determiner\IsIndexableDeterminer"
                  type="Klevu\Indexing\Service\Determiner\IsIndexableDeterminer">
         <arguments>
-            <argument name="isIndexableDeterminers" xsi:type="array">
+            <argument name="isIndexableConditions" xsi:type="array">
                 <item name="disabledProductsIsIndexableDeterminer"
-                      xsi:type="object">Klevu\IndexingProducts\Service\Determiner\DisabledProductsIsIndexableDeterminer</item>
+                      xsi:type="object">Klevu\IndexingProducts\Service\Determiner\DisabledProductsIsIndexableCondition</item>
                 <item name="oosProductsIsIndexableDeterminer"
-                      xsi:type="object">Klevu\IndexingProducts\Service\Determiner\OutOfStockProductsIsIndexableDeterminer</item>
+                      xsi:type="object">Klevu\IndexingProducts\Service\Determiner\OutOfStockProductsIsIndexableCondition</item>
             </argument>
         </arguments>
     </virtualType>
@@ -77,9 +77,9 @@
     <virtualType name="Klevu\IndexingProducts\Service\Determiner\IsAttributeIndexableDeterminer"
                  type="Klevu\Indexing\Service\Determiner\IsAttributeIndexableDeterminer">
         <arguments>
-            <argument name="isIndexableDeterminers" xsi:type="array">
-                <item name="indexTypeIsIndexableDeterminer"
-                      xsi:type="object">Klevu\IndexingProducts\Service\Determiner\IsAttributeIndexTypeIndexableDeterminer</item>
+            <argument name="isIndexableConditions" xsi:type="array">
+                <item name="indexTypeIsIndexableCondition"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Determiner\IsAttributeIndexTypeIndexableCondition</item>
             </argument>
         </arguments>
     </virtualType>
@@ -101,6 +101,7 @@
             <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
             <argument name="syncEnabledProvider"
                       xsi:type="object">Klevu\IndexingProducts\Service\Provider\SyncEnabledProvider</argument>
+            <argument name="batchSize" xsi:type="number">2500</argument>
         </arguments>
     </type>
 
@@ -236,10 +237,9 @@
         </arguments>
     </virtualType>
 
-    <virtualType name="Klevu\IndexingProducts\Service\Provider\EntityDiscoveryProvider"
-                 type="Klevu\Indexing\Service\Provider\EntityDiscoveryProvider">
+    <virtualType name="Klevu\IndexingProducts\Service\Provider\EntityProviderProvider"
+                 type="Klevu\Indexing\Service\Provider\EntityProviderProvider">
         <arguments>
-            <argument name="entityType" xsi:type="string">KLEVU_PRODUCT</argument>
             <argument name="entityProviders" xsi:type="array">
                 <item name="simple"
                       xsi:type="object">Klevu\IndexingProducts\Service\Provider\ProductEntityProvider\Simple</item>
@@ -256,6 +256,15 @@
                 <item name="configurable_variants"
                       xsi:type="object">Klevu\IndexingProducts\Service\Provider\ProductEntityProvider\ConfigurableVariants</item>
             </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Klevu\IndexingProducts\Service\Provider\EntityDiscoveryProvider"
+                 type="Klevu\Indexing\Service\Provider\EntityDiscoveryProvider">
+        <arguments>
+            <argument name="entityType" xsi:type="string">KLEVU_PRODUCT</argument>
+            <argument name="entityProviderProvider"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\EntityProviderProvider</argument>
             <argument name="isIndexableDeterminer"
                       xsi:type="object">Klevu\IndexingProducts\Service\Determiner\IsIndexableDeterminer</argument>
             <argument name="isParentRelationSynced" xsi:type="boolean">true</argument>
@@ -265,8 +274,29 @@
     <type name="Klevu\Indexing\Service\EntityDiscoveryOrchestratorService">
         <arguments>
             <argument name="discoveryProviders" xsi:type="array">
-                <item name="products"
+                <item name="KLEVU_PRODUCT"
                       xsi:type="object">Klevu\IndexingProducts\Service\Provider\EntityDiscoveryProvider</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <virtualType name="Klevu\IndexingProducts\Service\Provider\EntityDiscoveryProvider\FilterEntitiesToDelete"
+                 type="Klevu\Indexing\Service\Provider\EntityDiscoveryProvider">
+        <arguments>
+            <argument name="entityType" xsi:type="string">KLEVU_PRODUCT</argument>
+            <argument name="entityProviderProvider"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\EntityProviderProvider</argument>
+            <argument name="isIndexableDeterminer"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Determiner\IsIndexableDeterminer</argument>
+            <argument name="isParentRelationSynced" xsi:type="boolean">true</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Klevu\Indexing\Service\FilterEntitiesToDeleteService">
+        <arguments>
+            <argument name="discoveryProviders" xsi:type="array">
+                <item name="KLEVU_PRODUCT"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\EntityDiscoveryProvider\FilterEntitiesToDelete</item>
             </argument>
         </arguments>
     </type>
@@ -339,19 +369,19 @@
         </arguments>
     </type>
 
-    <type name="Klevu\IndexingProducts\Service\Determiner\DisabledProductsIsIndexableDeterminer">
+    <type name="Klevu\IndexingProducts\Service\Determiner\DisabledProductsIsIndexableCondition">
         <arguments>
             <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
         </arguments>
     </type>
 
-    <type name="Klevu\IndexingProducts\Service\Determiner\OutOfStockProductsIsIndexableDeterminer">
+    <type name="Klevu\IndexingProducts\Service\Determiner\OutOfStockProductsIsIndexableCondition">
         <arguments>
             <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
         </arguments>
     </type>
 
-    <type name="Klevu\IndexingProducts\Service\Determiner\IsAttributeIndexTypeIndexableDeterminer">
+    <type name="Klevu\IndexingProducts\Service\Determiner\IsAttributeIndexTypeIndexableCondition">
         <arguments>
             <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
         </arguments>
@@ -950,22 +980,8 @@
     <virtualType name="Klevu\IndexingProducts\Service\Provider\Sync\EntityIndexingRecordProvider"
                  type="Klevu\Indexing\Service\Provider\Sync\EntityIndexingRecordProvider">
         <arguments>
-            <argument name="entityProviders" xsi:type="array">
-                <item name="simple"
-                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\ProductEntityProvider\Simple</item>
-                <item name="virtual"
-                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\ProductEntityProvider\Virtual</item>
-                <item name="downloadable"
-                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\ProductEntityProvider\Downloadable</item>
-                <item name="grouped"
-                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\ProductEntityProvider\Grouped</item>
-                <item name="bundle"
-                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\ProductEntityProvider\Bundle</item>
-                <item name="configurable"
-                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\ProductEntityProvider\Configurable</item>
-                <item name="configurable_variants"
-                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\ProductEntityProvider\ConfigurableVariants</item>
-            </argument>
+            <argument name="entityProviderProvider"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\EntityProviderProvider</argument>
             <argument name="indexingRecordCreatorService"
                       xsi:type="object">Klevu\IndexingProducts\Service\EntityIndexingRecordCreatorService</argument>
             <argument name="entityType" xsi:type="string">KLEVU_PRODUCT</argument>

@@ -227,7 +227,9 @@ class ConfigurableVariantsProductEntityProviderTest extends TestCase
         $searchResults1 = $provider->get(store: $store1);
         $items1 = [];
         foreach ($searchResults1 as $searchResult) {
-            $items1[] = $searchResult;
+            foreach ($searchResult as $key => $resultItems) {
+                $items1[$key] = $resultItems;
+            }
         }
         $product1Array = array_filter(
             array: $items1,
@@ -267,7 +269,9 @@ class ConfigurableVariantsProductEntityProviderTest extends TestCase
         $searchResults2 = $provider->get(store: $store2);
         $items2 = [];
         foreach ($searchResults2 as $searchResult) {
-            $items2[] = $searchResult;
+            foreach ($searchResult as $key => $resultItems) {
+                $items2[$key] = $resultItems;
+            }
         }
         $product1Array = array_filter(
             array: $items2,
@@ -307,7 +311,9 @@ class ConfigurableVariantsProductEntityProviderTest extends TestCase
         $searchResults3 = $provider->get(store: $store3);
         $items3 = [];
         foreach ($searchResults3 as $searchResult) {
-            $items3[] = $searchResult;
+            foreach ($searchResult as $key => $resultItems) {
+                $items3[$key] = $resultItems;
+            }
         }
         $product1Array = array_filter(
             array: $items3,

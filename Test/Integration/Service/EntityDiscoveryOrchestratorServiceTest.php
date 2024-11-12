@@ -15,6 +15,7 @@ use Klevu\Indexing\Test\Integration\Traits\IndexingEntitiesTrait;
 use Klevu\IndexingApi\Api\Data\IndexingEntityInterface;
 use Klevu\IndexingApi\Model\Source\Actions;
 use Klevu\IndexingApi\Service\EntityDiscoveryOrchestratorServiceInterface;
+use Klevu\IndexingProducts\Service\Provider\EntityDiscoveryProvider as ProductDiscoveryProviderVirtualType;
 use Klevu\TestFixtures\Catalog\ProductTrait;
 use Klevu\TestFixtures\Store\StoreFixturesPool;
 use Klevu\TestFixtures\Store\StoreTrait;
@@ -330,6 +331,7 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
     }
 
     /**
+     * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/js_api_key klevu-js-api-key-1
      * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/rest_auth_key klevu-rest-auth-key-1
@@ -340,6 +342,20 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
      */
     public function testExecute_HandlesMultipleStores_SameKeys(): void
     {
+        // enable is indexable checks at store scope.
+        // in reality, we can only set status at website scope not store scope
+        // Here we have the same api keys integrated in different websites. Not recommended!
+        $indexingEntitiesProvider = $this->objectManager->create(
+            type: ProductDiscoveryProviderVirtualType::class, // @phpstan-ignore-line
+            arguments: [
+                'isCheckIsIndexableAtStoreScope' => true,
+            ],
+        );
+        $this->objectManager->addSharedInstance(
+            instance: $indexingEntitiesProvider,
+            className: ProductDiscoveryProviderVirtualType::class, // @phpstan-ignore-line
+        );
+
         $apiKey = 'klevu-js-api-key-1';
         $this->cleanIndexingEntities($apiKey);
 
@@ -366,7 +382,10 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
                 'in_stock' => true,
                 'qty' => 123,
                 'status' => Status::STATUS_ENABLED,
-                'website_ids' => [(int)$store1->getWebsiteId()],
+                'website_ids' => [
+                    (int)$store1->getWebsiteId(),
+                    (int)$store2->getWebsiteId(),
+                ],
                 'key' => 'test_product_1',
                 'stores' => [
                     $store1->getId() => [
@@ -384,7 +403,10 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
                 'in_stock' => true,
                 'qty' => 123,
                 'status' => Status::STATUS_DISABLED,
-                'website_ids' => [(int)$store2->getWebsiteId()],
+                'website_ids' => [
+                    (int)$store1->getWebsiteId(),
+                    (int)$store2->getWebsiteId(),
+                ],
                 'type_id' => DownloadableType::TYPE_DOWNLOADABLE,
                 'key' => 'test_product_2',
                 'stores' => [
@@ -902,6 +924,20 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
      */
     public function testExecute_SetsExistingProductToIndexable_WhenEnabled_IfPreviousDeleteActionNotYetIndexed_MultiStore(): void // phpcs:ignore Generic.Files.LineLength.TooLong
     {
+        // enable is indexable checks at store scope.
+        // in reality, we can only set status at website scope not store scope
+        // Here we have the same api keys integrated in different websites. Not recommended!
+        $indexingEntitiesProvider = $this->objectManager->create(
+            type: ProductDiscoveryProviderVirtualType::class, // @phpstan-ignore-line
+            arguments: [
+                'isCheckIsIndexableAtStoreScope' => true,
+            ],
+        );
+        $this->objectManager->addSharedInstance(
+            instance: $indexingEntitiesProvider,
+            className: ProductDiscoveryProviderVirtualType::class, // @phpstan-ignore-line
+        );
+
         $apiKey = 'klevu-js-api-key';
         $this->cleanIndexingEntities($apiKey);
 
@@ -1145,14 +1181,6 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
                 ],
                 'type_id' => DownloadableType::TYPE_DOWNLOADABLE,
                 'status' => Status::STATUS_ENABLED,
-                'stores' => [
-                    $store1->getId() => [
-                        'status' => Status::STATUS_ENABLED,
-                    ],
-                    $store2->getId() => [
-                        'status' => Status::STATUS_DISABLED,
-                    ],
-                ],
             ],
         );
         $product1 = $this->productFixturePool->get('test_product_1');
@@ -1163,14 +1191,7 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
                     $store1->getWebsiteId(),
                     $store2->getWebsiteId(),
                 ],
-                'stores' => [
-                    $store1->getId() => [
-                        'status' => Status::STATUS_DISABLED,
-                    ],
-                    $store2->getId() => [
-                        'status' => Status::STATUS_ENABLED,
-                    ],
-                ],
+                'status' => Status::STATUS_ENABLED,
             ],
         );
         $product2 = $this->productFixturePool->get('test_product_2');
@@ -1202,8 +1223,8 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $collection = $this->objectManager->create(Collection::class);
         $collection->addFieldToFilter(IndexingEntity::API_KEY, ['eq' => $apiKey]);
         $indexingEntities = $collection->getItems();
-        $this->assertUpdateIndexingEntity($indexingEntities, $product1, $apiKey, Actions::ADD);
-        $this->assertUpdateIndexingEntity($indexingEntities, $product2, $apiKey, Actions::UPDATE);
+        $this->assertUpdateIndexingEntity($indexingEntities, $product1, $apiKey, Actions::ADD, true);
+        $this->assertUpdateIndexingEntity($indexingEntities, $product2, $apiKey, Actions::UPDATE, true);
 
         $this->cleanIndexingEntities($apiKey);
     }
@@ -1360,6 +1381,11 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
             message: 'Target Entity Type',
         );
         $this->assertSame(
+            expected: $isIndexable,
+            actual: $indexingEntity->getIsIndexable(),
+            message: 'Is Indexable',
+        );
+        $this->assertSame(
             expected: $isIndexable
                 ? Actions::ADD
                 : Actions::NO_ACTION,
@@ -1378,11 +1404,6 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $this->assertNull(
             actual: $indexingEntity->getLockTimestamp(),
             message: 'Lock Timestamp',
-        );
-        $this->assertSame(
-            expected: $isIndexable,
-            actual: $indexingEntity->getIsIndexable(),
-            message: 'Is Indexable',
         );
     }
 

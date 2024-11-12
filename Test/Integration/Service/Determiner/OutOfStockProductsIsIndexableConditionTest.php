@@ -9,8 +9,8 @@ declare(strict_types=1);
 namespace Klevu\IndexingProducts\Test\Integration\Service\Determiner;
 
 use Klevu\Configuration\Service\Provider\ScopeProviderInterface;
-use Klevu\IndexingApi\Service\Determiner\IsIndexableDeterminerInterface;
-use Klevu\IndexingProducts\Service\Determiner\OutOfStockProductsIsIndexableDeterminer;
+use Klevu\IndexingApi\Service\Determiner\IsIndexableConditionInterface;
+use Klevu\IndexingProducts\Service\Determiner\OutOfStockProductsIsIndexableCondition;
 use Klevu\TestFixtures\Catalog\ProductTrait;
 use Klevu\TestFixtures\Store\StoreFixturesPool;
 use Klevu\TestFixtures\Store\StoreTrait;
@@ -27,11 +27,11 @@ use Psr\Log\LoggerInterface;
 use TddWizard\Fixtures\Catalog\ProductFixturePool;
 
 /**
- * @covers \Klevu\IndexingProducts\Service\Determiner\OutOfStockProductsIsIndexableDeterminer::class
- * @method IsIndexableDeterminerInterface instantiateTestObject(?array $arguments = null)
- * @method IsIndexableDeterminerInterface instantiateTestObjectFromInterface(?array $arguments = null)
+ * @covers \Klevu\IndexingProducts\Service\Determiner\OutOfStockProductsIsIndexableCondition::class
+ * @method IsIndexableConditionInterface instantiateTestObject(?array $arguments = null)
+ * @method IsIndexableConditionInterface instantiateTestObjectFromInterface(?array $arguments = null)
  */
-class OutOfStockProductsIsIndexableDeterminerTest extends TestCase
+class OutOfStockProductsIsIndexableConditionTest extends TestCase
 {
     use ObjectInstantiationTrait;
     use ProductTrait;
@@ -50,8 +50,8 @@ class OutOfStockProductsIsIndexableDeterminerTest extends TestCase
     {
         parent::setUp();
 
-        $this->implementationFqcn = OutOfStockProductsIsIndexableDeterminer::class;
-        $this->interfaceFqcn = IsIndexableDeterminerInterface::class;
+        $this->implementationFqcn = OutOfStockProductsIsIndexableCondition::class;
+        $this->interfaceFqcn = IsIndexableConditionInterface::class;
         $this->objectManager = Bootstrap::getObjectManager();
         $this->storeFixturesPool = $this->objectManager->get(StoreFixturesPool::class);
         $this->productFixturePool = $this->objectManager->get(ProductFixturePool::class);
@@ -167,7 +167,7 @@ class OutOfStockProductsIsIndexableDeterminerTest extends TestCase
                     'productId' => (string)$productFixture->getId(),
                     'stock' => false,
                     // phpcs:ignore Generic.Files.LineLength.TooLong
-                    'method' => 'Klevu\IndexingProducts\Service\Determiner\OutOfStockProductsIsIndexableDeterminer::isIndexable',
+                    'method' => 'Klevu\IndexingProducts\Service\Determiner\OutOfStockProductsIsIndexableCondition::isIndexable',
                 ],
             );
 
