@@ -40,52 +40,81 @@ class ProductEntityProvider implements EntityProviderInterface
      */
     private readonly LoggerInterface $logger;
     /**
-     * @var string
+     * @var string|null
      */
-    private readonly string $entitySubtype;
+    private readonly ?string $entitySubtype;
+    /**
+     * @var int|null
+     */
+    private readonly ?int $batchSize;
 
     /**
      * @param ProductEntityCollectionInterface $productEntityCollection
      * @param ScopeConfigProviderInterface $syncEnabledProvider
      * @param LoggerInterface $logger
-     * @param string $entitySubtype
+     * @param string|null $entitySubtype
+     * @param int|null $batchSize
      */
     public function __construct(
         ProductEntityCollectionInterface $productEntityCollection,
         ScopeConfigProviderInterface $syncEnabledProvider,
         LoggerInterface $logger,
-        string $entitySubtype,
+        ?string $entitySubtype = null,
+        ?int $batchSize = null,
     ) {
         $this->productEntityCollection = $productEntityCollection;
         $this->syncEnabledProvider = $syncEnabledProvider;
         $this->logger = $logger;
         $this->entitySubtype = $entitySubtype;
+        $this->batchSize = $batchSize;
     }
 
     /**
      * @param StoreInterface|null $store
      * @param int[]|null $entityIds
      *
-     * @return \Generator|null
+     * @return \Generator<ProductInterface[]>|null
      */
     public function get(?StoreInterface $store = null, ?array $entityIds = []): ?\Generator
     {
         if (!$this->syncEnabledProvider->get()) {
             return null;
         }
-        $collection = $this->productEntityCollection->get(store: $store, entityIds: $entityIds);
-        $this->logQuery($collection);
+        sort($entityIds);
+        $currentEntityId = 0;
+        $lastEntityId = $entityIds
+            ? $entityIds[array_keys($entityIds)[count($entityIds) - 1]]
+            : $this->productEntityCollection->getLastId(entityType: $this->entitySubtype);
 
-        /** @var ProductInterface $product */
-        foreach ($collection as $product) {
-            yield $product;
+        if (!$lastEntityId) {
+            return;
+        }
+        while ($currentEntityId < $lastEntityId) {
+            $collection = $this->productEntityCollection->get(
+                store: $store,
+                entityIds: $entityIds,
+                pageSize: $this->batchSize,
+                currentEntityId: $currentEntityId + 1,
+            );
+            $this->logQuery($collection);
+            if (!$collection->getSize()) {
+                break;
+            }
+            /** @var ProductInterface[] $products */
+            $products = $collection->getItems();
+            yield $products;
+            $lastProduct = array_pop($products);
+            $currentEntityId = (int)$lastProduct?->getId();
+            if (null === $this->batchSize || !$currentEntityId) {
+                break;
+            }
         }
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getEntitySubtype(): string
+    public function getEntitySubtype(): ?string
     {
         return $this->entitySubtype;
     }

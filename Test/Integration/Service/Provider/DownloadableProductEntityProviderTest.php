@@ -100,7 +100,9 @@ class DownloadableProductEntityProviderTest extends TestCase
 
         $items = [];
         foreach ($searchResults as $searchResult) {
-            $items[] = $searchResult;
+            foreach ($searchResult as $key => $resultItems) {
+                $items[$key] = $resultItems;
+            }
         }
 
         $this->assertCount(expectedCount: 2, haystack: $items);
@@ -162,7 +164,9 @@ class DownloadableProductEntityProviderTest extends TestCase
 
         $items = [];
         foreach ($searchResults as $searchResult) {
-            $items[] = $searchResult;
+            foreach ($searchResult as $key => $resultItems) {
+                $items[$key] = $resultItems;
+            }
         }
 
         $this->assertCount(expectedCount: 2, haystack: $items);

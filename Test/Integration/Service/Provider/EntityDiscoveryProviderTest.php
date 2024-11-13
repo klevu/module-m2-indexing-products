@@ -27,6 +27,7 @@ use Magento\Framework\ObjectManagerInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
 use TddWizard\Fixtures\Catalog\ProductFixturePool;
+use TddWizard\Fixtures\Core\ConfigFixture;
 
 /**
  * @covers \Klevu\Indexing\Service\Provider\EntityDiscoveryProvider::class
@@ -114,11 +115,13 @@ class EntityDiscoveryProviderTest extends TestCase
         $product = $this->productFixturePool->get('test_product');
 
         $provider = $this->instantiateTestObject();
-        $productEntitiesByApiKey = $provider->getData(apiKeys: [$apiKey]);
+        $result = $provider->getData(apiKeys: [$apiKey]);
+        $productEntitiesByApiKey = iterator_to_array($result);
+
         $this->assertCount(expectedCount: 1, haystack: $productEntitiesByApiKey);
-        $productEntities = $productEntitiesByApiKey[$apiKey];
+        $productEntities = iterator_to_array($productEntitiesByApiKey[$apiKey]);
         $productEntityArray = array_filter(
-            array: $productEntities,
+            array: $productEntities[0] ?? [],
             callback: static fn (MagentoEntityInterface $prodEntity): bool => (
                 (int)$prodEntity->getEntityId() === (int)$product->getId()
             ),
@@ -163,12 +166,13 @@ class EntityDiscoveryProviderTest extends TestCase
         $product = $this->productFixturePool->get('test_product');
 
         $provider = $this->instantiateTestObject();
-        $productEntitiesByApiKey = $provider->getData(apiKeys: [$apiKey]);
+        $result = $provider->getData(apiKeys: [$apiKey]);
+        $productEntitiesByApiKey = iterator_to_array($result);
 
         $this->assertCount(expectedCount: 1, haystack: $productEntitiesByApiKey);
-        $productEntities = $productEntitiesByApiKey[$apiKey];
+        $productEntities = iterator_to_array($productEntitiesByApiKey[$apiKey]);
         $productEntityArray = array_filter(
-            array: $productEntities,
+            array: $productEntities[0] ?? [],
             callback: static fn (MagentoEntityInterface $prodEntity): bool => (
                 (int)$prodEntity->getEntityId() === (int)$product->getId()
             ),
@@ -208,12 +212,13 @@ class EntityDiscoveryProviderTest extends TestCase
         $product = $this->productFixturePool->get('test_product');
 
         $provider = $this->instantiateTestObject();
-        $productEntitiesByApiKey = $provider->getData(apiKeys: [$apiKey]);
+        $result = $provider->getData(apiKeys: [$apiKey]);
+        $productEntitiesByApiKey = iterator_to_array($result);
 
         $this->assertCount(expectedCount: 1, haystack: $productEntitiesByApiKey);
-        $productEntities = $productEntitiesByApiKey[$apiKey];
+        $productEntities = iterator_to_array($productEntitiesByApiKey[$apiKey]);
         $productEntityArray = array_filter(
-            array: $productEntities,
+            array: $productEntities[0] ?? [],
             callback: static fn (MagentoEntityInterface $prodEntity): bool => (
                 (int)$prodEntity->getEntityId() === (int)$product->getId()
             ),
@@ -228,10 +233,6 @@ class EntityDiscoveryProviderTest extends TestCase
     /**
      * @magentoDbIsolation disabled
      * @magentoAppIsolation enabled
-     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/js_api_key klevu-js-api-key
-     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/rest_auth_key klevu-rest-auth-key
-     * @magentoConfigFixture klevu_test_store_2_store klevu_configuration/auth_keys/js_api_key klevu-js-api-key
-     * @magentoConfigFixture klevu_test_store_2_store klevu_configuration/auth_keys/rest_auth_key klevu-rest-auth-key
      * @magentoConfigFixture default/klevu/indexing/exclude_disabled_products 1
      */
     public function testGetData_IsIndexable_ForProductDisabledInOneStore_IsIndexableChecksEnabled(): void
@@ -257,12 +258,35 @@ class EntityDiscoveryProviderTest extends TestCase
         $storeFixture2 = $this->storeFixturesPool->get('test_store_2');
         $store2 = $storeFixture2->get();
 
+        ConfigFixture::setForStore(
+            path: 'klevu_configuration/auth_keys/js_api_key',
+            value: 'klevu-js-api-key',
+            storeCode: $store1->getCode(),
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu_configuration/auth_keys/rest_auth_key',
+            value: 'klevu-rest-auth-key',
+            storeCode: $store1->getCode(),
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu_configuration/auth_keys/js_api_key',
+            value: 'klevu-js-api-key',
+            storeCode: $store2->getCode(),
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu_configuration/auth_keys/rest_auth_key',
+            value: 'klevu-rest-auth-key',
+            storeCode: $store2->getCode(),
+        );
+
         $this->createProduct(
             productData: [
                 'in_stock' => true,
                 'qty' => 123,
                 'status' => Status::STATUS_ENABLED,
-                'website_ids' => [(int)$store2->getWebsiteId()],
+                'website_ids' => [
+                    (int)$store2->getWebsiteId(),
+                ],
                 'stores' => [
                     $store1->getId() => [
                         'status' => Status::STATUS_ENABLED,
@@ -275,13 +299,16 @@ class EntityDiscoveryProviderTest extends TestCase
         );
         $product = $this->productFixturePool->get('test_product');
 
-        $provider = $this->instantiateTestObject();
-        $productEntitiesByApiKey = $provider->getData(apiKeys: [$apiKey]);
+        $provider = $this->instantiateTestObject([
+            'isCheckIsIndexableAtStoreScope' => true,
+        ]);
+        $result = $provider->getData(apiKeys: [$apiKey]);
+        $productEntitiesByApiKey = iterator_to_array($result);
 
         $this->assertCount(expectedCount: 1, haystack: $productEntitiesByApiKey);
-        $productEntities = $productEntitiesByApiKey[$apiKey];
+        $productEntities = iterator_to_array($productEntitiesByApiKey[$apiKey]);
         $productEntityArray = array_filter(
-            array: $productEntities,
+            array: $productEntities[0] ?? [],
             callback: static fn (MagentoEntityInterface $prodEntity): bool => (
                 (int)$prodEntity->getEntityId() === (int)$product->getId()
             ),

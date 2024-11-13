@@ -28,7 +28,7 @@ use Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable as
 use Magento\Framework\Interception\PluginList\PluginList;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\TestFramework\Helper\Bootstrap;
-use Magento\TestFramework\Indexer\TestCase;
+use PHPUnit\Framework\TestCase;
 use TddWizard\Fixtures\Catalog\ProductFixturePool;
 
 /**
@@ -334,6 +334,7 @@ class ConfigurablePluginTest extends TestCase
         $this->createIndexingEntity([
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'configurable',
             IndexingEntity::TARGET_ID => $configurableProduct->getId(),
             IndexingEntity::TARGET_PARENT_ID => null,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
@@ -343,6 +344,7 @@ class ConfigurablePluginTest extends TestCase
         $this->createIndexingEntity([
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'configurable_variants',
             IndexingEntity::TARGET_ID => $simple1ProductFixture->getId(),
             IndexingEntity::TARGET_PARENT_ID => $configurableProduct->getId(),
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
@@ -352,6 +354,7 @@ class ConfigurablePluginTest extends TestCase
         $this->createIndexingEntity([
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'configurable_variants',
             IndexingEntity::TARGET_ID => $simple2ProductFixture->getId(),
             IndexingEntity::TARGET_PARENT_ID => $configurableProduct->getId(),
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
@@ -385,6 +388,7 @@ class ConfigurablePluginTest extends TestCase
         $this->assertSame(
             expected: Actions::DELETE,
             actual: $simple1Variant->getNextAction(),
+            message: 'expected: ' . Actions::DELETE->value . ', actual: ' . $simple1Variant->getNextAction()->value,
         );
         $this->assertSame(
             expected: (int)$simple1ProductFixture->getId(),
@@ -408,6 +412,7 @@ class ConfigurablePluginTest extends TestCase
         $this->assertSame(
             expected: Actions::NO_ACTION,
             actual: $simple2Variant->getNextAction(),
+            message: 'expected: ' . Actions::NO_ACTION->value . ', actual: ' . $simple2Variant->getNextAction()->value,
         );
         $this->assertSame(
             expected: (int)$simple2ProductFixture->getId(),
@@ -431,6 +436,7 @@ class ConfigurablePluginTest extends TestCase
         $this->assertSame(
             expected: Actions::NO_ACTION,
             actual: $configurable->getNextAction(),
+            message: 'expected: ' . Actions::DELETE->value . ', actual: ' . $configurable->getNextAction()->value,
         );
         $this->assertSame(
             expected: (int)$configurableProductFixture->getId(),
@@ -520,6 +526,7 @@ class ConfigurablePluginTest extends TestCase
         $this->createIndexingEntity([
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'configurable',
             IndexingEntity::TARGET_ID => $configurableProduct->getId(),
             IndexingEntity::TARGET_PARENT_ID => null,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
@@ -529,6 +536,7 @@ class ConfigurablePluginTest extends TestCase
         $this->createIndexingEntity([
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'configurable_variants',
             IndexingEntity::TARGET_ID => $simple1ProductFixture->getId(),
             IndexingEntity::TARGET_PARENT_ID => $configurableProduct->getId(),
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
@@ -538,6 +546,7 @@ class ConfigurablePluginTest extends TestCase
         $this->createIndexingEntity([
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'configurable_variants',
             IndexingEntity::TARGET_ID => $simple2ProductFixture->getId(),
             IndexingEntity::TARGET_PARENT_ID => $configurableProduct->getId(),
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
@@ -569,6 +578,7 @@ class ConfigurablePluginTest extends TestCase
         $this->assertSame(
             expected: Actions::DELETE,
             actual: $simple1Variant->getNextAction(),
+            message: 'expected: ' . Actions::DELETE->value . ', actual: ' . $simple1Variant->getNextAction()->value,
         );
         $this->assertSame(
             expected: (int)$simple1ProductFixture->getId(),
@@ -592,6 +602,7 @@ class ConfigurablePluginTest extends TestCase
         $this->assertSame(
             expected: Actions::DELETE,
             actual: $simple2Variant->getNextAction(),
+            message: 'expected: ' . Actions::DELETE->value . ', actual: ' . $simple2Variant->getNextAction()->value,
         );
         $this->assertSame(
             expected: (int)$simple2ProductFixture->getId(),
@@ -615,6 +626,8 @@ class ConfigurablePluginTest extends TestCase
         $this->assertSame(
             expected: Actions::NO_ACTION,
             actual: $configurable->getNextAction(),
+            message: 'expected: ' . Actions::NO_ACTION->value . ', actual: ' . $configurable->getNextAction()->value,
+
         );
         $this->assertSame(
             expected: (int)$configurableProductFixture->getId(),

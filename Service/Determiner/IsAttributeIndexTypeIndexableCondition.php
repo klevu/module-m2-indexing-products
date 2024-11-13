@@ -11,14 +11,14 @@ namespace Klevu\IndexingProducts\Service\Determiner;
 use Klevu\Configuration\Service\Provider\ScopeProviderInterface;
 use Klevu\IndexingApi\Model\MagentoAttributeInterface;
 use Klevu\IndexingApi\Model\Source\IndexType;
-use Klevu\IndexingApi\Service\Determiner\IsAttributeIndexableDeterminerInterface;
+use Klevu\IndexingApi\Service\Determiner\IsAttributeIndexableConditionInterface;
 use Magento\Catalog\Api\Data\ProductAttributeInterface;
 use Magento\Eav\Api\Data\AttributeInterface;
 use Magento\Store\Api\Data\StoreInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 
-class IsAttributeIndexTypeIndexableDeterminer implements IsAttributeIndexableDeterminerInterface
+class IsAttributeIndexTypeIndexableCondition implements IsAttributeIndexableConditionInterface
 {
     /**
      * @var LoggerInterface

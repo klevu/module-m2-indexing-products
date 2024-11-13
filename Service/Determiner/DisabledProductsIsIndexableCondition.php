@@ -9,7 +9,7 @@ declare(strict_types=1);
 namespace Klevu\IndexingProducts\Service\Determiner;
 
 use Klevu\Configuration\Service\Provider\ScopeProviderInterface;
-use Klevu\IndexingApi\Service\Determiner\IsIndexableDeterminerInterface;
+use Klevu\IndexingApi\Service\Determiner\IsIndexableConditionInterface;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Cms\Api\Data\PageInterface;
@@ -18,7 +18,7 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Api\Data\StoreInterface;
 use Psr\Log\LoggerInterface;
 
-class DisabledProductsIsIndexableDeterminer implements IsIndexableDeterminerInterface
+class DisabledProductsIsIndexableCondition implements IsIndexableConditionInterface
 {
     public const XML_PATH_EXCLUDE_DISABLED_PRODUCTS = 'klevu/indexing/exclude_disabled_products';
 

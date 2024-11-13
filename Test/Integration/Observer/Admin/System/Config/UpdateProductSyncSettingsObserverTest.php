@@ -11,8 +11,8 @@ namespace Klevu\IndexingProducts\Test\Integration\Observer\Admin\System\Config;
 use Klevu\IndexingApi\Service\Action\CreateCronScheduleActionInterface;
 use Klevu\IndexingProducts\Constants;
 use Klevu\IndexingProducts\Observer\Admin\System\Config\UpdateProductSyncSettingsObserver;
-use Klevu\IndexingProducts\Service\Determiner\DisabledProductsIsIndexableDeterminer;
-use Klevu\IndexingProducts\Service\Determiner\OutOfStockProductsIsIndexableDeterminer;
+use Klevu\IndexingProducts\Service\Determiner\DisabledProductsIsIndexableCondition;
+use Klevu\IndexingProducts\Service\Determiner\OutOfStockProductsIsIndexableCondition;
 use Klevu\TestFixtures\Store\StoreFixturesPool;
 use Klevu\TestFixtures\Store\StoreTrait;
 use Klevu\TestFixtures\Traits\ObjectInstantiationTrait;
@@ -145,7 +145,7 @@ class UpdateProductSyncSettingsObserverTest extends TestCase
             'data' => [
                 'changed_paths' => [
                     Constants::XML_PATH_PRODUCT_SYNC_ENABLED,
-                    DisabledProductsIsIndexableDeterminer::XML_PATH_EXCLUDE_DISABLED_PRODUCTS,
+                    DisabledProductsIsIndexableCondition::XML_PATH_EXCLUDE_DISABLED_PRODUCTS,
                 ],
             ],
         ]);
@@ -168,7 +168,7 @@ class UpdateProductSyncSettingsObserverTest extends TestCase
             'data' => [
                 'changed_paths' => [
                     Constants::XML_PATH_PRODUCT_SYNC_ENABLED,
-                    OutOfStockProductsIsIndexableDeterminer::XML_PATH_EXCLUDE_OOS_PRODUCTS,
+                    OutOfStockProductsIsIndexableCondition::XML_PATH_EXCLUDE_OOS_PRODUCTS,
                 ],
             ],
         ]);
@@ -190,8 +190,8 @@ class UpdateProductSyncSettingsObserverTest extends TestCase
         $observer = $this->objectManager->create(Observer::class, [
             'data' => [
                 'changed_paths' => [
-                    DisabledProductsIsIndexableDeterminer::XML_PATH_EXCLUDE_DISABLED_PRODUCTS,
-                    OutOfStockProductsIsIndexableDeterminer::XML_PATH_EXCLUDE_OOS_PRODUCTS,
+                    DisabledProductsIsIndexableCondition::XML_PATH_EXCLUDE_DISABLED_PRODUCTS,
+                    OutOfStockProductsIsIndexableCondition::XML_PATH_EXCLUDE_OOS_PRODUCTS,
                 ],
             ],
         ]);

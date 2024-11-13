@@ -104,7 +104,9 @@ class SimpleProductEntityProviderTest extends TestCase
 
         $items = [];
         foreach ($searchResults as $searchResult) {
-            $items[] = $searchResult;
+            foreach ($searchResult as $key => $resultItems) {
+                $items[$key] = $resultItems;
+            }
         }
 
         $productIds = array_map(
@@ -172,7 +174,9 @@ class SimpleProductEntityProviderTest extends TestCase
 
         $items = [];
         foreach ($searchResults as $searchResult) {
-            $items[] = $searchResult;
+            foreach ($searchResult as $key => $resultItems) {
+                $items[$key] = $resultItems;
+            }
         }
 
         $productIds = array_map(
@@ -207,7 +211,7 @@ class SimpleProductEntityProviderTest extends TestCase
     /**
      * @magentoDbIsolation disabled
      */
-    public function testGet_ForProductNotAssignedToWebsite_AtGlobalScope(): void
+    public function testGet_ForProductNotAssignedToWebsite_AtStoreScope(): void
     {
         $this->createStore();
         $storeFixture = $this->storeFixturesPool->get('test_store');
@@ -235,11 +239,13 @@ class SimpleProductEntityProviderTest extends TestCase
         $websiteLinkRepository->deleteById(sku: $productFixture2->getSku(), websiteId: (int)$defaultWebsite->getId());
 
         $provider = $this->instantiateTestObject();
-        $searchResults = $provider->get();
+        $searchResults = $provider->get(store: $store);
 
         $items = [];
         foreach ($searchResults as $searchResult) {
-            $items[] = $searchResult;
+            foreach ($searchResult as $key => $resultItems) {
+                $items[$key] = $resultItems;
+            }
         }
         $product1Array = array_filter(
             array: $items,

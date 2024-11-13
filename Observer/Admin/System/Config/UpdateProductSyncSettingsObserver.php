@@ -9,8 +9,8 @@ declare(strict_types=1);
 namespace Klevu\IndexingProducts\Observer\Admin\System\Config;
 
 use Klevu\IndexingApi\Service\Action\CreateCronScheduleActionInterface;
-use Klevu\IndexingProducts\Service\Determiner\DisabledProductsIsIndexableDeterminer;
-use Klevu\IndexingProducts\Service\Determiner\OutOfStockProductsIsIndexableDeterminer;
+use Klevu\IndexingProducts\Service\Determiner\DisabledProductsIsIndexableCondition;
+use Klevu\IndexingProducts\Service\Determiner\OutOfStockProductsIsIndexableCondition;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 
@@ -39,12 +39,12 @@ class UpdateProductSyncSettingsObserver implements ObserverInterface
         $changedPaths = (array)$observer->getData('changed_paths');
         if (
             !in_array(
-                needle: DisabledProductsIsIndexableDeterminer::XML_PATH_EXCLUDE_DISABLED_PRODUCTS,
+                needle: DisabledProductsIsIndexableCondition::XML_PATH_EXCLUDE_DISABLED_PRODUCTS,
                 haystack: $changedPaths,
                 strict: true,
             )
             && !in_array(
-                needle: OutOfStockProductsIsIndexableDeterminer::XML_PATH_EXCLUDE_OOS_PRODUCTS,
+                needle: OutOfStockProductsIsIndexableCondition::XML_PATH_EXCLUDE_OOS_PRODUCTS,
                 haystack: $changedPaths,
                 strict: true,
             )

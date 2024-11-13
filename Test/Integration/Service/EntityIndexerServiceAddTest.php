@@ -704,7 +704,7 @@ class EntityIndexerServiceAddTest extends TestCase
         $payload = $pipelineResult->payload;
         $this->assertCount(expectedCount: 1, haystack: $payload);
         $record = $payload->current();
-
+        /** @var DataObject&ProductInterface $product */
         $product = $productFixture->getProduct();
         $attributes = $record->getAttributes();
 
@@ -1088,6 +1088,7 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->assertContains(needle: 'categoryid_' . $topCategoryFixture->getId(), haystack: $categories['values']);
         $this->assertContains(needle: 'categoryid_' . $categoryFixture->getId(), haystack: $categories['values']);
 
+        /** @var DataObject&ProductInterface $product */
         $product = $productFixture->getProduct();
         $attributes = $record->getAttributes();
 
@@ -1760,7 +1761,7 @@ class EntityIndexerServiceAddTest extends TestCase
         );
 
         $this->assertArrayHasKey(key: 'rating', array: $attributes);
-        $this->assertSame(expected: $total / count($ratingIds), actual: $attributes['rating']);
+        $this->assertSame(expected: (float)($total / count($ratingIds)), actual: $attributes['rating']);
 
         $this->assertArrayHasKey(key: 'ratingCount', array: $attributes);
         $this->assertSame(expected: 1, actual: $attributes['ratingCount']);
@@ -2041,7 +2042,7 @@ class EntityIndexerServiceAddTest extends TestCase
         );
 
         $this->assertArrayHasKey(key: 'rating', array: $attributes);
-        $this->assertSame(expected: $total / count($ratingIds), actual: $attributes['rating']);
+        $this->assertSame(expected: (float)($total / count($ratingIds)), actual: $attributes['rating']);
 
         $this->assertArrayHasKey(key: 'ratingCount', array: $attributes);
         $this->assertSame(expected: 1, actual: $attributes['ratingCount']);

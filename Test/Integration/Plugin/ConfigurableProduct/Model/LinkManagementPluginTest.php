@@ -198,6 +198,7 @@ class LinkManagementPluginTest extends TestCase
         $this->assertSame(
             expected: Actions::ADD,
             actual: $simple1Variant->getNextAction(),
+            message: 'expected: ' . Actions::ADD->value . ', actual: ' . $simple1Variant->getNextAction()->value,
         );
         $this->assertSame(
             expected: (int)$simple1ProductFixture->getId(),
@@ -217,7 +218,6 @@ class LinkManagementPluginTest extends TestCase
     public function testAddChildAfter_RemoveVariantFromParent(): void
     {
         $apiKey = 'klevu-test-js-api-key';
-        $this->cleanIndexingEntities(apiKey: $apiKey);
 
         $this->createStore();
         $storeFixture = $this->storeFixturesPool->get('test_store');
@@ -289,6 +289,7 @@ class LinkManagementPluginTest extends TestCase
         $this->createIndexingEntity([
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'configurable_variants',
             IndexingEntity::TARGET_ID => $simple1ProductFixture->getId(),
             IndexingEntity::TARGET_PARENT_ID => $configurableProductFixture->getId(),
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
@@ -298,6 +299,7 @@ class LinkManagementPluginTest extends TestCase
         $this->createIndexingEntity([
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'configurable_variants',
             IndexingEntity::TARGET_ID => $simple2ProductFixture->getId(),
             IndexingEntity::TARGET_PARENT_ID => $configurableProductFixture->getId(),
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
@@ -307,6 +309,7 @@ class LinkManagementPluginTest extends TestCase
         $this->createIndexingEntity([
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
             IndexingEntity::TARGET_ID => $simple1ProductFixture->getId(),
             IndexingEntity::TARGET_PARENT_ID => null,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
@@ -316,6 +319,7 @@ class LinkManagementPluginTest extends TestCase
         $this->createIndexingEntity([
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
             IndexingEntity::TARGET_ID => $simple2ProductFixture->getId(),
             IndexingEntity::TARGET_PARENT_ID => null,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
@@ -325,6 +329,7 @@ class LinkManagementPluginTest extends TestCase
         $this->createIndexingEntity([
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'configurable',
             IndexingEntity::TARGET_ID => $configurableProductFixture->getId(),
             IndexingEntity::TARGET_PARENT_ID => null,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
@@ -356,6 +361,7 @@ class LinkManagementPluginTest extends TestCase
         $this->assertSame(
             expected: Actions::DELETE,
             actual: $simple1Variant->getNextAction(),
+            message: 'expected: ' . Actions::DELETE->value . ', actual: ' . $simple1Variant->getNextAction()->value,
         );
         $this->assertSame(
             expected: (int)$simple1ProductFixture->getId(),

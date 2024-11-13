@@ -11,9 +11,12 @@ namespace Klevu\IndexingProducts\Plugin\Catalog\Model\ResourceModel;
 use Klevu\Indexing\Model\Update\Entity;
 use Klevu\IndexingApi\Service\EntityUpdateResponderServiceInterface;
 use Klevu\IndexingApi\Service\Provider\AttributesToWatchProviderInterface;
+use Klevu\IndexingProducts\Model\Source\EntitySubtypeOptions;
 use Magento\Catalog\Api\Data\ProductInterface;
+use Magento\Catalog\Model\Product\Type as ProductType;
 use Magento\Catalog\Model\ProductFactory;
 use Magento\Catalog\Model\ResourceModel\Product as ProductResourceModel;
+use Magento\Downloadable\Model\Product\Type as DownloadableType;
 use Magento\Framework\Model\AbstractModel;
 
 class ProductPlugin
@@ -33,21 +36,32 @@ class ProductPlugin
     /**
      * @var string[]
      */
+    private array $allowedConfigurableProductSubtypes;
+    /**
+     * @var string[]
+     */
     private array $changedAttributes = [];
 
     /**
      * @param ProductFactory $productFactory
      * @param EntityUpdateResponderServiceInterface $responderService
      * @param AttributesToWatchProviderInterface $attributesToWatchProvider
+     * @param string[] $allowedConfigurableProductSubtypes
      */
     public function __construct(
         ProductFactory $productFactory,
         EntityUpdateResponderServiceInterface $responderService,
         AttributesToWatchProviderInterface $attributesToWatchProvider,
+        array $allowedConfigurableProductSubtypes = [
+            ProductType::TYPE_SIMPLE,
+            ProductType::TYPE_VIRTUAL,
+            DownloadableType::TYPE_DOWNLOADABLE,
+        ],
     ) {
         $this->productFactory = $productFactory;
         $this->responderService = $responderService;
         $this->attributesToWatchProvider = $attributesToWatchProvider;
+        array_walk($allowedConfigurableProductSubtypes, [$this, 'addAllowedConfigurableProductSubtype']);
     }
 
     /**
@@ -72,11 +86,22 @@ class ProductPlugin
                 Entity::ENTITY_IDS => [(int)$object->getId()],
                 Entity::STORE_IDS => $this->getStoreIds($originalProduct, $object),
                 EntityUpdateResponderServiceInterface::CHANGED_ATTRIBUTES => $this->changedAttributes,
+                Entity::ENTITY_SUBTYPES => $this->getSubtypes($object->getTypeId()),
             ];
             $this->responderService->execute($data);
         }
 
         return $return;
+    }
+
+    /**
+     * @param string $allowedConfigurableProductSubtype
+     *
+     * @return void
+     */
+    private function addAllowedConfigurableProductSubtype(string $allowedConfigurableProductSubtype): void
+    {
+        $this->allowedConfigurableProductSubtypes[] = $allowedConfigurableProductSubtype;
     }
 
     /**
@@ -138,13 +163,37 @@ class ProductPlugin
         AbstractModel&ProductInterface $originalProduct,
         AbstractModel&ProductInterface $product,
     ): array {
-        return array_filter(
-            array_unique(
-                array_merge(
-                    [(int)$originalProduct->getStoreId()],
-                    [(int)$product->getStoreId()],
+        return array_unique(
+            array: array_map(
+                callback: static fn (string|int $storeId): int => (int) $storeId,
+                array: array_filter(
+                    array: array_merge(
+                        [$originalProduct->getStoreId()],
+                        $originalProduct->getStoreIds(),
+                        [$product->getStoreId()],
+                        $product->getStoreIds(),
+                    ),
                 ),
             ),
         );
+    }
+
+    /**
+     * @param string|null $typeId
+     *
+     * @return string[]
+     */
+    private function getSubtypes(?string $typeId): array
+    {
+        $return = [];
+        if (!$typeId) {
+            return $return;
+        }
+        $return[] = $typeId;
+        if (in_array($typeId, $this->allowedConfigurableProductSubtypes, true)) {
+            $return[] = EntitySubtypeOptions::CONFIGURABLE_VARIANTS;
+        }
+
+        return $return;
     }
 }

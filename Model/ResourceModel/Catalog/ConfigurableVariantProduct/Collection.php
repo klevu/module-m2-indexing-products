@@ -22,6 +22,7 @@ use Magento\Catalog\Model\ResourceModel\Helper;
 use Magento\Catalog\Model\ResourceModel\Product\Collection\ProductLimitationFactory;
 use Magento\Catalog\Model\ResourceModel\Product\Gallery;
 use Magento\Catalog\Model\ResourceModel\Url;
+use Magento\CatalogInventory\Helper\Stock as CategoryInventoryStockHelper;
 use Magento\CatalogUrlRewrite\Model\Storage\DbStorage;
 use Magento\Customer\Api\GroupManagementInterface;
 use Magento\Customer\Model\Session;
@@ -29,6 +30,7 @@ use Magento\Eav\Model\Config;
 use Magento\Eav\Model\Entity;
 use Magento\Eav\Model\EntityFactory as EavEntityFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Data\Collection\Db\FetchStrategyInterface;
 use Magento\Framework\Data\Collection\EntityFactory as CollectionEntityFactory;
@@ -60,6 +62,10 @@ class Collection extends ProductCollection
      * @var AddParentAttributeToCollectionModifierInterface[]
      */
     private readonly array $addParentAttributeToCollectionModifiers;
+    /**
+     * @var CategoryInventoryStockHelper|mixed
+     */
+    private readonly mixed $categoryInventoryStockHelper;
 
     /**
      * @param AddParentAttributeToCollectionModifierProviderInterface $addParentAttributeToCollectionModifierProvider
@@ -92,6 +98,7 @@ class Collection extends ProductCollection
      * @param DbStorage|null $urlFinder
      * @param GalleryReadHandler|null $productGalleryReadHandler
      * @param Gallery|null $mediaGalleryResource
+     * @param CategoryInventoryStockHelper|null $categoryInventoryStockHelper
      */
     public function __construct(
         AddParentAttributeToCollectionModifierProviderInterface $addParentAttributeToCollectionModifierProvider,
@@ -125,6 +132,7 @@ class Collection extends ProductCollection
         DbStorage $urlFinder = null,
         GalleryReadHandler $productGalleryReadHandler = null,
         Gallery $mediaGalleryResource = null,
+        CategoryInventoryStockHelper $categoryInventoryStockHelper = null,
         // phpcs:enable SlevomatCodingStandard.TypeHints.NullableTypeForNullDefaultValue.NullabilityTypeMissing
     ) {
         parent::__construct(
@@ -160,6 +168,9 @@ class Collection extends ProductCollection
         );
 
         $this->addParentAttributeToCollectionModifiers = $addParentAttributeToCollectionModifierProvider->get();
+        $objectManager = ObjectManager::getInstance();
+        $this->categoryInventoryStockHelper = $categoryInventoryStockHelper
+            ?: $objectManager->get(CategoryInventoryStockHelper::class);
     }
 
     /**
@@ -176,34 +187,24 @@ class Collection extends ProductCollection
         $this->addStoreFilter($store);
         $this->joinAssociatedProducts();
         $this->joinProductParentAttributes(store: $store);
+        $this->joinStock();
 
         return $this;
     }
 
     /**
-     * @param DataObject $object
+     * @param DataObject $item
      *
-     * @return Collection
-     * @throws LocalizedException
+     * @return string
      */
-    public function addItem(DataObject $object): Collection
+    protected function _getItemId(DataObject $item): string
     {
-        // Lifted from \Magento\Eav\Model\Entity\Collection\AbstractCollection::addItem
-        if (!$object instanceof $this->_itemObjectClass) {
-            throw new LocalizedException(
-                __(
-                    "The object wasn't added because it's invalid. "
-                    . "To continue, enter a valid object and try again.",
-                ),
-            );
-        }
+        $parentId = $item->getData(self::FIELD_PLACEHOLDER_PARENT_ID);
+        $entityId = $item->getData(Entity::DEFAULT_ENTITY_ID_FIELD);
 
-        // Ref: KS-22991
-        // We may have duplicate item ids where a variant belongs to multiple parents
-        // In the parent method, the item id's presence in _items is checked if
-        //  an item id is returned by $item->getId(), otherwise _addItem() adds without
-        //  an id key (ie $this->_items[] = $item)
-        return $this->_addItem($object);
+        return null !== $parentId
+            ? $entityId . '-' . $parentId
+            : $entityId;
     }
 
     /**
@@ -213,7 +214,6 @@ class Collection extends ProductCollection
      */
     protected function beforeAddLoadedItem(DataObject $item): DataObject
     {
-        $this->setProductId($item);
         foreach ($this->addParentAttributeToCollectionModifiers as $addParentAttributeToCollectionModifier) {
             $addParentAttributeToCollectionModifier->setProductAttributeValue(item: $item);
         }
@@ -236,22 +236,6 @@ class Collection extends ProductCollection
                 store: $store,
             );
         }
-    }
-
-    /**
-     * @param DataObject $item
-     *
-     * @return void
-     */
-    private function setProductId(DataObject $item): void
-    {
-        $value = $item->getData(Entity::DEFAULT_ENTITY_ID_FIELD)
-            . '-'
-            . $item->getData(self::FIELD_PLACEHOLDER_PARENT_ID);
-        $item->setData(
-            key: Entity::DEFAULT_ENTITY_ID_FIELD,
-            value: $value,
-        );
     }
 
     /**
@@ -289,6 +273,21 @@ class Collection extends ProductCollection
                 ],
             ),
             cols: [self::FIELD_PLACEHOLDER_PARENT_ID => Entity::DEFAULT_ENTITY_ID_FIELD],
+        );
+    }
+
+    /**
+     * Ensures is_salebale is set on each variant product
+     *
+     * @return void
+     */
+    private function joinStock(): void
+    {
+        // categoryInventoryStockHelper is deprecated in favour of MSI
+        // however, MSI has a plugin on the addInStockFilterToCollection method
+        // so we can safely use this in case the merchant has removed MSI.
+        $this->categoryInventoryStockHelper->addInStockFilterToCollection(
+            collection: $this, // @phpstan-ignore-line incorrect type hint in Magento core
         );
     }
 }
