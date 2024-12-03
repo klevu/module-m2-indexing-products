@@ -11,10 +11,11 @@ namespace Klevu\IndexingProducts\Service\Provider\Discovery;
 use Klevu\IndexingApi\Service\Provider\Discovery\ProductEntityCollectionInterface;
 use Klevu\IndexingProducts\Model\ResourceModel\Catalog\ConfigurableVariantProduct\Collection as ConfigurableProductCollection; // phpcs:ignore Generic.Files.LineLength.TooLong
 use Klevu\IndexingProducts\Model\ResourceModel\Catalog\ConfigurableVariantProduct\CollectionFactory as ConfigurableProductCollectionFactory; // phpcs:ignore Generic.Files.LineLength.TooLong
-use Magento\Catalog\Api\Data\ProductInterface;
-use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
+use Magento\Catalog\Model\ResourceModel\Product\Collection as MagentoProductCollection;
 use Magento\Eav\Model\Entity;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\DB\Select;
+use Magento\Framework\DB\Sql\ExpressionFactory;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Store\Api\Data\StoreInterface;
 use Psr\Log\LoggerInterface;
@@ -29,26 +30,34 @@ class ConfigurableVariantProductEntityCollection implements ProductEntityCollect
      * @var LoggerInterface
      */
     private readonly LoggerInterface $logger;
+    /**
+     * @var ExpressionFactory
+     */
+    private readonly ExpressionFactory $expressionFactory;
 
     /**
      * @param ConfigurableProductCollectionFactory $configurableProductCollectionFactory
      * @param LoggerInterface $logger
+     * @param ExpressionFactory|null $expressionFactory
      */
     public function __construct(
         ConfigurableProductCollectionFactory $configurableProductCollectionFactory,
         LoggerInterface $logger,
+        ?ExpressionFactory $expressionFactory = null,
     ) {
         $this->configurableProductCollectionFactory = $configurableProductCollectionFactory;
         $this->logger = $logger;
+        $objectManager = ObjectManager::getInstance();
+        $this->expressionFactory = $expressionFactory ?: $objectManager->get(ExpressionFactory::class);
     }
 
     /**
      * @param StoreInterface|null $store
      * @param int[]|null $entityIds
-     * @param int $pageSize
+     * @param int|null $pageSize
      * @param int $currentEntityId
      *
-     * @return ProductCollection
+     * @return MagentoProductCollection
      * @throws LocalizedException
      * @throws \Zend_Db_Select_Exception
      */
@@ -57,7 +66,7 @@ class ConfigurableVariantProductEntityCollection implements ProductEntityCollect
         ?array $entityIds = [],
         ?int $pageSize = null,
         int $currentEntityId = 1,
-    ): ProductCollection {
+    ): MagentoProductCollection {
         /** @var ConfigurableProductCollection $collection */
         $collection = $this->configurableProductCollectionFactory->create();
         if ($entityIds) {
@@ -71,18 +80,10 @@ class ConfigurableVariantProductEntityCollection implements ProductEntityCollect
                 Entity::DEFAULT_ENTITY_ID_FIELD,
                 ['gteq' => $currentEntityId],
             );
-            $collection->setPageSize($pageSize);
+            $collection->setPageSize(size: $pageSize);
         }
-        $collection->setOrder(Entity::DEFAULT_ENTITY_ID_FIELD, Select::SQL_ASC);
+        $collection->setOrder(attribute: Entity::DEFAULT_ENTITY_ID_FIELD, dir: Select::SQL_ASC);
         $collection->getConfigurableCollection(store: $store);
-
-        $this->logger->debug(
-            message: 'Configurable Variant Product Discovery Collection Select: {method} : {select}',
-            context: [
-                'method' => __METHOD__,
-                'select' => $collection->getSelect()->__toString(),
-            ],
-        );
 
         return $collection;
     }
@@ -98,14 +99,31 @@ class ConfigurableVariantProductEntityCollection implements ProductEntityCollect
     ): int {
         /** @var ConfigurableProductCollection $collection */
         $collection = $this->configurableProductCollectionFactory->create();
+        $collection->joinAssociatedProducts();
         $collection->setPageSize(size: 1);
-        $collection->setOrder(Entity::DEFAULT_ENTITY_ID_FIELD, Select::SQL_DESC);
+        $collection->setOrder(attribute: Entity::DEFAULT_ENTITY_ID_FIELD, dir: Select::SQL_DESC);
         $select = $collection->getSelect();
         $select->reset(part: Select::COLUMNS);
-        $select->columns(Entity::DEFAULT_ENTITY_ID_FIELD);
-        /** @var ProductInterface $item */
-        $item = $collection->getFirstItem();
+        $select->columns(
+            cols: $this->expressionFactory->create([
+                'expression' => sprintf(
+                    'MAX(%s.%s)',
+                    MagentoProductCollection::MAIN_TABLE_ALIAS,
+                    Entity::DEFAULT_ENTITY_ID_FIELD,
+                ),
+            ]),
+        );
 
-        return (int)$item->getId();
+        $this->logger->debug(
+            message: 'Configurable Variant getLastId Select: {method} : {select}',
+            context: [
+                'method' => __METHOD__,
+                'line' => __LINE__,
+                'select' => $collection->getSelect()->__toString(),
+            ],
+        );
+        $connection = $collection->getConnection();
+
+        return (int)$connection->fetchOne(sql: $select->__toString());
     }
 }

@@ -9,11 +9,14 @@ declare(strict_types=1);
 namespace Klevu\IndexingProducts\Service\Provider;
 
 use Klevu\Configuration\Service\Provider\ScopeConfigProviderInterface;
+use Klevu\Indexing\Validator\BatchSizeValidator;
 use Klevu\IndexingApi\Service\Provider\Discovery\ProductEntityCollectionInterface;
 use Klevu\IndexingApi\Service\Provider\EntityProviderInterface;
+use Klevu\IndexingApi\Validator\ValidatorInterface;
 use Klevu\IndexingProducts\Model\Source\EntitySubtypeOptions;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
+use Magento\Framework\App\ObjectManager;
 use Magento\Store\Api\Data\StoreInterface;
 use Psr\Log\LoggerInterface;
 
@@ -54,6 +57,9 @@ class ProductEntityProvider implements EntityProviderInterface
      * @param LoggerInterface $logger
      * @param string|null $entitySubtype
      * @param int|null $batchSize
+     * @param ValidatorInterface|null $batchSizeValidator
+     *
+     * @throws \InvalidArgumentException
      */
     public function __construct(
         ProductEntityCollectionInterface $productEntityCollection,
@@ -61,11 +67,23 @@ class ProductEntityProvider implements EntityProviderInterface
         LoggerInterface $logger,
         ?string $entitySubtype = null,
         ?int $batchSize = null,
+        ?ValidatorInterface $batchSizeValidator = null,
     ) {
         $this->productEntityCollection = $productEntityCollection;
         $this->syncEnabledProvider = $syncEnabledProvider;
         $this->logger = $logger;
         $this->entitySubtype = $entitySubtype;
+
+        $objectManager = ObjectManager::getInstance();
+        $batchSizeValidator = $batchSizeValidator ?: $objectManager->get(BatchSizeValidator::class);
+        if (!$batchSizeValidator->isValid($batchSize)) {
+            throw new \InvalidArgumentException(
+                message: sprintf(
+                    'Invalid Batch Size: %s',
+                    implode(', ', $batchSizeValidator->getMessages()),
+                ),
+            );
+        }
         $this->batchSize = $batchSize;
     }
 
@@ -97,14 +115,14 @@ class ProductEntityProvider implements EntityProviderInterface
                 currentEntityId: $currentEntityId + 1,
             );
             $this->logQuery($collection);
-            if (!$collection->getSize()) {
-                break;
-            }
             /** @var ProductInterface[] $products */
             $products = $collection->getItems();
+            if (!$products) {
+                break;
+            }
             yield $products;
             $lastProduct = array_pop($products);
-            $currentEntityId = (int)$lastProduct?->getId();
+            $currentEntityId = (int)$lastProduct->getId();
             if (null === $this->batchSize || !$currentEntityId) {
                 break;
             }

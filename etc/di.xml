@@ -94,6 +94,12 @@
         </arguments>
     </virtualType>
 
+    <type name="Klevu\IndexingProducts\Service\Provider\Discovery\ProductEntityCollection">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
+        </arguments>
+    </type>
+
     <type name="Klevu\IndexingProducts\Service\Provider\ProductEntityProvider">
         <arguments>
             <argument name="productEntityCollection"
@@ -102,6 +108,7 @@
             <argument name="syncEnabledProvider"
                       xsi:type="object">Klevu\IndexingProducts\Service\Provider\SyncEnabledProvider</argument>
             <argument name="batchSize" xsi:type="number">2500</argument>
+            <argument name="batchSizeValidator" xsi:type="object">Klevu\Indexing\Validator\BatchSizeValidator</argument>
         </arguments>
     </type>
 
@@ -448,6 +455,31 @@
                 type="Klevu\IndexingProducts\Plugin\Catalog\Model\ResourceModel\ProductPlugin"/>
     </type>
 
+    <type name="Magento\Eav\Model\ResourceModel\Entity\Attribute">
+        <plugin name="klevu_indexingProducts_serializeCustomAttributeData"
+                type="Klevu\IndexingProducts\Plugin\Catalog\Model\ResourceModel\Attribute\SerializeCustomAttributeDataPlugin"/>
+        <plugin name="Klevu_IndexingProducts::TriggerAttributeUpdateOnAttributeSavePlugin"
+                type="Klevu\IndexingProducts\Plugin\Catalog\Model\ResourceModel\TriggerAttributeUpdateOnAttributeSavePlugin"
+                sortOrder="20"/>
+        <plugin name="Klevu_IndexingProducts::RegeneratePipelineOverridesOnAttributeSavePlugin"
+                type="Klevu\IndexingProducts\Plugin\Catalog\Model\ResourceModel\RegeneratePipelineOverridesOnAttributeSavePlugin"
+                sortOrder="30"/>
+        <plugin name="Klevu_IndexingProducts::TriggerEntityUpdateOnAttributeSavePlugin"
+                type="Klevu\IndexingProducts\Plugin\Catalog\Model\ResourceModel\TriggerEntityUpdateOnAttributeSavePlugin"
+                sortOrder="40"/>
+    </type>
+
+    <type name="Klevu\IndexingProducts\Plugin\Catalog\Model\ResourceModel\RegeneratePipelineOverridesOnAttributeSavePlugin">
+        <arguments>
+            <argument name="regenerateConfigurationOverrides"
+                      xsi:type="object">Klevu\IndexingProducts\Service\RegenerateConfigurationOverrides</argument>
+            <argument name="propertiesToCheck" xsi:type="array">
+                <item name="klevu_is_indexable" xsi:type="string">boolean</item>
+                <item name="klevu_generate_config_for" xsi:type="string">string</item>
+            </argument>
+        </arguments>
+    </type>
+
     <type name="Klevu\IndexingProducts\Observer\ProductDeleteObserver">
         <arguments>
             <argument name="responderService"
@@ -670,6 +702,31 @@
         </arguments>
     </type>
 
+    <type name="Klevu\IndexingProducts\Plugin\Catalog\Model\ResourceModel\TriggerAttributeUpdateOnAttributeSavePlugin">
+        <arguments>
+            <argument name="responderService"
+                      xsi:type="object">Klevu\IndexingProducts\Service\AttributeUpdateResponderService</argument>
+            <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
+            <argument name="propertiesToCheck" xsi:type="array">
+                <item name="frontend_label" xsi:type="string">string</item>
+                <item name="store_labels" xsi:type="string">array</item>
+                <item name="is_html_allowed_on_front" xsi:type="string">boolean</item>
+                <item name="is_searchable" xsi:type="string">boolean</item>
+                <item name="is_filterable" xsi:type="string">boolean</item>
+                <item name="used_in_product_listing" xsi:type="string">boolean</item>
+                <item name="klevu_is_indexable" xsi:type="string">boolean</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\IndexingProducts\Plugin\Catalog\Model\ResourceModel\TriggerEntityUpdateOnAttributeSavePlugin">
+        <arguments>
+            <argument name="responderService"
+                      xsi:type="object">Klevu\IndexingProducts\Service\EntityUpdateResponderService</argument>
+            <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
+        </arguments>
+    </type>
+
     <type name="Klevu\IndexingProducts\Observer\ProductAttribute\RegenerateConfigurationOverridesObserver">
         <arguments>
             <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
@@ -681,6 +738,13 @@
             </argument>
         </arguments>
     </type>
+
+    <virtualType name="Klevu\IndexingProducts\Service\RegenerateConfigurationOverrides"
+                 type="Klevu\Indexing\Service\RegenerateConfigurationOverrides">
+        <arguments>
+            <argument name="entityType" xsi:type="string">KLEVU_PRODUCT</argument>
+        </arguments>
+    </virtualType>
 
     <type name="Klevu\IndexingProducts\Service\EntityUpdateResponderService">
         <arguments>
@@ -854,7 +918,7 @@
     </type>
 
     <virtualType name="Klevu\IndexingProducts\Service\Mapper\AttributeTypeMapperService"
-        type="Klevu\Indexing\Service\Mapper\AttributeTypeMapperService">
+                 type="Klevu\Indexing\Service\Mapper\AttributeTypeMapperService">
         <arguments>
             <argument name="customMapping" xsi:type="array">
                 <item name="visibility" xsi:type="string">MULTIVALUE</item>
@@ -1033,13 +1097,13 @@
             <argument name="entityType" xsi:type="string">KLEVU_PRODUCT</argument>
             <argument name="currentEntityExtractionAccessor" xsi:type="string">currentProduct::</argument>
             <argument name="entitySubtypeToParentPathMap" xsi:type="array">
-                <item name="simple" xsi:type="string">iterateIndexingRecords.processProduct.default.generateRecord.attributes</item>
-                <item name="virtual" xsi:type="string">iterateIndexingRecords.processProduct.virtualProduct.generateRecord.attributes</item>
-                <item name="downloadable" xsi:type="string">iterateIndexingRecords.processProduct.downloadableProduct.generateRecord.attributes</item>
-                <item name="grouped" xsi:type="string">iterateIndexingRecords.processProduct.groupedProduct.generateRecord.attributes</item>
-                <item name="bundle" xsi:type="string">iterateIndexingRecords.processProduct.bundleProduct.generateRecord.attributes</item>
-                <item name="configurable" xsi:type="string">iterateIndexingRecords.processProduct.configurableProduct.generateRecord.attributes</item>
-                <item name="configurable_variants" xsi:type="string">iterateIndexingRecords.processProduct.variantProduct.generateRecord.attributes</item>
+                <item name="simple" xsi:type="string">iterateIndexingRecordsBatch.iterateIndexingRecords.processProduct.default.generateRecord.attributes</item>
+                <item name="virtual" xsi:type="string">iterateIndexingRecordsBatch.iterateIndexingRecords.processProduct.virtualProduct.generateRecord.attributes</item>
+                <item name="downloadable" xsi:type="string">iterateIndexingRecordsBatch.iterateIndexingRecords.processProduct.downloadableProduct.generateRecord.attributes</item>
+                <item name="grouped" xsi:type="string">iterateIndexingRecordsBatch.iterateIndexingRecords.processProduct.groupedProduct.generateRecord.attributes</item>
+                <item name="bundle" xsi:type="string">iterateIndexingRecordsBatch.iterateIndexingRecords.processProduct.bundleProduct.generateRecord.attributes</item>
+                <item name="configurable" xsi:type="string">iterateIndexingRecordsBatch.iterateIndexingRecords.processProduct.configurableProduct.generateRecord.attributes</item>
+                <item name="configurable_variants" xsi:type="string">iterateIndexingRecordsBatch.iterateIndexingRecords.processProduct.variantProduct.generateRecord.attributes</item>
             </argument>
         </arguments>
     </virtualType>
@@ -1293,10 +1357,5 @@
                 </item>
             </argument>
         </arguments>
-    </type>
-
-    <type name="Magento\Eav\Model\ResourceModel\Entity\Attribute">
-        <plugin name="klevu_indexingProducts_serializeCustomAttributeData"
-                type="Klevu\IndexingProducts\Plugin\Catalog\Model\ResourceModel\Attribute\SerializeCustomAttributeDataPlugin"/>
     </type>
 </config>

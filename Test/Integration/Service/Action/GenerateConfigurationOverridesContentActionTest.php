@@ -235,19 +235,26 @@ class GenerateConfigurationOverridesContentActionTest extends TestCase
         );
 
         $addStages = [
-            'default' => $contentAsArray['stages']['iterateIndexingRecords']['stages']['processProduct']['stages']
+            'default' => $contentAsArray['stages']['iterateIndexingRecordsBatch']['stages']
+                ['iterateIndexingRecords']['stages']['processProduct']['stages']
                 ['default']['stages']['generateRecord']['stages']['attributes']['addStages'] ?? null,
-            'virtual' => $contentAsArray['stages']['iterateIndexingRecords']['stages']['processProduct']['stages']
+            'virtual' => $contentAsArray['stages']['iterateIndexingRecordsBatch']['stages']
+                ['iterateIndexingRecords']['stages']['processProduct']['stages']
                 ['virtualProduct']['stages']['generateRecord']['stages']['attributes']['addStages'] ?? null,
-            'downloadable' => $contentAsArray['stages']['iterateIndexingRecords']['stages']['processProduct']['stages']
+            'downloadable' => $contentAsArray['stages']['iterateIndexingRecordsBatch']['stages']
+                ['iterateIndexingRecords']['stages']['processProduct']['stages']
                 ['downloadableProduct']['stages']['generateRecord']['stages']['attributes']['addStages'] ?? null,
-            'variant' => $contentAsArray['stages']['iterateIndexingRecords']['stages']['processProduct']['stages']
+            'variant' => $contentAsArray['stages']['iterateIndexingRecordsBatch']['stages']
+                ['iterateIndexingRecords']['stages']['processProduct']['stages']
                 ['variantProduct']['stages']['generateRecord']['stages']['attributes']['addStages'] ?? null,
-            'grouped' => $contentAsArray['stages']['iterateIndexingRecords']['stages']['processProduct']['stages']
+            'grouped' => $contentAsArray['stages']['iterateIndexingRecordsBatch']['stages']
+                ['iterateIndexingRecords']['stages']['processProduct']['stages']
                 ['bundleProduct']['stages']['generateRecord']['stages']['attributes']['addStages'] ?? null,
-            'bundle' => $contentAsArray['stages']['iterateIndexingRecords']['stages']['processProduct']['stages']
+            'bundle' => $contentAsArray['stages']['iterateIndexingRecordsBatch']['stages']
+                ['iterateIndexingRecords']['stages']['processProduct']['stages']
                 ['groupedProduct']['stages']['generateRecord']['stages']['attributes']['addStages'] ?? null,
-            'configurable' => $contentAsArray['stages']['iterateIndexingRecords']['stages']['processProduct']['stages']
+            'configurable' => $contentAsArray['stages']['iterateIndexingRecordsBatch']['stages']
+                ['iterateIndexingRecords']['stages']['processProduct']['stages']
                 ['configurableProduct']['stages']['generateRecord']['stages']['attributes']['addStages'] ?? null,
         ];
         array_walk($addStages, function (?array $stagesToAdd, string $entitySubtype): void {

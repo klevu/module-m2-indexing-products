@@ -751,7 +751,7 @@ class ProductSavePluginTest extends TestCase
         );
     }
 
-        /**
+    /**
      * @return mixed[]|null
      */
     private function getSystemConfigPluginInfo(): ?array

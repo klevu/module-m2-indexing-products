@@ -152,13 +152,13 @@ class SyncEntitiesCommandTest extends TestCase
 
         $pattern = '#'
             . 'Action  : KLEVU_PRODUCT::add'
-            . '\s*Batches : 1'
             . '\s*Batch        : 0'
             . '\s*Success      : False'
             . '\s*API Response : .*'
             . '\s*Job ID       : n/a'
             . '\s*Record Count : 1'
             . '\s*There has been an ERROR'
+            . '\s*Batches : 1'
             . '\s*--'
             . '#';
         $matches = [];
@@ -184,13 +184,13 @@ class SyncEntitiesCommandTest extends TestCase
 
         $pattern = '#'
             . 'Action  : KLEVU_PRODUCT::update'
-            . '\s*Batches : 1'
             . '\s*Batch        : 0'
             . '\s*Success      : False'
             . '\s*API Response : .*'
             . '\s*Job ID       : n/a'
             . '\s*Record Count : 1'
             . '\s*There has been an ERROR'
+            . '\s*Batches : 1'
             . '\s*--'
             . '#';
         $matches = [];
@@ -288,13 +288,13 @@ class SyncEntitiesCommandTest extends TestCase
 
         $pattern = '#'
             . 'Action  : KLEVU_PRODUCT::add'
-            . '\s*Batches : 1'
             . '\s*Batch        : 0'
             . '\s*Success      : True'
             . '\s*API Response : 0'
             . '\s*Job ID       : n/a'
             . '\s*Record Count : 1'
             . '\s*Batch accepted successfully'
+            . '\s*Batches : 1'
             . '\s*--'
             . '#';
         $matches = [];
@@ -320,13 +320,13 @@ class SyncEntitiesCommandTest extends TestCase
 
         $pattern = '#'
             . 'Action  : KLEVU_PRODUCT::update'
-            . '\s*Batches : 1'
             . '\s*Batch        : 0'
             . '\s*Success      : True'
             . '\s*API Response : 0'
             . '\s*Job ID       : n/a'
             . '\s*Record Count : 1'
             . '\s*Batch accepted successfully'
+            . '\s*Batches : 1'
             . '\s*--'
             . '#';
         $matches = [];
@@ -438,13 +438,13 @@ class SyncEntitiesCommandTest extends TestCase
 
         $pattern = '#'
             . 'Action  : KLEVU_PRODUCT::delete'
-            . '\s*Batches : 1'
             . '\s*Batch        : 0'
             . '\s*Success      : True'
             . '\s*API Response : 0'
             . '\s*Job ID       : n/a'
             . '\s*Record Count : 2'
             . '\s*Batch accepted successfully'
+            . '\s*Batches : 1'
             . '\s*--'
             . '#';
         $matches = [];

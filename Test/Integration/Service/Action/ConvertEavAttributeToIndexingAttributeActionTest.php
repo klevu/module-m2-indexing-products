@@ -629,7 +629,7 @@ class ConvertEavAttributeToIndexingAttributeActionTest extends TestCase
      */
     private function getMockObserver(): MockObject
     {
-        return $this->getMockBuilder(ObserverInterface::class)
+        return $this->getMockBuilder(ObserverInterface::class) // @phpstan-ignore-line return type
             ->disableOriginalConstructor()
             ->getMock();
     }

@@ -172,7 +172,7 @@ class EntityUpdateResponderObserver implements ObserverInterface
     private function getStoredData(EavAttribute $attribute, string $key): mixed
     {
         if (!($this->storedData[$attribute->getAttributeId()] ?? [])) {
-            $this->storedData[$attribute->getAttributeId()] = $attribute->getStoredData();
+            $this->storedData[$attribute->getAttributeId()] = $attribute->getOrigData();
         }
 
         return $this->storedData[$attribute->getAttributeId()][$key] ?? null;
@@ -185,13 +185,16 @@ class EntityUpdateResponderObserver implements ObserverInterface
      */
     private function getOriginalSubtypes(EavAttribute $attribute): array
     {
-        $originalSubTypesString = $this->getStoredData(
+        $originalSubTypesData = $this->getStoredData(
             attribute: $attribute,
             key: MagentoAttributeInterface::ATTRIBUTE_PROPERTY_GENERATE_CONFIGURATION_FOR_ENTITY_SUBTYPES,
         );
+        $originalSubTypes = is_string($originalSubTypesData)
+            ? explode(separator: ',', string: $originalSubTypesData)
+            : $originalSubTypesData;
 
-        return is_string($originalSubTypesString)
-            ? explode(separator: ',', string: $originalSubTypesString)
+        return is_array($originalSubTypes)
+            ? $originalSubTypes
             : [];
     }
 
@@ -202,12 +205,15 @@ class EntityUpdateResponderObserver implements ObserverInterface
      */
     private function getNewSubtypes(EavAttribute $attribute): array
     {
-        $newSubTypesString = $attribute->getData(
+        $newSubTypesData = $attribute->getData(
             key: MagentoAttributeInterface::ATTRIBUTE_PROPERTY_GENERATE_CONFIGURATION_FOR_ENTITY_SUBTYPES,
         );
+        $newSubTypes = is_string($newSubTypesData)
+            ? explode(separator: ',', string: $newSubTypesData)
+            : $newSubTypesData;
 
-        return is_string($newSubTypesString)
-            ? explode(separator: ',', string: $newSubTypesString)
+        return is_array($newSubTypes)
+            ? $newSubTypes
             : [];
     }
 
@@ -231,6 +237,10 @@ class EntityUpdateResponderObserver implements ObserverInterface
      */
     private function isRegisterWithKlevuEnabled(EavAttribute $attribute): int
     {
+        if ($attribute->isDeleted()) {
+            return 0;
+        }
+
         return (int)$attribute->getData(
             key: MagentoAttributeInterface::ATTRIBUTE_PROPERTY_IS_INDEXABLE,
         );

@@ -313,7 +313,9 @@ class EntityIndexerServiceUpdateTest extends TestCase
             message: 'Status: ' . $result->getStatus()->name,
         );
 
-        $pipelineResults = $result->getPipelineResult();
+        $pipelineResultsArray = $result->getPipelineResult();
+        $this->assertCount(expectedCount: 1, haystack: $pipelineResultsArray);
+        $pipelineResults = array_shift($pipelineResultsArray);
         $this->assertCount(expectedCount: 1, haystack: $pipelineResults);
         /** @var ApiPipelineResult $pipelineResult */
         $pipelineResult = array_shift($pipelineResults);
@@ -400,7 +402,9 @@ class EntityIndexerServiceUpdateTest extends TestCase
             actual: $result->getStatus(),
             message: 'Status: ' . $result->getStatus()->name,
         );
-        $pipelineResults = $result->getPipelineResult();
+        $pipelineResultsArray = $result->getPipelineResult();
+        $this->assertCount(expectedCount: 1, haystack: $pipelineResultsArray);
+        $pipelineResults = array_shift($pipelineResultsArray);
         $this->assertCount(expectedCount: 1, haystack: $pipelineResults);
         /** @var ApiPipelineResult $pipelineResult */
         $pipelineResult = array_shift($pipelineResults);
@@ -560,7 +564,9 @@ class EntityIndexerServiceUpdateTest extends TestCase
             actual: $result->getStatus(),
             message: 'Status: ' . $result->getStatus()->name,
         );
-        $pipelineResults = $result->getPipelineResult();
+        $pipelineResultsArray = $result->getPipelineResult();
+        $this->assertCount(expectedCount: 1, haystack: $pipelineResultsArray);
+        $pipelineResults = array_shift($pipelineResultsArray);
         $this->assertCount(expectedCount: 1, haystack: $pipelineResults);
         /** @var ApiPipelineResult $pipelineResult */
         $pipelineResult = array_shift($pipelineResults);
@@ -709,7 +715,9 @@ class EntityIndexerServiceUpdateTest extends TestCase
             actual: $result->getStatus(),
             message: 'Status: ' . $result->getStatus()->name,
         );
-        $pipelineResults = $result->getPipelineResult();
+        $pipelineResultsArray = $result->getPipelineResult();
+        $this->assertCount(expectedCount: 1, haystack: $pipelineResultsArray);
+        $pipelineResults = array_shift($pipelineResultsArray);
         $this->assertCount(expectedCount: 1, haystack: $pipelineResults);
         /** @var ApiPipelineResult $pipelineResult */
         $pipelineResult = array_shift($pipelineResults);
@@ -902,7 +910,9 @@ class EntityIndexerServiceUpdateTest extends TestCase
             actual: $result->getStatus(),
             message: 'Status: ' . $result->getStatus()->name,
         );
-        $pipelineResults = $result->getPipelineResult();
+        $pipelineResultsArray = $result->getPipelineResult();
+        $this->assertCount(expectedCount: 1, haystack: $pipelineResultsArray);
+        $pipelineResults = array_shift($pipelineResultsArray);
         $this->assertCount(expectedCount: 1, haystack: $pipelineResults);
         /** @var ApiPipelineResult $pipelineResult */
         $pipelineResult = array_shift($pipelineResults);
@@ -1110,7 +1120,9 @@ class EntityIndexerServiceUpdateTest extends TestCase
             actual: $result->getStatus(),
             message: 'Status: ' . $result->getStatus()->name,
         );
-        $pipelineResults = $result->getPipelineResult();
+        $pipelineResultsArray = $result->getPipelineResult();
+        $this->assertCount(expectedCount: 1, haystack: $pipelineResultsArray);
+        $pipelineResults = array_shift($pipelineResultsArray);
         $this->assertCount(expectedCount: 1, haystack: $pipelineResults);
         /** @var ApiPipelineResult $pipelineResult */
         $pipelineResult = array_shift($pipelineResults);
@@ -1328,7 +1340,9 @@ class EntityIndexerServiceUpdateTest extends TestCase
             actual: $result->getStatus(),
             message: 'Status: ' . $result->getStatus()->name,
         );
-        $pipelineResults = $result->getPipelineResult();
+        $pipelineResultsArray = $result->getPipelineResult();
+        $this->assertCount(expectedCount: 1, haystack: $pipelineResultsArray);
+        $pipelineResults = array_shift($pipelineResultsArray);
         $this->assertCount(expectedCount: 1, haystack: $pipelineResults);
         /** @var ApiPipelineResult $pipelineResult */
         $pipelineResult = array_shift($pipelineResults);
@@ -1521,7 +1535,9 @@ class EntityIndexerServiceUpdateTest extends TestCase
             actual: $result->getStatus(),
             message: 'Status: ' . $result->getStatus()->name,
         );
-        $pipelineResults = $result->getPipelineResult();
+        $pipelineResultsArray = $result->getPipelineResult();
+        $this->assertCount(expectedCount: 1, haystack: $pipelineResultsArray);
+        $pipelineResults = array_shift($pipelineResultsArray);
         $this->assertCount(expectedCount: 1, haystack: $pipelineResults);
         /** @var ApiPipelineResult $pipelineResult */
         $pipelineResult = array_shift($pipelineResults);
@@ -1727,7 +1743,9 @@ class EntityIndexerServiceUpdateTest extends TestCase
             actual: $result->getStatus(),
             message: 'Status: ' . $result->getStatus()->name,
         );
-        $pipelineResults = $result->getPipelineResult();
+        $pipelineResultsArray = $result->getPipelineResult();
+        $this->assertCount(expectedCount: 1, haystack: $pipelineResultsArray);
+        $pipelineResults = array_shift($pipelineResultsArray);
         $this->assertCount(expectedCount: 1, haystack: $pipelineResults);
         /** @var ApiPipelineResult $pipelineResult */
         $pipelineResult = array_shift($pipelineResults);

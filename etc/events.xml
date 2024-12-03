@@ -15,15 +15,6 @@
                   instance="Klevu\IndexingProducts\Observer\ProductImportObserver"/>
     </event>
 
-    <event name="catalog_entity_attribute_save_after">
-        <observer name="Klevu_IndexingProducts_ProductAttribute_AttributeUpdateResponder_Save"
-                  instance="Klevu\IndexingProducts\Observer\ProductAttribute\AttributeUpdateResponderObserver" />
-        <observer name="Klevu_IndexingProducts_ProductAttribute_RegenerateConfigurationOverrides"
-                  instance="Klevu\IndexingProducts\Observer\ProductAttribute\RegenerateConfigurationOverridesObserver" />
-        <observer name="Klevu_IndexingProducts_ProductAttribute_EntityUpdateResponder_Save"
-                  instance="Klevu\IndexingProducts\Observer\ProductAttribute\EntityUpdateResponderObserver" />
-    </event>
-
     <event name="catalog_entity_attribute_delete_commit_after">
         <observer name="Klevu_IndexingProducts_ProductAttribute_AttributeUpdateResponder_Delete"
                   instance="Klevu\IndexingProducts\Observer\ProductAttribute\AttributeUpdateResponderObserver" />

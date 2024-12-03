@@ -12,11 +12,15 @@ use Klevu\IndexingApi\Service\Provider\Discovery\ProductEntityCollectionInterfac
 use Klevu\IndexingProducts\Model\ResourceModel\Product\Collection as ProductCollection;
 use Klevu\IndexingProducts\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
 use Magento\Catalog\Api\Data\ProductInterface;
+use Magento\Catalog\Model\ResourceModel\Product\Collection as MagentoProductCollection;
 use Magento\CatalogInventory\Helper\Stock as StockHelper;
 use Magento\Eav\Model\Entity;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\DB\Select;
+use Magento\Framework\DB\Sql\ExpressionFactory;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\Store;
+use Psr\Log\LoggerInterface;
 
 class ProductEntityCollection implements ProductEntityCollectionInterface
 {
@@ -36,20 +40,35 @@ class ProductEntityCollection implements ProductEntityCollectionInterface
      * @var string|null
      */
     private readonly ?string $productType;
+    /**
+     * @var LoggerInterface
+     */
+    private readonly LoggerInterface $logger;
+    /**
+     * @var ExpressionFactory
+     */
+    private readonly ExpressionFactory $expressionFactory;
 
     /**
      * @param ProductCollectionFactory $productCollectionFactory
      * @param StockHelper $stockHelper
      * @param string|null $productType
+     * @param LoggerInterface|null $logger
+     * @param ExpressionFactory|null $expressionFactory
      */
     public function __construct(
         ProductCollectionFactory $productCollectionFactory,
         StockHelper $stockHelper,
         ?string $productType = null,
+        ?LoggerInterface $logger = null,
+        ?ExpressionFactory $expressionFactory = null,
     ) {
         $this->productCollectionFactory = $productCollectionFactory;
         $this->stockHelper = $stockHelper;
         $this->productType = $productType;
+        $objectManager = ObjectManager::getInstance();
+        $this->logger = $logger ?: $objectManager->get(LoggerInterface::class);
+        $this->expressionFactory = $expressionFactory ?: $objectManager->get(ExpressionFactory::class);
     }
 
     /**
@@ -74,8 +93,8 @@ class ProductEntityCollection implements ProductEntityCollectionInterface
          */
         /** @var ProductCollection $collection */
         $collection = $this->productCollectionFactory->create();
-        $collection->addAttributeToSelect('*');
-        $collection->addAttributeToSelect(ProductInterface::STATUS);
+        $collection->addAttributeToSelect(attribute: '*');
+        $collection->addAttributeToSelect(attribute: ProductInterface::STATUS);
 
         if ($store) {
             /** @var Store $store */
@@ -88,14 +107,14 @@ class ProductEntityCollection implements ProductEntityCollectionInterface
             );
         }
         if (null !== $pageSize) {
-            $collection->setPageSize($pageSize);
+            $collection->setPageSize(size: $pageSize);
             $collection->addFieldToFilter(
                 Entity::DEFAULT_ENTITY_ID_FIELD,
                 ['gteq' => $currentEntityId],
             );
         }
 
-        $collection->setOrder(Entity::DEFAULT_ENTITY_ID_FIELD, Select::SQL_ASC);
+        $collection->setOrder(attribute: Entity::DEFAULT_ENTITY_ID_FIELD, dir: Select::SQL_ASC);
         if ($this->productType) {
             $collection->addFieldToFilter(ProductInterface::TYPE_ID, $this->productType);
         }
@@ -104,7 +123,7 @@ class ProductEntityCollection implements ProductEntityCollectionInterface
          * however MSI has a plugin on this method to set the right data
          * and this allows us to be compatible if MSI is removed from the codebase
          */
-        $this->stockHelper->addStockStatusToProducts($collection);
+        $this->stockHelper->addStockStatusToProducts(productCollection: $collection);
 
         return $collection;
     }
@@ -121,14 +140,30 @@ class ProductEntityCollection implements ProductEntityCollectionInterface
         if ($entityType) {
             $collection->addAttributeToFilter(ProductInterface::TYPE_ID, ['eq' => $entityType]);
         }
-        $collection->setOrder(Entity::DEFAULT_ENTITY_ID_FIELD, Select::SQL_DESC);
-        $collection->setPageSize(1);
+        $collection->setOrder(attribute: Entity::DEFAULT_ENTITY_ID_FIELD, dir: Select::SQL_DESC);
+        $collection->setPageSize(size: 1);
         $select = $collection->getSelect();
         $select->reset(part: Select::COLUMNS);
-        $select->columns(Entity::DEFAULT_ENTITY_ID_FIELD);
-        /** @var ProductInterface $item */
-        $item = $collection->getFirstItem();
+        $select->columns(
+            cols: $this->expressionFactory->create([
+                'expression' => sprintf(
+                    'MAX(%s.%s)',
+                    MagentoProductCollection::MAIN_TABLE_ALIAS,
+                    Entity::DEFAULT_ENTITY_ID_FIELD,
+                ),
+            ]),
+        );
 
-        return (int)$item->getId();
+        $this->logger->debug(
+            message: 'Product entity getLastId Select: {method} : {select}',
+            context: [
+                'method' => __METHOD__,
+                'line' => __LINE__,
+                'select' => $collection->getSelect()->__toString(),
+            ],
+        );
+        $connection = $collection->getConnection();
+
+        return (int)$connection->fetchOne(sql: $select->__toString());
     }
 }

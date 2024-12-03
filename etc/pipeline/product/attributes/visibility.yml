@@ -5,8 +5,12 @@ stages:
       extraction: currentProduct::getVisibility()
       transformations: >
         ToInteger|ValueMap([
+            {"sourceValue": 0, "convertedValue": []},
             {"sourceValue": 1, "convertedValue": []},
             {"sourceValue": 2, "convertedValue": ["catalog"]},
             {"sourceValue": 3, "convertedValue": ["search"]},
             {"sourceValue": 4, "convertedValue": ["catalog", "search"]}
-        ])|Merge([])
+        ])|ToArray|Merge([])
+
+# "sourceValue": 0 would occur if visibility is not set (due to the "ToInteger" transformer casting it to 0),
+#  therefore assume not visible individually, i.e. []

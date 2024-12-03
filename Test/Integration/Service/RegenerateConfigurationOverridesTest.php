@@ -6,11 +6,12 @@
 
 declare(strict_types=1);
 
-namespace Klevu\IndexingProducts\Test\Integration\Observer\ProductAttribute;
+namespace Klevu\IndexingProducts\Test\Integration\Service;
 
-use Klevu\Indexing\Test\Integration\Traits\IndexingAttributesTrait;
+use Klevu\Indexing\Service\RegenerateConfigurationOverrides;
 use Klevu\IndexingApi\Model\Source\IndexType;
-use Klevu\IndexingProducts\Observer\ProductAttribute\RegenerateConfigurationOverridesObserver;
+use Klevu\IndexingApi\Service\RegenerateConfigurationOverridesInterface;
+use Klevu\IndexingProducts\Service\RegenerateConfigurationOverrides as RegenerateConfigurationOverridesVirtualType; // phpcs:ignore Generic.Files.LineLength.TooLong
 use Klevu\TestFixtures\Catalog\Attribute\AttributeFixturePool;
 use Klevu\TestFixtures\Catalog\AttributeTrait;
 use Klevu\TestFixtures\Store\StoreFixturesPool;
@@ -18,33 +19,28 @@ use Klevu\TestFixtures\Store\StoreTrait;
 use Klevu\TestFixtures\Traits\ObjectInstantiationTrait;
 use Klevu\TestFixtures\Traits\SetAuthKeysTrait;
 use Klevu\TestFixtures\Traits\TestImplementsInterfaceTrait;
-use Magento\Catalog\Api\ProductAttributeRepositoryInterface;
-use Magento\Catalog\Model\ResourceModel\Eav\Attribute;
 use Magento\Framework\App\Filesystem\DirectoryList as AppDirectoryList;
-use Magento\Framework\Event\ConfigInterface as EventConfig;
-use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem\Io\File as FileIo;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Yaml\Yaml;
 use TddWizard\Fixtures\Core\ConfigFixture;
 
 /**
- * @covers \Klevu\IndexingProducts\Observer\ProductAttribute\RegenerateConfigurationOverridesObserver::class
+ * @covers RegenerateConfigurationOverrides::class
+ * @method RegenerateConfigurationOverridesInterface instantiateTestObject(?array $arguments = null)
+ * @method RegenerateConfigurationOverridesInterface instantiateTestObjectFromInterface(?array $arguments = null)
  */
-class RegenerateConfigurationOverridesObserverTest extends TestCase
+class RegenerateConfigurationOverridesTest extends TestCase
 {
     use AttributeTrait;
-    use IndexingAttributesTrait;
     use ObjectInstantiationTrait;
     use SetAuthKeysTrait;
     use StoreTrait;
     use TestImplementsInterfaceTrait;
-
-    private const EVENT_NAME_DELETE = 'catalog_entity_attribute_delete_commit_after';
-    private const OBSERVER_NAME_DELETE = 'Klevu_IndexingProducts_ProductAttribute_RegenerateConfigurationOverrides';
 
     /**
      * @var ObjectManagerInterface|null
@@ -58,10 +54,6 @@ class RegenerateConfigurationOverridesObserverTest extends TestCase
      * @var FileIo|null
      */
     private ?FileIo $fileIo = null;
-    /**
-     * @var ProductAttributeRepositoryInterface|null
-     */
-    private ?ProductAttributeRepositoryInterface $productAttributeRepository = null;
 
     /**
      * @return void
@@ -70,14 +62,13 @@ class RegenerateConfigurationOverridesObserverTest extends TestCase
     {
         parent::setUp();
 
+        $this->implementationFqcn = RegenerateConfigurationOverridesVirtualType::class; // @phpstan-ignore-line
+        $this->interfaceFqcn = RegenerateConfigurationOverridesInterface::class;
+        $this->implementationForVirtualType = RegenerateConfigurationOverrides::class;
         $this->objectManager = Bootstrap::getObjectManager();
-
-        $this->implementationFqcn = RegenerateConfigurationOverridesObserver::class;
-        $this->interfaceFqcn = ObserverInterface::class;
 
         $this->directoryList = $this->objectManager->get(DirectoryList::class);
         $this->fileIo = $this->objectManager->get(FileIo::class);
-        $this->productAttributeRepository = $this->objectManager->get(ProductAttributeRepositoryInterface::class);
 
         $this->storeFixturesPool = $this->objectManager->get(StoreFixturesPool::class);
         $this->attributeFixturePool = $this->objectManager->get(AttributeFixturePool::class);
@@ -95,19 +86,7 @@ class RegenerateConfigurationOverridesObserverTest extends TestCase
         $this->storeFixturesPool->rollback();
     }
 
-    public function testDeleteObserver_IsConfigured(): void
-    {
-        $observerConfig = $this->objectManager->create(type: EventConfig::class);
-        $observers = $observerConfig->getObservers(eventName: self::EVENT_NAME_DELETE);
-
-        $this->assertArrayHasKey(key: self::OBSERVER_NAME_DELETE, array: $observers);
-        $this->assertSame(
-            expected: ltrim(string: RegenerateConfigurationOverridesObserver::class, characters: '\\'),
-            actual: $observers[self::OBSERVER_NAME_DELETE]['instance'],
-        );
-    }
-
-    public function testAttributeDelete_RegeneratesOverridesFiles_WhenOverridesFilesDoNotExist(): void
+    public function testExecute_RegeneratesOverridesFiles_WhenOverridesFilesDoNotExist(): void
     {
         $expectedFiles = $this->getExpectedFiles();
 
@@ -131,10 +110,8 @@ class RegenerateConfigurationOverridesObserverTest extends TestCase
             $this->assertFileDoesNotExist($expectedFile);
         }
 
-        $attributeFixture = $this->attributeFixturePool->get('klevu_test_attribute_text');
-        /** @var Attribute $magentoAttribute */
-        $magentoAttribute = $attributeFixture->getAttribute();
-        $this->productAttributeRepository->delete($magentoAttribute);
+        $service = $this->instantiateTestObject();
+        $service->execute();
 
         foreach ($expectedFiles as $expectedFile) {
             $this->assertFileExists($expectedFile);
@@ -143,15 +120,32 @@ class RegenerateConfigurationOverridesObserverTest extends TestCase
             );
         }
 
-        $this->assertStringNotContainsString(
-            needle: 'klevu_test_attribute_text',
-            haystack: $this->fileIo->read(
+        $addUpdateArray = Yaml::parse(
+            input: $this->fileIo->read(
                 filename: $expectedFiles['add_update'],
             ),
         );
+        $this->assertSame(
+            expected: [
+                'pipeline' => 'Stage\Extract',
+                'args' => [
+                    'extraction' => 'currentProduct::getKlevuTestAttributeText()',
+                    'transformations' => [
+                        'ToString',
+                        'StripTags(["p", "br", "hr", "h1", "h2", "h3", "h4", "h5", "h6", "strong", "em", "ul", "ol", "li", "dl", "dt", "dd", "img", "sub", "sup", "small"], ["script"])', // phpcs:ignore Generic.Files.LineLength.TooLong
+                        'EscapeHtml',
+                        'Trim',
+                    ],
+                ],
+            ],
+            actual: $addUpdateArray['stages']['iterateIndexingRecordsBatch']['stages']
+                ['iterateIndexingRecords']['stages']['processProduct']['stages']
+                ['default']['stages']['generateRecord']['stages']['attributes']['addStages']
+                ['klevu_test_attribute_text'] ?? null,
+        );
     }
 
-    public function testAttributeDelete_RegeneratesOverridesFiles_WhenOverridesFilesExist(): void
+    public function testExecute_RegeneratesOverridesFiles_WhenOverridesFilesExist(): void
     {
         $expectedFiles = $this->getExpectedFiles();
 
@@ -169,6 +163,9 @@ class RegenerateConfigurationOverridesObserverTest extends TestCase
         ]);
 
         foreach ($expectedFiles as $expectedFile) {
+            if ($this->fileIo->fileExists($expectedFile)) {
+                $this->fileIo->rm($expectedFile);
+            }
             if (!$this->fileIo->fileExists($expectedFile)) {
                 $this->fileIo->write(
                     filename: $expectedFile,
@@ -178,10 +175,8 @@ class RegenerateConfigurationOverridesObserverTest extends TestCase
             $this->assertFileExists($expectedFile);
         }
 
-        $attributeFixture = $this->attributeFixturePool->get('klevu_test_attribute_text');
-        /** @var Attribute $magentoAttribute */
-        $magentoAttribute = $attributeFixture->getAttribute();
-        $this->productAttributeRepository->delete($magentoAttribute);
+        $service = $this->instantiateTestObject();
+        $service->execute();
 
         foreach ($expectedFiles as $expectedFile) {
             $this->assertFileExists($expectedFile);
@@ -190,15 +185,32 @@ class RegenerateConfigurationOverridesObserverTest extends TestCase
             );
         }
 
-        $this->assertStringNotContainsString(
-            needle: 'klevu_test_attribute_text',
-            haystack: $this->fileIo->read(
+        $addUpdateArray = Yaml::parse(
+            input: $this->fileIo->read(
                 filename: $expectedFiles['add_update'],
             ),
         );
+        $this->assertSame(
+            expected: [
+                'pipeline' => 'Stage\Extract',
+                'args' => [
+                    'extraction' => 'currentProduct::getKlevuTestAttributeText()',
+                    'transformations' => [
+                        'ToString',
+                        'StripTags(["p", "br", "hr", "h1", "h2", "h3", "h4", "h5", "h6", "strong", "em", "ul", "ol", "li", "dl", "dt", "dd", "img", "sub", "sup", "small"], ["script"])', // phpcs:ignore Generic.Files.LineLength.TooLong
+                        'EscapeHtml',
+                        'Trim',
+                    ],
+                ],
+            ],
+            actual: $addUpdateArray['stages']['iterateIndexingRecordsBatch']['stages']
+                ['iterateIndexingRecords']['stages']['processProduct']['stages']
+                ['default']['stages']['generateRecord']['stages']['attributes']['addStages']
+                ['klevu_test_attribute_text'] ?? null,
+        );
     }
 
-    public function testAttributeDelete_PerformsNoAction_WhenConfigurationDisabled_AndFilesDoNotExist(): void
+    public function testExecute_PerformsNoAction_WhenConfigurationDisabled_AndFilesDoNotExist(): void
     {
         ConfigFixture::setGlobal(
             path: 'klevu/platform_pipelines/configuration_overrides_generation_enabled',
@@ -227,17 +239,15 @@ class RegenerateConfigurationOverridesObserverTest extends TestCase
             $this->assertFileDoesNotExist($expectedFile);
         }
 
-        $attributeFixture = $this->attributeFixturePool->get('klevu_test_attribute_text');
-        /** @var Attribute $magentoAttribute */
-        $magentoAttribute = $attributeFixture->getAttribute();
-        $this->productAttributeRepository->delete($magentoAttribute);
+        $service = $this->instantiateTestObject();
+        $service->execute();
 
         foreach ($expectedFiles as $expectedFile) {
             $this->assertFileDoesNotExist($expectedFile);
         }
     }
 
-    public function testAttributeDelete_PerformsNoAction_WhenConfigurationDisabled_AndFilesExist(): void
+    public function testExecute_PerformsNoAction_WhenConfigurationDisabled_AndFilesExist(): void
     {
         ConfigFixture::setGlobal(
             path: 'klevu/platform_pipelines/configuration_overrides_generation_enabled',
@@ -245,13 +255,6 @@ class RegenerateConfigurationOverridesObserverTest extends TestCase
         );
 
         $expectedFiles = $this->getExpectedFiles();
-
-        foreach ($expectedFiles as $expectedFile) {
-            if ($this->fileIo->fileExists($expectedFile)) {
-                $this->fileIo->rm($expectedFile);
-            }
-            $this->assertFileDoesNotExist($expectedFile);
-        }
 
         $this->createAttribute([
             'key' => 'klevu_test_attribute_text',
@@ -267,7 +270,27 @@ class RegenerateConfigurationOverridesObserverTest extends TestCase
         ]);
 
         foreach ($expectedFiles as $expectedFile) {
-            $this->assertFileDoesNotExist($expectedFile);
+            if ($this->fileIo->fileExists($expectedFile)) {
+                $this->fileIo->rm($expectedFile);
+            }
+            if (!$this->fileIo->fileExists($expectedFile)) {
+                $this->fileIo->write(
+                    filename: $expectedFile,
+                    src: '# Test Content',
+                );
+            }
+            $this->assertFileExists($expectedFile);
+        }
+
+        $service = $this->instantiateTestObject();
+        $service->execute();
+
+        foreach ($expectedFiles as $expectedFile) {
+            $this->assertFileExists($expectedFile);
+            $this->assertSame(
+                expected: '# Test Content',
+                actual: $this->fileIo->read($expectedFile),
+            );
         }
     }
 

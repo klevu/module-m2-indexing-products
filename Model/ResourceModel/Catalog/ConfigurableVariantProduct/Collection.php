@@ -193,6 +193,44 @@ class Collection extends ProductCollection
     }
 
     /**
+     * @return void
+     * @throws \Zend_Db_Select_Exception
+     * @throws LocalizedException
+     */
+    public function joinAssociatedProducts(): void
+    {
+        $select = $this->getSelect();
+        $from = $select->getPart(part: Select::FROM);
+        if (array_key_exists(key: static::TABLE_ALIAS_ASSOCIATED_PRODUCT, array: $from)) {
+            return;
+        }
+        $select->joinInner(
+            name: [
+                static::TABLE_ALIAS_ASSOCIATED_PRODUCT => $this->getTable(table: 'catalog_product_super_link'),
+            ],
+            cond: implode(
+                ' ' . Select::SQL_AND . ' ',
+                [
+                    // note in adobe commerce parent_id is linked to row_id, but product_id is linked to entity_id
+                    static::TABLE_ALIAS_ASSOCIATED_PRODUCT . '.product_id = e.' . Entity::DEFAULT_ENTITY_ID_FIELD,
+                ],
+            ),
+            cols: [],
+        );
+        $select->joinInner(
+            name: ['parent_entity' => $this->getTable('catalog_product_entity')],
+            cond: implode(
+                ' ' . Select::SQL_AND . ' ',
+                [
+                    // phpcs:ignore Generic.Files.LineLength.TooLong
+                    'parent_entity.' . $this->getLinkField($this) . ' = ' . static::TABLE_ALIAS_ASSOCIATED_PRODUCT . '.parent_id',
+                ],
+            ),
+            cols: [self::FIELD_PLACEHOLDER_PARENT_ID => Entity::DEFAULT_ENTITY_ID_FIELD],
+        );
+    }
+
+    /**
      * @param DataObject $item
      *
      * @return string
@@ -236,44 +274,6 @@ class Collection extends ProductCollection
                 store: $store,
             );
         }
-    }
-
-    /**
-     * @return void
-     * @throws \Zend_Db_Select_Exception
-     * @throws LocalizedException
-     */
-    private function joinAssociatedProducts(): void
-    {
-        $select = $this->getSelect();
-        $from = $select->getPart(part: Select::FROM);
-        if (array_key_exists(key: static::TABLE_ALIAS_ASSOCIATED_PRODUCT, array: $from)) {
-            return;
-        }
-        $select->joinInner(
-            name: [
-                static::TABLE_ALIAS_ASSOCIATED_PRODUCT => $this->getTable(table: 'catalog_product_super_link'),
-            ],
-            cond: implode(
-                ' ' . Select::SQL_AND . ' ',
-                [
-                    // note in adobe commerce parent_id is linked to row_id, but product_id is linked to entity_id
-                    static::TABLE_ALIAS_ASSOCIATED_PRODUCT . '.product_id = e.' . Entity::DEFAULT_ENTITY_ID_FIELD,
-                ],
-            ),
-            cols: [],
-        );
-        $select->joinInner(
-            name: ['parent_entity' => $this->getTable('catalog_product_entity')],
-            cond: implode(
-                ' ' . Select::SQL_AND . ' ',
-                [
-                    // phpcs:ignore Generic.Files.LineLength.TooLong
-                    'parent_entity.' . $this->getLinkField($this) . ' = ' . static::TABLE_ALIAS_ASSOCIATED_PRODUCT . '.parent_id',
-                ],
-            ),
-            cols: [self::FIELD_PLACEHOLDER_PARENT_ID => Entity::DEFAULT_ENTITY_ID_FIELD],
-        );
     }
 
     /**
