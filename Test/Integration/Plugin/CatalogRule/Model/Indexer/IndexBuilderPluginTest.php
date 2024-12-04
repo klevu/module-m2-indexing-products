@@ -175,7 +175,7 @@ class IndexBuilderPluginTest extends TestCase
         ]);
 
         $indexBuilder = $this->objectManager->get(IndexBuilder::class);
-        $indexBuilder->reindexById((int)$productFixture->getId());
+        $indexBuilder->reindexById((string)$productFixture->getId());
 
         $indexingEntity = $this->getIndexingEntityForEntity(
             apiKey: $apiKey,
@@ -230,7 +230,7 @@ class IndexBuilderPluginTest extends TestCase
         ]);
 
         $indexBuilder = $this->objectManager->get(IndexBuilder::class);
-        $indexBuilder->reindexByIds([(int)$productFixture->getId()]);
+        $indexBuilder->reindexByIds([(string)$productFixture->getId()]);
 
         $indexingEntity = $this->getIndexingEntityForEntity(
             apiKey: $apiKey,

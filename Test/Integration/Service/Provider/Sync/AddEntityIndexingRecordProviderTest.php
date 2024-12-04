@@ -113,16 +113,19 @@ class AddEntityIndexingRecordProviderTest extends TestCase
 
         /** @var EntityIndexingRecordInterface[] $result */
         $result = [];
-        foreach ($generator as $indexingRecord) {
-            $result[] = $indexingRecord;
+        foreach ($generator as $indexingRecords) {
+            $result[] = $indexingRecords;
         }
         $this->assertCount(expectedCount: 1, haystack: $result);
-        $this->assertNotNull(actual: (int)$result[0]->getRecordId());
+        $this->assertCount(expectedCount: 1, haystack: $result[0]);
+        $indexingRecord = $result[0][0] ?? null;
+
+        $this->assertNotNull(actual: (int)$indexingRecord->getRecordId());
         $this->assertSame(
             expected: (int)$productFixture->getId(),
-            actual: (int)$result[0]->getEntity()->getId(),
+            actual: (int)$indexingRecord->getEntity()->getId(),
         );
-        $this->assertNull(actual: $result[0]->getParent());
+        $this->assertNull(actual: $indexingRecord->getParent());
 
         $this->cleanIndexingEntities(apiKey: $apiKey);
     }
@@ -205,12 +208,13 @@ class AddEntityIndexingRecordProviderTest extends TestCase
 
         /** @var EntityIndexingRecordInterface[] $results */
         $results = [];
-        foreach ($generator as $indexingRecord) {
-            $results[] = $indexingRecord;
+        foreach ($generator as $indexingRecords) {
+            $results[] = $indexingRecords;
         }
-        $this->assertCount(expectedCount: 2, haystack: $results);
+        $this->assertCount(expectedCount: 1, haystack: $results);
+        $this->assertCount(expectedCount: 2, haystack: $results[0]);
         $result1Array = array_filter(
-            array: $results,
+            array: $results[0],
             callback: static fn (EntityIndexingRecordInterface $record) => ($record->getParent() !== null),
         );
         $result1 = array_shift($result1Array);
@@ -228,7 +232,7 @@ class AddEntityIndexingRecordProviderTest extends TestCase
         );
 
         $result2Array = array_filter(
-            array: $results,
+            array: $results[0],
             callback: static fn (EntityIndexingRecordInterface $record) => ($record->getParent() === null),
         );
         $result2 = array_shift($result2Array);
@@ -308,11 +312,12 @@ class AddEntityIndexingRecordProviderTest extends TestCase
 
         /** @var EntityIndexingRecordInterface[] $results */
         $results = [];
-        foreach ($generator as $indexingRecord) {
-            $results[] = $indexingRecord;
+        foreach ($generator as $indexingRecords) {
+            $results[] = $indexingRecords;
         }
         $this->assertCount(expectedCount: 1, haystack: $results);
-        $result1 = array_shift($results);
+        $this->assertCount(expectedCount: 1, haystack: $results[0]);
+        $result1 = array_shift($results[0]);
         $this->assertSame(
             expected: $indexingEntity->getId(),
             actual: $result1->getRecordId(),

@@ -110,7 +110,7 @@ class IndexBuilderPlugin
     private function updateIndexingEntities(array $productIds): void
     {
         $this->responderService->execute(data: [
-            Entity::ENTITY_IDS => $productIds,
+            Entity::ENTITY_IDS => array_map('intval', $productIds),
             EntityUpdateResponderServiceInterface::CHANGED_ATTRIBUTES => [
                 ProductInterface::PRICE,
             ],

@@ -3,78 +3,83 @@ stages:
     pipeline: Indexing\Stage\Log # log that the pipeline has begun
     args:
       message: "Start Delete Products Pipeline"
-  iterateIndexingRecords:
-    pipeline: Pipeline\Iterate # LOOP OVER ALL PROVIDED RECORDS
+  iterateIndexingRecordsBatch:
+    pipeline: Pipeline\Iterate # LOOP OVER ALL PROVIDED BATCHES
     args:
       continueOnException: ~
     stages:
-      processIndexingRecordStart: # set some variables before processing product data
-        stages:
-          registerIndexingRecordToContext:
-            pipeline: Stage\RegisterContext
-            args:
-              contextKey: "currentIndexingRecord" # Set the current record to a variable called "currentIndexingRecord"
-          registerActionToContext:
-            stages:
-              createAction:
-                pipeline: Stage\StaticValue
-                args:
-                  value: "Delete"
-              registerAction:
-                pipeline: Stage\RegisterContext
-                args:
-                  contextKey: "currentAction" # i.e. $currentAction = 'Delete';
-          registerEntityTypeToContext:
-            stages:
-              createEntityType:
-                pipeline: Stage\StaticValue
-                args:
-                  value: "KLEVU_PRODUCT"
-              registerEntityType:
-                pipeline: Stage\RegisterContext
-                args:
-                  contextKey: "currentEntityType" # i.e. $currentEntityType = 'KLEVU_PRODUCT';
-      processProduct:
-        pipeline: Pipeline\Fallback # if validation during one stage fails, move onto the next stage
-        stages:
-          variantProduct: # Simple products belonging to configurable products
-            stages:
-              getParentProduct:
-                pipeline: Stage\Extract
-                args:
-                  extraction: currentIndexingRecord::getParentId()
-              validateParentProduct:
-                pipeline: Stage\Validate
-                args:
-                  validation: IsNotEmpty
-              generateRecord:
-                pipeline: Pipeline\CreateRecord
-                stages:
-                  -
-                    pipeline: Stage\Extract
-                    args:
-                      extraction: currentIndexingRecord::getEntityId()
-                      transformations:
-                        - Prepend($currentIndexingRecord::getParentId(), "-") # prepend parent_id . '-' to entity_id
-                        - Trim("- ")
-          default: # all other product types
-            stages:
-              generateRecord:
-                pipeline: Pipeline\CreateRecord
-                stages:
-                  -
-                    pipeline: Stage\Extract
-                    args:
-                      extraction: currentIndexingRecord::getEntityId()
-                      transformations: ToString
-  processPayload:
-    stages:
-      mergeRecords:
-        pipeline: Stage\Transform
+      iterateIndexingRecords:
+        pipeline: Pipeline\Iterate # LOOP OVER ALL PROVIDED RECORDS
         args:
-          transformation: Flatten
-      processRecords: # send generated data to Klevu
-        import: Klevu_Indexing::etc/pipeline/process-batch-delete-payload.yml
+          continueOnException: ~
+        stages:
+          processIndexingRecordStart: # set some variables before processing product data
+            stages:
+              registerIndexingRecordToContext:
+                pipeline: Stage\RegisterContext
+                args:
+                  contextKey: "currentIndexingRecord" # Set the current record to a variable called "currentIndexingRecord"
+              registerActionToContext:
+                stages:
+                  createAction:
+                    pipeline: Stage\StaticValue
+                    args:
+                      value: "Delete"
+                  registerAction:
+                    pipeline: Stage\RegisterContext
+                    args:
+                      contextKey: "currentAction" # i.e. $currentAction = 'Delete';
+              registerEntityTypeToContext:
+                stages:
+                  createEntityType:
+                    pipeline: Stage\StaticValue
+                    args:
+                      value: "KLEVU_PRODUCT"
+                  registerEntityType:
+                    pipeline: Stage\RegisterContext
+                    args:
+                      contextKey: "currentEntityType" # i.e. $currentEntityType = 'KLEVU_PRODUCT';
+          processProduct:
+            pipeline: Pipeline\Fallback # if validation during one stage fails, move onto the next stage
+            stages:
+              variantProduct: # Simple products belonging to configurable products
+                stages:
+                  getParentProduct:
+                    pipeline: Stage\Extract
+                    args:
+                      extraction: currentIndexingRecord::getParentId()
+                  validateParentProduct:
+                    pipeline: Stage\Validate
+                    args:
+                      validation: IsNotEmpty
+                  generateRecord:
+                    pipeline: Pipeline\CreateRecord
+                    stages:
+                      -
+                        pipeline: Stage\Extract
+                        args:
+                          extraction: currentIndexingRecord::getEntityId()
+                          transformations:
+                            - Prepend($currentIndexingRecord::getParentId(), "-") # prepend parent_id . '-' to entity_id
+                            - Trim("- ")
+              default: # all other product types
+                stages:
+                  generateRecord:
+                    pipeline: Pipeline\CreateRecord
+                    stages:
+                      -
+                        pipeline: Stage\Extract
+                        args:
+                          extraction: currentIndexingRecord::getEntityId()
+                          transformations: ToString
+      processPayload:
+        stages:
+          mergeRecords:
+            pipeline: Stage\Transform
+            args:
+              transformation: Flatten
+          processRecords: # send generated data to Klevu
+            import: Klevu_Indexing::etc/pipeline/process-batch-delete-payload.yml
   logEnd:
     pipeline: Indexing\Stage\Log # log that the pipeline has ended
     args:

@@ -77,6 +77,9 @@ class AttributeIndexerServiceAddTest extends TestCase
         $this->storeFixturesPool->rollback();
     }
 
+    /**
+     * @magentoAppIsolation enabled
+     */
     public function testExecute_CallsSdkPutAndUpdatesIndexingAttribute(): void
     {
         $apiKey1 = 'klevu-test-js-api-key-1';

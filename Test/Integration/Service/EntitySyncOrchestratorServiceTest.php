@@ -242,8 +242,10 @@ class EntitySyncOrchestratorServiceTest extends TestCase
         $this->assertIsArray(actual: $addResponses, message: 'Product Add Response');
         $this->assertCount(expectedCount: 1, haystack: $addResponses);
 
+        $pipelineResults = array_shift($addResponses);
+        $this->assertCount(expectedCount: 1, haystack: $pipelineResults);
         /** @var ApiPipelineResult $pipelineResult */
-        $pipelineResult = array_shift($addResponses);
+        $pipelineResult = array_shift($pipelineResults);
 
         $this->assertTrue(condition: $pipelineResult->success);
         $this->assertCount(expectedCount: 1, haystack: $pipelineResult->messages);
@@ -416,8 +418,10 @@ class EntitySyncOrchestratorServiceTest extends TestCase
         $updateResponses = $pipelineResults['KLEVU_PRODUCT::update'];
         $this->assertCount(expectedCount: 1, haystack: $updateResponses);
 
+        $pipelineResults = array_shift($updateResponses);
+        $this->assertCount(expectedCount: 1, haystack: $pipelineResults);
         /** @var ApiPipelineResult $pipelineResult */
-        $pipelineResult = array_shift($updateResponses);
+        $pipelineResult = array_shift($pipelineResults);
 
         $this->assertTrue(condition: $pipelineResult->success);
         $this->assertCount(expectedCount: 1, haystack: $pipelineResult->messages);
@@ -561,15 +565,17 @@ class EntitySyncOrchestratorServiceTest extends TestCase
         $this->assertCount(expectedCount: 0, haystack: $addResponses);
 
         $this->assertArrayHasKey(key: 'KLEVU_PRODUCT::update', array: $pipelineResults);
-        $addResponses = $pipelineResults['KLEVU_PRODUCT::update'];
-        $this->assertCount(expectedCount: 0, haystack: $addResponses);
+        $updateResponses = $pipelineResults['KLEVU_PRODUCT::update'];
+        $this->assertCount(expectedCount: 0, haystack: $updateResponses);
 
         $this->assertArrayHasKey(key: 'KLEVU_PRODUCT::delete', array: $pipelineResults);
-        $updateResponses = $pipelineResults['KLEVU_PRODUCT::delete'];
-        $this->assertCount(expectedCount: 1, haystack: $updateResponses);
+        $deleteResponses = $pipelineResults['KLEVU_PRODUCT::delete'];
+        $this->assertCount(expectedCount: 1, haystack: $deleteResponses);
 
+        $pipelineResults = array_shift($deleteResponses);
+        $this->assertCount(expectedCount: 1, haystack: $pipelineResults);
         /** @var ApiPipelineResult $pipelineResult */
-        $pipelineResult = array_shift($updateResponses);
+        $pipelineResult = array_shift($pipelineResults);
 
         $this->assertTrue(condition: $pipelineResult->success);
         $this->assertCount(expectedCount: 1, haystack: $pipelineResult->messages);
