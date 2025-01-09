@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace Klevu\IndexingProducts\Block\Adminhtml\Product\Attribute\Edit\Tab;
+namespace Klevu\IndexingProducts\Test\Integration\Block\Adminhtml\Product\Attribute\Edit\Tab;
 
 use Klevu\Configuration\Test\Integration\Controller\Adminhtml\GetAdminFrontNameTrait;
 use Klevu\IndexingApi\Model\Source\IndexType;
@@ -45,9 +45,10 @@ class KlevuIndexingPropertiesOutputTest extends AbstractBackendControllerTestCas
         parent::setUp();
 
         $this->uri = $this->getAdminFrontName() . '/catalog/product_attribute/edit';
-        $this->resource = 'Klevu_Indexing::indexing';
+        $this->resource = 'Magento_Catalog::attributes_attributes';
         $this->objectManager = Bootstrap::getObjectManager();
         $this->attributeFixturePool = $this->objectManager->get(AttributeFixturePool::class);
+        $this->_session->setPciAdminUserIsPasswordExpired(false);
     }
 
     /**

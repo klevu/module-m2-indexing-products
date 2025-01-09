@@ -8,6 +8,8 @@ stages:
             pipeline: Stage\Extract
             args:
               extraction: currentProduct::getKlevuImage()
+              transformations:
+                - ResizeImage("klevu_image", $config::getForCurrentStore().image_width, $config::getForCurrentStore().image_height, $store::getForCurrentStore().store_id)
           validateImage:
             pipeline: Stage\Validate
             args:
@@ -18,6 +20,8 @@ stages:
             pipeline: Stage\Extract
             args:
               extraction: currentProduct::getImage()
+              transformations:
+                - ResizeImage("klevu_image", $config::getForCurrentStore().image_width, $config::getForCurrentStore().image_height, $store::getForCurrentStore().store_id)
           validateImage:
             pipeline: Stage\Validate
             args:
@@ -28,6 +32,8 @@ stages:
             pipeline: Stage\Extract
             args:
               extraction: config::getForCurrentStore().placeholder_image
+              transformations:
+                - ResizeImage("klevu_image", $config::getForCurrentStore().image_width, $config::getForCurrentStore().image_height, $store::getForCurrentStore().store_id)
           validateImage:
             pipeline: Stage\Validate
             args:
@@ -67,7 +73,6 @@ stages:
                         args:
                           extraction: productImage::
                           transformations:
-                            - ResizeImage("klevu_image", $config::getForCurrentStore().image_width, $config::getForCurrentStore().image_height, $store::getForCurrentStore().store_id)
                             - Prepend($store::getForCurrentStore().media_url)
                       width:
                         pipeline: Stage\Extract

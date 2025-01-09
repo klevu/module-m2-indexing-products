@@ -92,9 +92,9 @@ class ImageGenerationAction implements ImageGenerationActionInterface
      * @param mixed[] $imageParams
      * @param string $imagePath
      *
-     * @return string
+     * @return string|null
      */
-    public function execute(array $imageParams, string $imagePath): string
+    public function execute(array $imageParams, string $imagePath): ?string
     {
         $absolutePath = $this->imagePathProvider->get(
             imageParams: $imageParams,
@@ -120,7 +120,7 @@ class ImageGenerationAction implements ImageGenerationActionInterface
                         'message' => $exception->getMessage(),
                     ],
                 );
-                return '';
+                return null;
             }
         }
 

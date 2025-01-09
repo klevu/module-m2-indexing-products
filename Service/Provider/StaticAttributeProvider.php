@@ -166,7 +166,7 @@ class StaticAttributeProvider implements StaticAttributeProviderInterface
             $attribute->setFrontendInput(frontendInput: $data['frontend_input']);
         }
         if (($data['backend_type'] ?? null)) {
-            $attribute->setBackendType(backendType: $data['backend_type']);
+            $attribute->setBackendType($data['backend_type']);
         }
         if (($data['source_model'] ?? null)) {
             $attribute->setSourceModel(sourceModel: $data['source_model']);

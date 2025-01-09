@@ -151,9 +151,7 @@ class AttributeIndexingRecordCreatorService implements AttributeIndexingRecordCr
     private function getLabels(AttributeInterface $attribute, string $apiKey): array
     {
         $defaultLabel = $attribute->getDefaultFrontendLabel();
-        $return = [
-            'default' => $defaultLabel,
-        ];
+        $storeLabels = [];
         $locales = $this->localeCodesProvider->get(apiKey: $apiKey);
         $labels = $attribute->getFrontendLabels();
         foreach ($labels as $label) {
@@ -163,10 +161,13 @@ class AttributeIndexingRecordCreatorService implements AttributeIndexingRecordCr
             }
             $storeLabel = $label->getLabel();
             if ($defaultLabel !== $storeLabel) {
-                $return[$locales[$label->getStoreId()]] = $storeLabel;
+                $storeLabels[$locales[$label->getStoreId()]] = $storeLabel;
             }
         }
+        $return = $storeLabels
+            ? array_shift($storeLabels)
+            : $defaultLabel;
 
-        return $return;
+        return ['default' => $return];
     }
 }

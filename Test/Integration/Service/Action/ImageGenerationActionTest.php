@@ -168,7 +168,7 @@ class ImageGenerationActionTest extends TestCase
         $action->execute(imageParams: [], imagePath: $product->getImage());
     }
 
-    public function testExecute_ReturnsEmptyString_WhenDbStorageNotUsed_AndFileExists(): void
+    public function testExecute_ReturnsString_WhenDbStorageNotUsed_AndFileExists(): void
     {
         $this->createProduct([
             'images' => [
@@ -196,7 +196,7 @@ class ImageGenerationActionTest extends TestCase
         );
     }
 
-    public function testExecute_ReturnsEmptyString_WhenDbStorageNotUsed_AndFileDoesNotExist(): void
+    public function testExecute_ReturnsNull_WhenDbStorageNotUsed_AndFileDoesNotExist(): void
     {
         $this->createProduct([
             'images' => [
@@ -219,13 +219,10 @@ class ImageGenerationActionTest extends TestCase
         ]);
         $return = $action->execute(imageParams: [], imagePath: $product->getImage());
 
-        $this->assertSame(
-            expected: '',
-            actual: $return,
-        );
+        $this->assertNull(actual: $return);
     }
 
-    public function testExecute_ReturnsEmptyString_WhenDbStorageUsed_AndFileExists(): void
+    public function testExecute_ReturnsString_WhenDbStorageUsed_AndFileExists(): void
     {
         $this->createProduct([
             'images' => [
@@ -253,7 +250,7 @@ class ImageGenerationActionTest extends TestCase
         );
     }
 
-    public function testExecute_ReturnsEmptyString_WhenDbStorageUsed_AndFileDoesNotExist(): void
+    public function testExecute_ReturnsNull_WhenDbStorageUsed_AndFileDoesNotExist(): void
     {
         $this->createProduct([
             'images' => [
@@ -276,16 +273,13 @@ class ImageGenerationActionTest extends TestCase
         ]);
         $return = $action->execute(imageParams: [], imagePath: $product->getImage());
 
-        $this->assertSame(
-            expected: '',
-            actual: $return,
-        );
+        $this->assertNull(actual: $return);
     }
 
     /**
      * Ref: KS-22988
      */
-    public function testExecute_ReturnsEmptyString_WhenDbStorageUsed_AndFileExists_AndFileIsEmpty(): void
+    public function testExecute_ReturnsNull_WhenDbStorageUsed_AndFileExists_AndFileIsEmpty(): void
     {
         $this->createProduct([
             'images' => [
@@ -314,17 +308,14 @@ class ImageGenerationActionTest extends TestCase
         ]);
         $return = $action->execute(imageParams: [], imagePath: $product->getImage());
 
-        $this->assertSame(
-            expected: '',
-            actual: $return,
-        );
+        $this->assertNull(actual: $return);
     }
 
     /**
      * Ref: KS-22988
      * @group wip
      */
-    public function testExecute_ReturnsEmptyString_WhenDbStorageNotUsed_AndFileExists_AndFileIsEmpty(): void
+    public function testExecute_ReturnsNull_WhenDbStorageNotUsed_AndFileExists_AndFileIsEmpty(): void
     {
         $this->createProduct([
             'images' => [
@@ -353,9 +344,6 @@ class ImageGenerationActionTest extends TestCase
         ]);
         $return = $action->execute(imageParams: [], imagePath: $product->getImage());
 
-        $this->assertSame(
-            expected: '',
-            actual: $return,
-        );
+        $this->assertNull(actual: $return);
     }
 }

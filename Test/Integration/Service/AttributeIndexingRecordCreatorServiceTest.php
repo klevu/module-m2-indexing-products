@@ -72,6 +72,7 @@ class AttributeIndexingRecordCreatorServiceTest extends TestCase
     }
 
     /**
+     * @magentoAppIsolation enabled
      * @magentoConfigFixture default/general/locale/code en_US
      * @magentoConfigFixture klevu_test_store_1_store general/locale/code en_GB
      * @magentoConfigFixture klevu_test_store_2_store general/locale/code fr_FR
@@ -225,18 +226,9 @@ class AttributeIndexingRecordCreatorServiceTest extends TestCase
         $this->assertFalse(condition: $indexingAttribute->isReturnable());
 
         $label = $indexingAttribute->getLabel();
-        $this->assertCount(expectedCount: 2, haystack: $label);
+        $this->assertCount(expectedCount: 1, haystack: $label);
 
         $this->assertArrayHasKey(key: 'default', array: $label);
-        $this->assertSame(expected: 'TEST BOOLEAN ATTRIBUTE', actual: $label['default']);
-
-        // No store label
-        $this->assertArrayNotHasKey(key: 'en-GB-klevu_test_store_1', array: $label);
-
-        // Integrated with a different API key
-        $this->assertArrayNotHasKey(key: 'fr-FR-klevu_test_store_2', array: $label);
-
-        $this->assertArrayHasKey(key: 'de-DE-klevu_test_store_3', array: $label);
-        $this->assertSame(expected: 'Label Store 3', actual: $label['de-DE-klevu_test_store_3']);
+        $this->assertSame(expected: 'Label Store 3', actual: $label['default']);
     }
 }

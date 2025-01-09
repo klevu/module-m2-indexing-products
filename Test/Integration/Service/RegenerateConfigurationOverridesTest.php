@@ -86,6 +86,9 @@ class RegenerateConfigurationOverridesTest extends TestCase
         $this->storeFixturesPool->rollback();
     }
 
+    /**
+     * @magentoAppIsolation enabled
+     */
     public function testExecute_RegeneratesOverridesFiles_WhenOverridesFilesDoNotExist(): void
     {
         $expectedFiles = $this->getExpectedFiles();
@@ -145,6 +148,9 @@ class RegenerateConfigurationOverridesTest extends TestCase
         );
     }
 
+    /**
+     * @magentoAppIsolation enabled
+     */
     public function testExecute_RegeneratesOverridesFiles_WhenOverridesFilesExist(): void
     {
         $expectedFiles = $this->getExpectedFiles();
@@ -210,6 +216,9 @@ class RegenerateConfigurationOverridesTest extends TestCase
         );
     }
 
+    /**
+     * @magentoAppIsolation enabled
+     */
     public function testExecute_PerformsNoAction_WhenConfigurationDisabled_AndFilesDoNotExist(): void
     {
         ConfigFixture::setGlobal(

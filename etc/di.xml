@@ -59,6 +59,9 @@
     <preference for="Klevu\IndexingApi\Service\Provider\Rating\RatingProviderInterface"
                 type="Klevu\IndexingProducts\Service\Provider\Rating\RatingProvider"/>
 
+    <preference for="Klevu\IndexingApi\Service\Provider\Tax\ProductTaxProviderInterface"
+                type="Klevu\IndexingProducts\Service\Provider\Tax\ProductTaxProvider"/>
+
     <preference for="Klevu\IndexingApi\Service\UpdateRatingServiceInterface"
                 type="Klevu\IndexingProducts\Service\UpdateRatingService"/>
 
@@ -1036,6 +1039,12 @@
     </type>
 
     <type name="Klevu\IndexingProducts\Pipeline\Provider\Argument\Transformer\ToRatingCountArgumentProvider">
+        <arguments>
+            <argument name="argumentProvider" xsi:type="object">Klevu\Pipelines\Provider\ArgumentProvider</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\IndexingProducts\Pipeline\Provider\Argument\Transformer\ToPriceIncludingTaxArgumentProvider">
         <arguments>
             <argument name="argumentProvider" xsi:type="object">Klevu\Pipelines\Provider\ArgumentProvider</argument>
         </arguments>

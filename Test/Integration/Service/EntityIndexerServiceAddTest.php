@@ -386,7 +386,7 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->createProduct([
             'name' => '  Klevu Simple <strong>Product</strong> Test <script>foo</script>  ',
             'sku' => 'KLEVU-SIMPLE-SKU-001',
-            'price' => 9.99,
+            'price' => 9999.99,
             'in_stock' => false,
             'qty' => -3,
             'category_ids' => [
@@ -514,9 +514,9 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->assertArrayHasKey(key: 'price', array: $attributes);
         $this->assertArrayHasKey(key: 'USD', array: $attributes['price']);
         $this->assertArrayHasKey(key: 'defaultPrice', array: $attributes['price']['USD']);
-        $this->assertSame(expected: 9.99, actual: $attributes['price']['USD']['defaultPrice']);
+        $this->assertSame(expected: 9999.99, actual: $attributes['price']['USD']['defaultPrice']);
         $this->assertArrayHasKey(key: 'salePrice', array: $attributes['price']['USD']);
-        $this->assertSame(expected: 9.99, actual: $attributes['price']['USD']['salePrice']);
+        $this->assertSame(expected: 9999.99, actual: $attributes['price']['USD']['salePrice']);
 
         $this->assertArrayHasKey(key: 'image', array: $attributes);
         $this->assertArrayHasKey(key: 'default', array: $attributes['image']);
@@ -784,7 +784,7 @@ class EntityIndexerServiceAddTest extends TestCase
             'type_id' => Type::TYPE_VIRTUAL,
             'name' => 'Klevu Virtual Product Test',
             'sku' => 'KLEVU-VIRTUAL-SKU-001',
-            'price' => 19.99,
+            'price' => 1900.99,
             'visibility' => Visibility::VISIBILITY_IN_CATALOG,
             'category_ids' => [
                 $topCategoryFixture->getId(),
@@ -897,9 +897,9 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->assertArrayHasKey(key: 'price', array: $attributes);
         $this->assertArrayHasKey(key: 'USD', array: $attributes['price']);
         $this->assertArrayHasKey(key: 'defaultPrice', array: $attributes['price']['USD']);
-        $this->assertSame(expected: 19.99, actual: $attributes['price']['USD']['defaultPrice']);
+        $this->assertSame(expected: 1900.99, actual: $attributes['price']['USD']['defaultPrice']);
         $this->assertArrayHasKey(key: 'salePrice', array: $attributes['price']['USD']);
-        $this->assertSame(expected: 19.99, actual: $attributes['price']['USD']['salePrice']);
+        $this->assertSame(expected: 1900.99, actual: $attributes['price']['USD']['salePrice']);
 
         $this->assertArrayHasKey(key: 'image', array: $attributes);
         $this->assertArrayHasKey(key: 'default', array: $attributes['image']);
@@ -1026,7 +1026,7 @@ class EntityIndexerServiceAddTest extends TestCase
             'type_id' => Type::TYPE_VIRTUAL,
             'name' => 'Klevu Virtual Product Test',
             'sku' => 'KLEVU-VIRTUAL-SKU-001',
-            'price' => 19.99,
+            'price' => 1900.99,
             'visibility' => Visibility::VISIBILITY_IN_CATALOG,
             'category_ids' => [
                 $topCategoryFixture->getId(),
@@ -1163,7 +1163,7 @@ class EntityIndexerServiceAddTest extends TestCase
             'type_id' => DownloadableType::TYPE_DOWNLOADABLE,
             'name' => 'Klevu Downloadable Product Test',
             'sku' => 'KLEVU-DOWNLOADABLE-SKU-001',
-            'price' => 99.99,
+            'price' => 9900.99,
             'visibility' => Visibility::VISIBILITY_IN_SEARCH,
             'category_ids' => [
                 $categoryFixture->getId(),
@@ -1171,7 +1171,7 @@ class EntityIndexerServiceAddTest extends TestCase
             'data' => [
                 'short_description' => 'This is a Downloadable product short description',
                 'description' => 'This is a Downloadable product longer description than the short description',
-                'special_price' => 54.99,
+                'special_price' => 5400.99,
                 'special_price_from' => '1970-01-01',
                 'special_price_to' => '2099-12-31',
             ],
@@ -1275,9 +1275,9 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->assertArrayHasKey(key: 'price', array: $attributes);
         $this->assertArrayHasKey(key: 'USD', array: $attributes['price']);
         $this->assertArrayHasKey(key: 'defaultPrice', array: $attributes['price']['USD']);
-        $this->assertSame(expected: 99.99, actual: $attributes['price']['USD']['defaultPrice']);
+        $this->assertSame(expected: 9900.99, actual: $attributes['price']['USD']['defaultPrice']);
         $this->assertArrayHasKey(key: 'salePrice', array: $attributes['price']['USD']);
-        $this->assertSame(expected: 54.99, actual: $attributes['price']['USD']['salePrice']);
+        $this->assertSame(expected: 5400.99, actual: $attributes['price']['USD']['salePrice']);
 
         $this->assertArrayHasKey(key: 'image', array: $attributes);
         $this->assertNull($attributes['image']);
@@ -1339,7 +1339,7 @@ class EntityIndexerServiceAddTest extends TestCase
             'key' => 'test_product_variant_1',
             'name' => 'Klevu Simple Product Test',
             'sku' => 'KLEVU-SIMPLE-SKU-001',
-            'price' => 49.99,
+            'price' => 4900.99,
             'in_stock' => true,
             'qty' => 3,
             'category_ids' => [
@@ -1357,7 +1357,7 @@ class EntityIndexerServiceAddTest extends TestCase
             'key' => 'test_product_variant_2',
             'name' => 'Klevu Simple Product Test',
             'sku' => 'KLEVU-SIMPLE-SKU-002',
-            'price' => 39.99,
+            'price' => 3900.99,
             'in_stock' => true,
             'qty' => 3,
             'category_ids' => [
@@ -1376,7 +1376,7 @@ class EntityIndexerServiceAddTest extends TestCase
             'type_id' => Configurable::TYPE_CODE,
             'name' => 'Klevu Configurable Product Test',
             'sku' => 'KLEVU-CONFIGURABLE-SKU-001',
-            'price' => 99.99,
+            'price' => 9900.99,
             'in_stock' => true,
             'visibility' => Visibility::VISIBILITY_IN_SEARCH,
             'category_ids' => [
@@ -1392,7 +1392,7 @@ class EntityIndexerServiceAddTest extends TestCase
             'data' => [
                 'short_description' => 'This is a Configurable product short description',
                 'description' => 'This is a Configurable product longer description than the short description',
-                'special_price' => 54.99,
+                'special_price' => 5400.99,
                 'special_price_from' => '1970-01-01',
                 'special_price_to' => '2099-12-31',
             ],
@@ -1514,7 +1514,7 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->assertArrayHasKey(key: 'USD', array: $attributes['price']);
         $this->assertArrayNotHasKey(key: 'defaultPrice', array: $attributes['price']['USD']);
         $this->assertArrayHasKey(key: 'salePrice', array: $attributes['price']['USD']);
-        $this->assertSame(expected: 39.99, actual: $attributes['price']['USD']['salePrice']);
+        $this->assertSame(expected: 3900.99, actual: $attributes['price']['USD']['salePrice']);
 
         $this->assertArrayHasKey(key: 'image', array: $attributes);
         $this->assertArrayHasKey(key: 'default', array: $attributes['image']);
@@ -1586,7 +1586,7 @@ class EntityIndexerServiceAddTest extends TestCase
             'key' => 'test_product_variant_1',
             'name' => 'Klevu Simple Product Test',
             'sku' => 'KLEVU-SIMPLE-SKU-001',
-            'price' => 99.99,
+            'price' => 9900.99,
             'in_stock' => false,
             'qty' => -3,
             'category_ids' => [
@@ -1597,7 +1597,7 @@ class EntityIndexerServiceAddTest extends TestCase
                 'short_description' => 'This is a short description variant 1',
                 'description' => 'This is a longer description than the short description variant 1',
                 $attributeFixture->getAttributeCode() => '1',
-                'special_price' => 49.99,
+                'special_price' => 4900.99,
                 'special_price_from' => '1970-01-01',
                 'special_price_to' => '2099-12-31',
             ],
@@ -1630,7 +1630,7 @@ class EntityIndexerServiceAddTest extends TestCase
             'key' => 'test_product_variant_2',
             'name' => 'Klevu Simple Product Test',
             'sku' => 'KLEVU-SIMPLE-SKU-002',
-            'price' => 99.99,
+            'price' => 9900.99,
             'in_stock' => true,
             'qty' => 100,
             'category_ids' => [
@@ -1641,7 +1641,7 @@ class EntityIndexerServiceAddTest extends TestCase
                 'short_description' => 'This is a short description variant 2',
                 'description' => 'This is a longer description than the short description variant 2',
                 $attributeFixture->getAttributeCode() => '2',
-                'special_price' => 39.99,
+                'special_price' => 3900.99,
                 'special_price_from' => '1970-01-01',
                 'special_price_to' => '2099-12-31',
             ],
@@ -1652,7 +1652,7 @@ class EntityIndexerServiceAddTest extends TestCase
             'type_id' => Configurable::TYPE_CODE,
             'name' => 'Klevu Configurable Product Test',
             'sku' => 'KLEVU-CONFIGURABLE-SKU-001',
-            'price' => 99.99,
+            'price' => 9900.99,
             'in_stock' => true,
             'visibility' => Visibility::VISIBILITY_IN_SEARCH,
             'category_ids' => [
@@ -1668,7 +1668,7 @@ class EntityIndexerServiceAddTest extends TestCase
             'data' => [
                 'short_description' => 'This is a Configurable product short description',
                 'description' => 'This is a Configurable product longer description than the short description',
-                'special_price' => 54.99,
+                'special_price' => 5400.99,
                 'special_price_from' => '1970-01-01',
                 'special_price_to' => '2099-12-31',
             ],
@@ -1758,9 +1758,9 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->assertArrayHasKey(key: 'price', array: $attributes);
         $this->assertArrayHasKey(key: 'USD', array: $attributes['price']);
         $this->assertArrayHasKey(key: 'defaultPrice', array: $attributes['price']['USD']);
-        $this->assertSame(expected: 99.99, actual: $attributes['price']['USD']['defaultPrice']);
+        $this->assertSame(expected: 9900.99, actual: $attributes['price']['USD']['defaultPrice']);
         $this->assertArrayHasKey(key: 'salePrice', array: $attributes['price']['USD']);
-        $this->assertSame(expected: 49.99, actual: $attributes['price']['USD']['salePrice']);
+        $this->assertSame(expected: 4900.99, actual: $attributes['price']['USD']['salePrice']);
 
         $this->assertArrayHasKey(key: 'image', array: $attributes);
         $this->assertArrayHasKey(key: 'default', array: $attributes['image']);
@@ -1827,7 +1827,7 @@ class EntityIndexerServiceAddTest extends TestCase
             'key' => 'test_product_simple_1',
             'name' => 'Klevu Simple Product Test',
             'sku' => 'KLEVU-SIMPLE-SKU-001',
-            'price' => 69.99,
+            'price' => 6900.99,
             'status' => Status::STATUS_DISABLED,
             'category_ids' => [
                 $topCategoryFixture->getId(),
@@ -1836,7 +1836,7 @@ class EntityIndexerServiceAddTest extends TestCase
             'data' => [
                 'short_description' => 'This is a short description variant 1',
                 'description' => 'This is a longer description than the short description variant 1',
-                'special_price' => 44.99,
+                'special_price' => 4400.99,
                 'special_price_from' => '1970-01-01',
                 'special_price_to' => '2099-12-31',
             ],
@@ -1846,7 +1846,7 @@ class EntityIndexerServiceAddTest extends TestCase
             'key' => 'test_product_simple_2',
             'name' => 'Klevu Simple Product Test',
             'sku' => 'KLEVU-SIMPLE-SKU-002',
-            'price' => 79.99,
+            'price' => 7900.99,
             'category_ids' => [
                 $topCategoryFixture->getId(),
                 $categoryFixture->getId(),
@@ -1854,7 +1854,7 @@ class EntityIndexerServiceAddTest extends TestCase
             'data' => [
                 'short_description' => 'This is a short description variant 2',
                 'description' => 'This is a longer description than the short description variant 2',
-                'special_price' => 49.99,
+                'special_price' => 4900.99,
                 'special_price_from' => '1970-01-01',
                 'special_price_to' => '2099-12-31',
             ],
@@ -1864,7 +1864,7 @@ class EntityIndexerServiceAddTest extends TestCase
             'key' => 'test_product_simple_3',
             'name' => 'Klevu Simple Product Test',
             'sku' => 'KLEVU-SIMPLE-SKU-003',
-            'price' => 89.99,
+            'price' => 8900.99,
             'category_ids' => [
                 $topCategoryFixture->getId(),
                 $categoryFixture->getId(),
@@ -1872,7 +1872,7 @@ class EntityIndexerServiceAddTest extends TestCase
             'data' => [
                 'short_description' => 'This is a short description variant 3',
                 'description' => 'This is a longer description than the short description variant 3',
-                'special_price' => 59.99,
+                'special_price' => 5900.99,
                 'special_price_from' => '1970-01-01',
                 'special_price_to' => '2099-12-31',
             ],
@@ -1882,7 +1882,7 @@ class EntityIndexerServiceAddTest extends TestCase
             'key' => 'test_product_simple_4',
             'name' => 'Klevu Simple Product Test',
             'sku' => 'KLEVU-SIMPLE-SKU-004',
-            'price' => 74.99,
+            'price' => 7400.99,
             'in_stock' => false,
             'qty' => 0,
             'category_ids' => [
@@ -1892,7 +1892,7 @@ class EntityIndexerServiceAddTest extends TestCase
             'data' => [
                 'short_description' => 'This is a short description variant 4',
                 'description' => 'This is a longer description than the short description variant 4',
-                'special_price' => 46.99,
+                'special_price' => 4600.99,
                 'special_price_from' => '1970-01-01',
                 'special_price_to' => '2099-12-31',
             ],
@@ -1903,7 +1903,7 @@ class EntityIndexerServiceAddTest extends TestCase
             'type_id' => Grouped::TYPE_CODE,
             'name' => 'Klevu Grouped Product Test',
             'sku' => 'KLEVU-GROUPED-SKU-001',
-            'price' => 99.99,
+            'price' => 9900.99,
             'visibility' => Visibility::VISIBILITY_BOTH,
             'category_ids' => [
                 $topCategoryFixture->getId(),
@@ -1918,7 +1918,7 @@ class EntityIndexerServiceAddTest extends TestCase
             'data' => [
                 'short_description' => 'This is a Grouped product short description',
                 'description' => 'This is a Grouped product longer description than the short description',
-                'special_price' => 54.99,
+                'special_price' => 5400.99,
                 'special_price_from' => '1970-01-01',
                 'special_price_to' => '2099-12-31',
             ],
@@ -2041,9 +2041,9 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->assertArrayHasKey(key: 'price', array: $attributes);
         $this->assertArrayHasKey(key: 'USD', array: $attributes['price']);
         $this->assertArrayHasKey(key: 'defaultPrice', array: $attributes['price']['USD']);
-        $this->assertSame(expected: 74.99, actual: $attributes['price']['USD']['defaultPrice']);
+        $this->assertSame(expected: 7400.99, actual: $attributes['price']['USD']['defaultPrice']);
         $this->assertArrayHasKey(key: 'salePrice', array: $attributes['price']['USD']);
-        $this->assertSame(expected: 46.99, actual: $attributes['price']['USD']['salePrice']);
+        $this->assertSame(expected: 4600.99, actual: $attributes['price']['USD']['salePrice']);
 
         $this->assertArrayHasKey(key: 'image', array: $attributes);
         $this->assertArrayHasKey(key: 'default', array: $attributes['image']);
@@ -2367,7 +2367,7 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->createProduct([
             'name' => 'Klevu Simple Product Test',
             'sku' => 'KLEVU-SIMPLE-SKU-001',
-            'price' => 9.99,
+            'price' => 9999.99,
             'category_ids' => [
                 $topCategoryFixture->getId(),
                 $categoryFixture->getId(),
@@ -2492,9 +2492,9 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->assertArrayHasKey(key: 'price', array: $attributes);
         $this->assertArrayHasKey(key: 'USD', array: $attributes['price']);
         $this->assertArrayHasKey(key: 'defaultPrice', array: $attributes['price']['USD']);
-        $this->assertSame(expected: 9.99, actual: $attributes['price']['USD']['defaultPrice']);
+        $this->assertSame(expected: 9999.99, actual: $attributes['price']['USD']['defaultPrice']);
         $this->assertArrayHasKey(key: 'salePrice', array: $attributes['price']['USD']);
-        $this->assertSame(expected: 9.99, actual: $attributes['price']['USD']['salePrice']);
+        $this->assertSame(expected: 9999.99, actual: $attributes['price']['USD']['salePrice']);
 
         $this->assertArrayHasKey(key: 'image', array: $attributes);
         $this->assertArrayHasKey(key: 'default', array: $attributes['image']);

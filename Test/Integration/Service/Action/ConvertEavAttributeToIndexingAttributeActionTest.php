@@ -625,6 +625,66 @@ class ConvertEavAttributeToIndexingAttributeActionTest extends TestCase
     }
 
     /**
+     * @dataProvider dataProvider_testExecute_WithAttributeTypeMapping_Determined
+     *
+     * @param mixed[] $attributeData
+     * @param DataType|null $expectedDataType
+     *
+     * @return void
+     * @throws NoSuchEntityException
+     * @throws AttributeMappingMissingException
+     */
+    public function testExecute_WithAttributeTypeMapping_Determined_ForStaticAttributes(
+        array $attributeData,
+        ?DataType $expectedDataType,
+    ): void {
+        $this->createAttribute(
+            attributeData: array_merge(
+                $attributeData,
+                [
+                    'key' => 'klevu_test_attribute_attributeMappingDetermined',
+                ],
+            ),
+        );
+        $attributeFixture = $this->attributeFixturePool->get('klevu_test_attribute_attributeMappingDetermined');
+        $magentoAttribute = $attributeFixture->getAttribute();
+
+        $convertEavAttributeToIndexingAttributeAction = $this->instantiateTestObject();
+
+        $resultWithoutStore = $convertEavAttributeToIndexingAttributeAction->execute(
+            entityType: 'KLEVU_PRODUCT_STATIC',
+            attribute: $magentoAttribute,
+            store: null,
+        );
+
+        $this->assertInstanceOf(
+            expected: MagentoAttributeInterface::class,
+            actual: $resultWithoutStore,
+        );
+        $this->assertEquals(
+            expected: $expectedDataType,
+            actual: $resultWithoutStore->getKlevuAttributeType(),
+            message: 'klevu_attribute_type (without store)',
+        );
+
+        $resultWithStore = $convertEavAttributeToIndexingAttributeAction->execute(
+            entityType: 'KLEVU_PRODUCT',
+            attribute: $magentoAttribute,
+            store: $this->storeManager->getStore('default'),
+        );
+
+        $this->assertInstanceOf(
+            expected: MagentoAttributeInterface::class,
+            actual: $resultWithStore,
+        );
+        $this->assertEquals(
+            expected: $expectedDataType,
+            actual: $resultWithStore->getKlevuAttributeType(),
+            message: 'klevu_attribute_type (without store)',
+        );
+    }
+
+    /**
      * @return MockObject&ObserverInterface
      */
     private function getMockObserver(): MockObject

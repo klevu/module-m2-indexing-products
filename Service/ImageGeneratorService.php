@@ -60,7 +60,8 @@ class ImageGeneratorService implements ImageGeneratorServiceInterface
      * @param int|null $height
      * @param int|null $storeId
      *
-     * @return string
+     * @return string|null
+     * @throws LocalizedException
      */
     public function execute(
         string $imagePath,
@@ -68,7 +69,7 @@ class ImageGeneratorService implements ImageGeneratorServiceInterface
         ?int $width = null,
         ?int $height = null,
         ?int $storeId = null,
-    ): string {
+    ): ?string {
         $this->setAreaCode();
         $imageParams = $this->generateImageParams(
             imageType: $imageType,
