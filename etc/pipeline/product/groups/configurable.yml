@@ -11,6 +11,10 @@ stages:
     stages:
       SetCustomerGroupId:
         pipeline: Stage\SetCustomerGroupId
+      RegisterCurrentGroupId:
+        pipeline: Stage\RegisterContext
+        args:
+          contextKey: "currentGroupId"
       CreateCurrentGroupKey:
         pipeline: Stage\Transform
         args:
@@ -29,7 +33,7 @@ stages:
                 pipeline: Pipeline\CreateRecord
                 stages:
                   price:
-                    import: Klevu_IndexingProducts::etc/pipeline/product/attributes/price/configurable.yml
+                    import: Klevu_IndexingProducts::etc/pipeline/product/groups/attributes/price/configurable.yml
   FormatCustomerGroups:
     pipeline: Stage\Transform
     args:

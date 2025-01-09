@@ -27,6 +27,11 @@ use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
 use TddWizard\Fixtures\Catalog\ProductFixturePool;
 
+/**
+ * @covers ToFinalPrice::class
+ * @method TransformerInterface instantiateTestObject(?array $arguments = null)
+ * @method TransformerInterface instantiateTestObjectFromInterface(?array $arguments = null)
+ */
 class ToFinalPriceTransformerTest extends TestCase
 {
     use CustomerGroupTrait;

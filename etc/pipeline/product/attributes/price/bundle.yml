@@ -11,7 +11,8 @@ stages:
               extraction: currentProduct::
               transformations:
                 - ToBundlePrice("regular_price")
-                - FormatNumber("2",".")
+                - ToPriceIncludingTax($currentProduct::, null)
+                - FormatNumber("2",".","")
                 - ToFloat
       salePrice:
         stages:
@@ -21,7 +22,8 @@ stages:
               extraction: currentProduct::
               transformations:
                 - ToBundlePrice("final_price")
-                - FormatNumber("2",".")
+                - ToPriceIncludingTax($currentProduct::, null)
+                - FormatNumber("2",".","")
                 - ToFloat
       startPrice:
         stages:
@@ -31,7 +33,8 @@ stages:
               extraction: currentProduct::
               transformations:
                 - ToBundlePrice("min_final_price")
-                - FormatNumber("2",".")
+                - ToPriceIncludingTax($currentProduct::, null)
+                - FormatNumber("2",".","")
                 - ToFloat
       toPrice:
         stages:
@@ -41,5 +44,6 @@ stages:
               extraction: currentProduct::
               transformations:
                 - ToBundlePrice("max_final_price")
-                - FormatNumber("2",".")
+                - ToPriceIncludingTax($currentProduct::, null)
+                - FormatNumber("2",".","")
                 - ToFloat
