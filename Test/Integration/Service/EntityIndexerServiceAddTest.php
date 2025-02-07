@@ -28,6 +28,10 @@ use Klevu\TestFixtures\Catalog\CategoryTrait;
 use Klevu\TestFixtures\Catalog\ProductTrait;
 use Klevu\TestFixtures\Catalog\Review\ReviewFixturePool;
 use Klevu\TestFixtures\Catalog\ReviewTrait;
+use Klevu\TestFixtures\Catalog\Rule\RuleFixturePool;
+use Klevu\TestFixtures\Catalog\RuleTrait;
+use Klevu\TestFixtures\Customer\CustomerGroupTrait;
+use Klevu\TestFixtures\Customer\Group\CustomerGroupFixturePool;
 use Klevu\TestFixtures\Store\StoreFixturesPool;
 use Klevu\TestFixtures\Store\StoreTrait;
 use Klevu\TestFixtures\Traits\ObjectInstantiationTrait;
@@ -63,11 +67,13 @@ class EntityIndexerServiceAddTest extends TestCase
 {
     use AttributeTrait;
     use CategoryTrait;
+    use CustomerGroupTrait;
     use IndexingEntitiesTrait;
     use ObjectInstantiationTrait;
     use PipelineEntityApiCallTrait;
     use ProductTrait;
     use ReviewTrait;
+    use RuleTrait;
     use SetAuthKeysTrait;
     use StoreTrait;
     use TestImplementsInterfaceTrait;
@@ -101,6 +107,8 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->fileIo = $this->objectManager->get(FileIo::class);
 
         $this->storeFixturesPool = $this->objectManager->get(StoreFixturesPool::class);
+        $this->customerGroupFixturePool = $this->objectManager->get(CustomerGroupFixturePool::class);
+        $this->ruleFixturePool = $this->objectManager->get(RuleFixturePool::class);
         $this->attributeFixturePool = $this->objectManager->get(AttributeFixturePool::class);
         $this->categoryFixturePool = $this->objectManager->get(CategoryFixturePool::class);
         $this->productFixturePool = $this->objectManager->get(ProductFixturePool::class);
@@ -119,6 +127,8 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->productFixturePool->rollback();
         $this->categoryFixturePool->rollback();
         $this->attributeFixturePool->rollback();
+        $this->ruleFixturePool->rollback();
+        $this->customerGroupFixturePool->rollback();
         $this->storeFixturesPool->rollback();
     }
 
@@ -348,6 +358,7 @@ class EntityIndexerServiceAddTest extends TestCase
     /**
      * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
+     * @magentoConfigFixture default_currency_options_base USD
      */
     public function testExecute_ReturnsSuccess_WhenSimpleProductAdded(): void
     {
@@ -415,6 +426,24 @@ class EntityIndexerServiceAddTest extends TestCase
             'customer_id' => null,
             'store_id' => $storeFixture->getId(),
             'ratings' => $ratings,
+        ]);
+
+        $this->createCustomerGroup();
+        $customerGroupFixture = $this->customerGroupFixturePool->get('test_customer_group');
+
+        $this->createRule([
+            'website_ids' => [$storeFixture->getWebsiteId()],
+            'customer_group_ids' => [$customerGroupFixture->getId()],
+            'from_date' => date('Y-m-d H:i:s', time() - (24 * 60 * 60)),
+            'from_to' => date('Y-m-d H:i:s', time() + (24 * 60 * 60)),
+            'discount_amount' => 10,
+            'is_percent' => true,
+            'conditions' => [
+                [
+                    'attribute' => 'sku',
+                    'value' => $productFixture->getSku(),
+                ],
+            ],
         ]);
 
         $this->cleanIndexingEntities(apiKey: $apiKey);
@@ -537,6 +566,18 @@ class EntityIndexerServiceAddTest extends TestCase
 
         $this->assertArrayHasKey(key: 'ratingCount', array: $attributes);
         $this->assertSame(expected: 1, actual: $attributes['ratingCount']);
+
+        $groups = $record->getGroups();
+        $this->assertArrayHasKey(key: 'grp_' . $customerGroupFixture->getId(), array: $groups);
+        $this->assertArrayHasKey(key: 'attributes', array: $groups['grp_' . $customerGroupFixture->getId()]);
+        $groupAttributes = $groups['grp_' . $customerGroupFixture->getId()]['attributes'];
+        $this->assertArrayHasKey(key: 'price', array: $groupAttributes);
+        $this->assertArrayHasKey(key: 'USD', array: $groupAttributes['price']);
+        $groupPrices = $groupAttributes['price']['USD'];
+        $this->assertArrayHasKey(key: 'defaultPrice', array: $groupPrices);
+        $this->assertSame(expected: 9999.99, actual: $groupPrices['defaultPrice']);
+        $this->assertArrayHasKey(key: 'salePrice', array: $groupPrices);
+        $this->assertSame(expected: 8999.99, actual: $groupPrices['salePrice']);
 
         $this->cleanIndexingEntities(apiKey: $apiKey);
     }
@@ -800,6 +841,24 @@ class EntityIndexerServiceAddTest extends TestCase
         ]);
         $productFixture = $this->productFixturePool->get('test_product');
 
+        $this->createCustomerGroup();
+        $customerGroupFixture = $this->customerGroupFixturePool->get('test_customer_group');
+
+        $this->createRule([
+            'website_ids' => [$storeFixture->getWebsiteId()],
+            'customer_group_ids' => [$customerGroupFixture->getId()],
+            'from_date' => date('Y-m-d H:i:s', time() - (24 * 60 * 60)),
+            'from_to' => date('Y-m-d H:i:s', time() + (24 * 60 * 60)),
+            'discount_amount' => 10,
+            'is_percent' => true,
+            'conditions' => [
+                [
+                    'attribute' => 'sku',
+                    'value' => $productFixture->getSku(),
+                ],
+            ],
+        ]);
+
         $this->cleanIndexingEntities(apiKey: $apiKey);
         $this->createIndexingEntity([
             IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
@@ -920,6 +979,18 @@ class EntityIndexerServiceAddTest extends TestCase
 
         $this->assertArrayHasKey(key: 'ratingCount', array: $attributes);
         $this->assertSame(expected: 0, actual: $attributes['ratingCount']);
+
+        $groups = $record->getGroups();
+        $this->assertArrayHasKey(key: 'grp_' . $customerGroupFixture->getId(), array: $groups);
+        $this->assertArrayHasKey(key: 'attributes', array: $groups['grp_' . $customerGroupFixture->getId()]);
+        $groupAttributes = $groups['grp_' . $customerGroupFixture->getId()]['attributes'];
+        $this->assertArrayHasKey(key: 'price', array: $groupAttributes);
+        $this->assertArrayHasKey(key: 'USD', array: $groupAttributes['price']);
+        $groupPrices = $groupAttributes['price']['USD'];
+        $this->assertArrayHasKey(key: 'defaultPrice', array: $groupPrices);
+        $this->assertSame(expected: 1900.99, actual: $groupPrices['defaultPrice']);
+        $this->assertArrayHasKey(key: 'salePrice', array: $groupPrices);
+        $this->assertSame(expected: 1710.89, actual: $groupPrices['salePrice']);
 
         $this->cleanIndexingEntities(apiKey: $apiKey);
     }
@@ -1178,6 +1249,24 @@ class EntityIndexerServiceAddTest extends TestCase
         ]);
         $productFixture = $this->productFixturePool->get('test_product');
 
+        $this->createCustomerGroup();
+        $customerGroupFixture = $this->customerGroupFixturePool->get('test_customer_group');
+
+        $this->createRule([
+            'website_ids' => [$storeFixture->getWebsiteId()],
+            'customer_group_ids' => [$customerGroupFixture->getId()],
+            'from_date' => date('Y-m-d H:i:s', time() - (24 * 60 * 60)),
+            'from_to' => date('Y-m-d H:i:s', time() + (24 * 60 * 60)),
+            'discount_amount' => 50,
+            'is_percent' => true,
+            'conditions' => [
+                [
+                    'attribute' => 'sku',
+                    'value' => $productFixture->getSku(),
+                ],
+            ],
+        ]);
+
         $this->cleanIndexingEntities(apiKey: $apiKey);
         $this->createIndexingEntity([
             IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
@@ -1287,6 +1376,18 @@ class EntityIndexerServiceAddTest extends TestCase
 
         $this->assertArrayHasKey(key: 'ratingCount', array: $attributes);
         $this->assertSame(expected: 0, actual: $attributes['ratingCount']);
+
+        $groups = $record->getGroups();
+        $this->assertArrayHasKey(key: 'grp_' . $customerGroupFixture->getId(), array: $groups);
+        $this->assertArrayHasKey(key: 'attributes', array: $groups['grp_' . $customerGroupFixture->getId()]);
+        $groupAttributes = $groups['grp_' . $customerGroupFixture->getId()]['attributes'];
+        $this->assertArrayHasKey(key: 'price', array: $groupAttributes);
+        $this->assertArrayHasKey(key: 'USD', array: $groupAttributes['price']);
+        $groupPrices = $groupAttributes['price']['USD'];
+        $this->assertArrayHasKey(key: 'defaultPrice', array: $groupPrices);
+        $this->assertSame(expected: 9900.99, actual: $groupPrices['defaultPrice']);
+        $this->assertArrayHasKey(key: 'salePrice', array: $groupPrices);
+        $this->assertSame(expected: 4950.50, actual: $groupPrices['salePrice']);
 
         $this->cleanIndexingEntities(apiKey: $apiKey);
     }
@@ -1416,6 +1517,9 @@ class EntityIndexerServiceAddTest extends TestCase
             'ratings' => $ratings,
         ]);
 
+        $this->createCustomerGroup();
+        $customerGroupFixture = $this->customerGroupFixturePool->get('test_customer_group');
+
         $this->cleanIndexingEntities(apiKey: $apiKey);
         $this->createIndexingEntity([
             IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
@@ -1518,8 +1622,7 @@ class EntityIndexerServiceAddTest extends TestCase
 
         $this->assertArrayHasKey(key: 'image', array: $attributes);
         $this->assertArrayHasKey(key: 'default', array: $attributes['image']);
-        $image = $attributes['image']['default'];
-        $this->assertArrayHasKey(key: 'height', array: $image);
+        $image = $attributes['image']['default'];$this->assertArrayHasKey(key: 'height', array: $image);
         $this->assertSame(expected: 800, actual: $image['height']);
         $this->assertArrayHasKey(key: 'width', array: $image);
         $this->assertSame(expected: 800, actual: $image['width']);
@@ -1535,6 +1638,16 @@ class EntityIndexerServiceAddTest extends TestCase
 
         $this->assertArrayHasKey(key: 'ratingCount', array: $attributes);
         $this->assertSame(expected: 1, actual: $attributes['ratingCount']);
+
+        $groups = $record->getGroups();
+        $this->assertArrayHasKey(key: 'grp_' . $customerGroupFixture->getId(), array: $groups);
+        $this->assertArrayHasKey(key: 'attributes', array: $groups['grp_' . $customerGroupFixture->getId()]);
+        $groupAttributes = $groups['grp_' . $customerGroupFixture->getId()]['attributes'];
+        $this->assertArrayHasKey(key: 'price', array: $groupAttributes);
+        $this->assertArrayHasKey(key: 'USD', array: $groupAttributes['price']);
+        $groupPrices = $groupAttributes['price']['USD'];
+        $this->assertArrayHasKey(key: 'salePrice', array: $groupPrices);
+        $this->assertSame(expected: 3900.99, actual: $groupPrices['salePrice']);
 
         $this->cleanIndexingEntities(apiKey: $apiKey);
     }
@@ -1944,6 +2057,9 @@ class EntityIndexerServiceAddTest extends TestCase
             'ratings' => $ratings,
         ]);
 
+        $this->createCustomerGroup();
+        $customerGroupFixture = $this->customerGroupFixturePool->get('test_customer_group');
+
         $this->cleanIndexingEntities(apiKey: $apiKey);
         $this->createIndexingEntity([
             IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
@@ -2064,6 +2180,20 @@ class EntityIndexerServiceAddTest extends TestCase
 
         $this->assertArrayHasKey(key: 'ratingCount', array: $attributes);
         $this->assertSame(expected: 1, actual: $attributes['ratingCount']);
+
+        $groups = $record->getGroups();
+        $this->assertArrayHasKey(key: 'grp_' . $customerGroupFixture->getId(), array: $groups);
+        $this->assertArrayHasKey(key: 'attributes', array: $groups['grp_' . $customerGroupFixture->getId()]);
+        $groupAttributes = $groups['grp_' . $customerGroupFixture->getId()]['attributes'];
+        $this->assertArrayHasKey(key: 'price', array: $groupAttributes);
+        $this->assertArrayHasKey(key: 'USD', array: $groupAttributes['price']);
+        $groupPrices = $groupAttributes['price']['USD'];
+        $this->assertArrayHasKey(key: 'defaultPrice', array: $groupPrices);
+        $this->assertSame(expected: 7400.99, actual: $groupPrices['defaultPrice']);
+        $this->assertArrayHasKey(key: 'salePrice', array: $groupPrices);
+        $this->assertSame(expected: 4600.99, actual: $groupPrices['salePrice']);
+        $this->assertArrayHasKey(key: 'startPrice', array: $groupPrices);
+        $this->assertSame(expected: 4600.99, actual: $groupPrices['salePrice']);
 
         $this->cleanIndexingEntities(apiKey: $apiKey);
     }
