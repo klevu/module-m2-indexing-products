@@ -35,7 +35,7 @@ stages:
                       extraction: minPriceProduct::getPrice()
                       transformations:
                         - ToPriceIncludingTax($currentProduct::, $currentGroupId::)
-                        - FormatNumber("2", ".")
+                        - FormatNumber("2", ".", "")
                         - ToFloat
               defaultPrice:
                 pipeline: Stage\StaticValue
@@ -61,7 +61,7 @@ stages:
                       transformations:
                         - ToFinalPrice(1)
                         - ToPriceIncludingTax($currentProduct::, $currentGroupId::)
-                        - FormatNumber("2", ".")
+                        - FormatNumber("2", ".", "")
                         - ToFloat
               defaultFinalPrice:
                 pipeline: Stage\StaticValue
@@ -87,7 +87,7 @@ stages:
                       transformations:
                         - ToFinalPrice(1)
                         - ToPriceIncludingTax($currentProduct::, $currentGroupId::)
-                        - FormatNumber("2", ".")
+                        - FormatNumber("2", ".", "")
                         - ToFloat
               defaultFinalPrice:
                 pipeline: Stage\StaticValue

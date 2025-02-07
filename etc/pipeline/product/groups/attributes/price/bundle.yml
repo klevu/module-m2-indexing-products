@@ -12,7 +12,7 @@ stages:
               transformations:
                 - ToBundlePrice("regular_price")
                 - ToPriceIncludingTax($currentProduct::, $currentGroupId::)
-                - FormatNumber("2", ".")
+                - FormatNumber("2", ".", "")
                 - ToFloat
       salePrice:
         stages:
@@ -23,7 +23,7 @@ stages:
               transformations:
                 - ToBundlePrice("final_price")
                 - ToPriceIncludingTax($currentProduct::, $currentGroupId::)
-                - FormatNumber("2", ".")
+                - FormatNumber("2", ".", "")
                 - ToFloat
       startPrice:
         stages:
@@ -34,7 +34,7 @@ stages:
               transformations:
                 - ToBundlePrice("min_final_price")
                 - ToPriceIncludingTax($currentProduct::, $currentGroupId::)
-                - FormatNumber("2", ".")
+                - FormatNumber("2", ".", "")
                 - ToFloat
       toPrice:
         stages:
@@ -45,5 +45,5 @@ stages:
               transformations:
                 - ToBundlePrice("max_final_price")
                 - ToPriceIncludingTax($currentProduct::, $currentGroupId::)
-                - FormatNumber("2", ".")
+                - FormatNumber("2", ".", "")
                 - ToFloat

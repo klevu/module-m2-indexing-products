@@ -43,7 +43,7 @@ class ToPriceIncludingTax implements TransformerInterface
      * @param ArgumentIterator|null $arguments
      * @param \ArrayAccess<int|string, mixed>|null $context
      *
-     * @return float
+     * @return float|null
      * @throws TransformationException
      */
     public function transform(
@@ -51,7 +51,10 @@ class ToPriceIncludingTax implements TransformerInterface
         ?ArgumentIterator $arguments = null,
         // phpcs:ignore SlevomatCodingStandard.Functions.UnusedParameter.UnusedParameter
         ?\ArrayAccess $context = null,
-    ): float {
+    ): ?float {
+        if (null === $data) {
+            return null;
+        }
         if (!is_numeric($data)) {
             throw new InvalidInputDataException(
                 transformerName: $this::class,

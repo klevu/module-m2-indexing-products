@@ -11,7 +11,7 @@ stages:
               extraction: currentProduct::getPrice()
               transformations:
                 - ToPriceIncludingTax($currentProduct::, $currentGroupId::)
-                - FormatNumber("2", ".")
+                - FormatNumber("2", ".", "")
                 - ToFloat
       salePrice:
         stages:
@@ -22,5 +22,5 @@ stages:
               transformations:
                 - ToFinalPrice(1)
                 - ToPriceIncludingTax($currentProduct::, $currentGroupId::)
-                - FormatNumber("2", ".")
+                - FormatNumber("2", ".", "")
                 - ToFloat

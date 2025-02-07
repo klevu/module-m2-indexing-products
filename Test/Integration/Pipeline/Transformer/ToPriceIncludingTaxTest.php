@@ -104,7 +104,6 @@ class ToPriceIncludingTaxTest extends TestCase
     public function testTransform_ThrowsException_WhenInvalidDataType_dataProvider(): array
     {
         return [
-            [null],
             ['string'],
             ['1234a'],
             [true],
@@ -213,6 +212,14 @@ class ToPriceIncludingTaxTest extends TestCase
             [new DataObject()],
             [[1.234]],
         ];
+    }
+
+    public function testTransform_ReturnsNull_WhenPriceIsNull(): void
+    {
+        $transformer = $this->instantiateTestObject();
+        $result = $transformer->transform(data: null);
+
+        $this->assertNull(actual: $result);
     }
 
     /**

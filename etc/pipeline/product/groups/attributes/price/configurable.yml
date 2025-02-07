@@ -12,5 +12,5 @@ stages:
               transformations:
                 - ToFinalPrice(1)
                 - ToPriceIncludingTax($currentProduct::, $currentGroupId::)
-                - FormatNumber("2", ".")
+                - FormatNumber("2", ".", "")
                 - ToFloat
