@@ -61,6 +61,10 @@ class FrameworkImageProviderTest extends TestCase
         $this->productFixturePool->rollback();
     }
 
+    /**
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     */
     public function testGet_ReturnsImage(): void
     {
         $this->createProduct([

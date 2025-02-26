@@ -167,7 +167,7 @@ class OutOfStockProductsIsIndexableCondition implements IsIndexableConditionInte
     {
         $scope = $this->scopeProvider->getCurrentScope();
         $scopeObject = $scope->getScopeObject();
-        if ($scope->getScopeType() === 'stores') {
+        if ($scopeObject && $scope->getScopeType() === 'stores') {
             $scopeId = $scopeObject->getWebsiteId();
         } else {
             $scopeId = $scope->getScopeId();

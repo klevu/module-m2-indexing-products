@@ -69,6 +69,7 @@ class AttributeTextProviderTest extends TestCase
     }
 
     /**
+     * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      */
     public function testGet_ThrowsException_WhenAttributeCodeNotValid(): void

@@ -67,6 +67,7 @@ class ImageGeneratorServiceTest extends TestCase
     }
 
     /**
+     * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      */
     public function testExecute_ReturnsResizedImageRelativePath(): void

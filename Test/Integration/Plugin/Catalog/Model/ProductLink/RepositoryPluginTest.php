@@ -129,6 +129,7 @@ class RepositoryPluginTest extends TestCase
 
         $this->createIndexingEntity([
             IndexingEntity::TARGET_ID => $simpleProduct1Fixture->getId(),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
             IndexingEntity::LAST_ACTION => Actions::ADD,
@@ -136,6 +137,7 @@ class RepositoryPluginTest extends TestCase
         ]);
         $this->createIndexingEntity([
             IndexingEntity::TARGET_ID => $simpleProduct2Fixture->getId(),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
             IndexingEntity::LAST_ACTION => Actions::ADD,
@@ -143,6 +145,7 @@ class RepositoryPluginTest extends TestCase
         ]);
         $this->createIndexingEntity([
             IndexingEntity::TARGET_ID => $groupedProductFixture->getId(),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'grouped',
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
             IndexingEntity::LAST_ACTION => Actions::ADD,
@@ -243,6 +246,7 @@ class RepositoryPluginTest extends TestCase
 
         $this->createIndexingEntity([
             IndexingEntity::TARGET_ID => $simpleProduct1Fixture->getId(),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
             IndexingEntity::LAST_ACTION => Actions::ADD,
@@ -250,6 +254,7 @@ class RepositoryPluginTest extends TestCase
         ]);
         $this->createIndexingEntity([
             IndexingEntity::TARGET_ID => $simpleProduct2Fixture->getId(),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
             IndexingEntity::LAST_ACTION => Actions::ADD,
@@ -257,6 +262,7 @@ class RepositoryPluginTest extends TestCase
         ]);
         $this->createIndexingEntity([
             IndexingEntity::TARGET_ID => $groupedProductFixture->getId(),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'grouped',
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
             IndexingEntity::LAST_ACTION => Actions::ADD,

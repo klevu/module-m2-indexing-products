@@ -13,6 +13,7 @@ use Klevu\Indexing\Service\Provider\AttributeDiscoveryProvider;
 use Klevu\IndexingApi\Model\MagentoAttributeInterface;
 use Klevu\IndexingApi\Model\Source\IndexType;
 use Klevu\IndexingApi\Service\Provider\AttributeDiscoveryProviderInterface;
+use Klevu\IndexingProducts\Model\Attribute\KlevuParentSkuInterface;
 use Klevu\IndexingProducts\Service\Provider\AttributeDiscoveryProvider as AttributeDiscoveryProviderVirtualType;
 use Klevu\TestFixtures\Catalog\Attribute\AttributeFixturePool;
 use Klevu\TestFixtures\Catalog\AttributeTrait;
@@ -212,5 +213,43 @@ class AttributeDiscoveryProviderTest extends TestCase
         $this->assertSame(expected: $apiKey, actual: $productAttribute2->getApiKey());
         $this->assertFalse(condition: $productAttribute2->isIndexable());
         $this->assertSame(expected: 'klevu_test_attribute_2', actual: $productAttribute2->getKlevuAttributeName());
+    }
+
+    /**
+     * @magentoDbIsolation disabled
+     */
+    public function testGetData_ReturnsParentSkuStaticAttribute_BasedOnIndexType(): void
+    {
+        $apiKey = 'klevu-js-api-key';
+
+        $this->createStore();
+        $storeFixture = $this->storeFixturesPool->get('test_store');
+        $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
+        $scopeProvider->setCurrentScope(scope: $storeFixture->get());
+        $this->setAuthKeys(
+            $scopeProvider,
+            $apiKey,
+            'rest-auth-key',
+        );
+        $scopeProvider->unsetCurrentScope();
+
+        $provider = $this->instantiateTestObject();
+        $productAttributesByApiKey = $provider->getData([$apiKey]);
+        $this->assertCount(expectedCount: 1, haystack: $productAttributesByApiKey);
+        $productAttributes = $productAttributesByApiKey[$apiKey];
+
+        $this->assertArrayHasKey(key: KlevuParentSkuInterface::ATTRIBUTE_ID, array: $productAttributes);
+        /** @var MagentoAttributeInterface $parentSkuAttribute */
+        $parentSkuAttribute = $productAttributes[KlevuParentSkuInterface::ATTRIBUTE_ID];
+        $this->assertSame(
+            expected: KlevuParentSkuInterface::ATTRIBUTE_ID,
+            actual: $parentSkuAttribute->getAttributeId(),
+        );
+        $this->assertSame(expected: $apiKey, actual: $parentSkuAttribute->getApiKey());
+        $this->assertTrue(condition: $parentSkuAttribute->isIndexable());
+        $this->assertSame(
+            expected: KlevuParentSkuInterface::ATTRIBUTE_CODE,
+            actual: $parentSkuAttribute->getKlevuAttributeName(),
+        );
     }
 }

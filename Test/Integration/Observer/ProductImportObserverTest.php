@@ -211,6 +211,7 @@ class ProductImportObserverTest extends TestCase
         $this->createIndexingEntity([
             IndexingEntity::TARGET_ID => $productFixture->getId(),
             IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
             IndexingEntity::LAST_ACTION => Actions::ADD,

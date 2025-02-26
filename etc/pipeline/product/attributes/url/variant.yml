@@ -1,8 +1,21 @@
 stages:
   getVariantUrl:
-    pipeline: Stage\Extract
-    args:
-      extraction: currentParentProduct::getProductUrl()
-      transformations:
-        # @TODO get configurable attributes and append to URL
-        - Append()
+    pipeline: Pipeline\Fallback
+    stages:
+      getData:
+        stages:
+          extract:
+            pipeline: Stage\Extract
+            args:
+              extraction: currentParentProduct::getProductUrl()
+              transformations:
+                - ToString
+                - Trim
+          validate:
+            pipeline: Stage\Validate
+            args:
+              validation: IsNotEqualTo("", false)
+          transform:
+            pipeline: Stage\Transform
+            args:
+              transformation: Append()  # @TODO get configurable attributes and append to URL

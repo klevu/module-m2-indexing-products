@@ -110,15 +110,11 @@ class AddEntityIndexingRecordProviderTest extends TestCase
 
         $provider = $this->instantiateTestObject();
         $generator = $provider->get(apiKey: $apiKey);
-
-        /** @var EntityIndexingRecordInterface[] $result */
-        $result = [];
-        foreach ($generator as $indexingRecords) {
-            $result[] = $indexingRecords;
-        }
-        $this->assertCount(expectedCount: 1, haystack: $result);
-        $this->assertCount(expectedCount: 1, haystack: $result[0]);
-        $indexingRecord = $result[0][0] ?? null;
+        /** @var EntityIndexingRecordInterface[] $results */
+        $results = $generator->current();
+        $this->assertCount(expectedCount: 1, haystack: $results);
+        $keys = array_keys($results);
+        $indexingRecord = $results[$keys[0]];
 
         $this->assertNotNull(actual: (int)$indexingRecord->getRecordId());
         $this->assertSame(
@@ -207,42 +203,33 @@ class AddEntityIndexingRecordProviderTest extends TestCase
         $generator = $provider->get(apiKey: $apiKey);
 
         /** @var EntityIndexingRecordInterface[] $results */
-        $results = [];
-        foreach ($generator as $indexingRecords) {
-            $results[] = $indexingRecords;
-        }
-        $this->assertCount(expectedCount: 1, haystack: $results);
-        $this->assertCount(expectedCount: 2, haystack: $results[0]);
-        $result1Array = array_filter(
-            array: $results[0],
-            callback: static fn (EntityIndexingRecordInterface $record) => ($record->getParent() !== null),
-        );
-        $result1 = array_shift($result1Array);
+        $results = $generator->current();
+
+        $this->assertCount(expectedCount: 2, haystack: $results);
+        $keys = array_keys($results);
+
+        $result1 = $results[$keys[0]];
         $this->assertSame(
             expected: $variantRecord->getId(),
             actual: $result1->getRecordId(),
         );
         $this->assertSame(
             expected: (int)$productFixture->getId(),
-            actual: (int)$result1->getEntity()?->getId(),
+            actual: (int)$result1->getEntity()->getId(),
         );
         $this->assertSame(
             expected: (int)$configurableProductFixture->getId(),
             actual: (int)$result1->getParent()?->getId(),
         );
 
-        $result2Array = array_filter(
-            array: $results[0],
-            callback: static fn (EntityIndexingRecordInterface $record) => ($record->getParent() === null),
-        );
-        $result2 = array_shift($result2Array);
+        $result2 = $results[$keys[1]];
         $this->assertSame(
             expected: $parentRecord->getId(),
             actual: $result2->getRecordId(),
         );
         $this->assertSame(
             expected: (int)$configurableProductFixture->getId(),
-            actual: (int)$result2->getEntity()?->getId(),
+            actual: (int)$result2->getEntity()->getId(),
         );
         $this->assertNull(actual: $result2->getParent());
 
@@ -311,20 +298,19 @@ class AddEntityIndexingRecordProviderTest extends TestCase
         $generator = $provider->get(apiKey: $apiKey);
 
         /** @var EntityIndexingRecordInterface[] $results */
-        $results = [];
-        foreach ($generator as $indexingRecords) {
-            $results[] = $indexingRecords;
-        }
+        $results = $generator->current();
+
         $this->assertCount(expectedCount: 1, haystack: $results);
-        $this->assertCount(expectedCount: 1, haystack: $results[0]);
-        $result1 = array_shift($results[0]);
+        $keys = array_keys($results);
+        $result1 = $results[$keys[0]];
+
         $this->assertSame(
             expected: $indexingEntity->getId(),
             actual: $result1->getRecordId(),
         );
         $this->assertSame(
             expected: (int)$groupedProductFixture->getId(),
-            actual: (int)$result1->getEntity()?->getId(),
+            actual: (int)$result1->getEntity()->getId(),
         );
         $this->assertNull(actual: $result1->getParent());
 

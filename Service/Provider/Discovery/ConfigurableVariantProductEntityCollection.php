@@ -123,7 +123,10 @@ class ConfigurableVariantProductEntityCollection implements ProductEntityCollect
             ],
         );
         $connection = $collection->getConnection();
+        $return = (int)$connection->fetchOne(sql: $select->__toString());
+        $collection->clear();
+        unset($collection);
 
-        return (int)$connection->fetchOne(sql: $select->__toString());
+        return $return;
     }
 }

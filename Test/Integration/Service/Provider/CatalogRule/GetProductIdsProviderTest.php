@@ -69,6 +69,7 @@ class GetProductIdsProviderTest extends TestCase
     }
 
     /**
+     * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      */
     public function testGet_ReturnsProductsIds_FromCatalogRule(): void

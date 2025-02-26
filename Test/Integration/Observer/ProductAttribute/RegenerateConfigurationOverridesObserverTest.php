@@ -107,6 +107,9 @@ class RegenerateConfigurationOverridesObserverTest extends TestCase
         );
     }
 
+    /**
+     * @magentoAppIsolation enabled
+     */
     public function testAttributeDelete_RegeneratesOverridesFiles_WhenOverridesFilesDoNotExist(): void
     {
         $expectedFiles = $this->getExpectedFiles();

@@ -3,41 +3,11 @@ stages:
     pipeline: Pipeline\Fallback
     stages:
       klevuImage:
-        stages:
-          getImage:
-            pipeline: Stage\Extract
-            args:
-              extraction: currentProduct::getKlevuImage()
-              transformations:
-                - ResizeImage("klevu_image", $config::getForCurrentStore().image_width, $config::getForCurrentStore().image_height, $store::getForCurrentStore().store_id)
-          validateImage:
-            pipeline: Stage\Validate
-            args:
-              validation: IsNotEqualTo("no_selection")|IsNotEmpty
+        import: Klevu_IndexingProducts::etc/pipeline/product/attributes/images/klevu_image.yml
       image:
-        stages:
-          getImage:
-            pipeline: Stage\Extract
-            args:
-              extraction: currentProduct::getImage()
-              transformations:
-                - ResizeImage("klevu_image", $config::getForCurrentStore().image_width, $config::getForCurrentStore().image_height, $store::getForCurrentStore().store_id)
-          validateImage:
-            pipeline: Stage\Validate
-            args:
-              validation: IsNotEqualTo("no_selection")|IsNotEmpty
+        import: Klevu_IndexingProducts::etc/pipeline/product/attributes/images/base_image.yml
       placeholder:
-        stages:
-          getImage:
-            pipeline: Stage\Extract
-            args:
-              extraction: config::getForCurrentStore().placeholder_image
-              transformations:
-                - ResizeImage("klevu_image", $config::getForCurrentStore().image_width, $config::getForCurrentStore().image_height, $store::getForCurrentStore().store_id)
-          validateImage:
-            pipeline: Stage\Validate
-            args:
-              validation: IsNotEqualTo("no_selection")|IsNotEmpty
+        import: Klevu_IndexingProducts::etc/pipeline/product/attributes/images/placeholder_image.yml
       default:
         stages:
           getImage:
@@ -48,6 +18,21 @@ stages:
     pipeline: Stage\RegisterContext
     args:
       contextKey: "productImage"
+  findHoverImageToUse:
+    pipeline: Pipeline\Fallback
+    stages:
+      klevuImageHover:
+        import: Klevu_IndexingProducts::etc/pipeline/product/attributes/images/klevu_image_hover.yml
+      default:
+        stages:
+          getImage:
+            pipeline: Stage\StaticValue
+            args:
+              value: null
+  registerImageHover:
+    pipeline: Stage\RegisterContext
+    args:
+      contextKey: "productImageHover"
   fallbackImageCreation:
     pipeline: Pipeline\Fallback
     stages:
@@ -74,6 +59,28 @@ stages:
                           extraction: productImage::
                           transformations:
                             - Prepend($store::getForCurrentStore().media_url)
+                      width:
+                        pipeline: Stage\Extract
+                        args:
+                          extraction: config::getForCurrentStore().image_width
+                      height:
+                        pipeline: Stage\Extract
+                        args:
+                          extraction: config::getForCurrentStore().image_height
+              hover:
+                stages:
+                  - pipeline: Pipeline\CreateRecord
+                    stages:
+                      url:
+                        pipeline: Stage\Extract
+                        args:
+                          extraction: productImageHover::
+                          transformations:
+                            - Prepend($store::getForCurrentStore().media_url)
+                      type:
+                        pipeline: Stage\StaticValue
+                        args:
+                          value: hover
                       width:
                         pipeline: Stage\Extract
                         args:

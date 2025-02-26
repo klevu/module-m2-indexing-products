@@ -11,6 +11,7 @@ namespace Klevu\IndexingProducts\Test\Integration\Service\Provider;
 use Klevu\Indexing\Exception\InvalidStaticAttributeConfigurationException;
 use Klevu\Indexing\Validator\StaticAttributeValidator;
 use Klevu\IndexingApi\Service\Provider\StaticAttributeProviderInterface;
+use Klevu\IndexingProducts\Model\Attribute\KlevuParentSkuInterface;
 use Klevu\IndexingProducts\Service\Provider\StaticAttributeProvider;
 use Klevu\TestFixtures\Store\StoreFixturesPool;
 use Klevu\TestFixtures\Store\StoreTrait;
@@ -60,7 +61,9 @@ class StaticAttributeProviderTest extends TestCase
 
     public function testGet_ReturnsNoAttributes_WhenNotSet(): void
     {
-        $provider = $this->instantiateTestObject([]);
+        $provider = $this->instantiateTestObject([
+            'attributes' => [],
+        ]);
         $results = iterator_to_array(iterator: $provider->get(), preserve_keys: false);
         $this->assertCount(expectedCount: 0, haystack: $results);
     }
@@ -310,5 +313,46 @@ class StaticAttributeProviderTest extends TestCase
         $storeFrontLabel = array_shift($storeFrontLabels);
         $this->assertSame(expected: 'Ein weiteres Etikett', actual: $storeFrontLabel->getLabel());
         $this->assertSame(expected: $storeFixture->getId(), actual: $storeFrontLabel->getStoreId());
+    }
+
+    public function testGet_ReturnsGeneratorOfAttributes_IncludingParentSku(): void
+    {
+        $provider = $this->instantiateTestObject();
+        $results = iterator_to_array(iterator: $provider->get(), preserve_keys: false);
+        $this->assertCount(expectedCount: 1, haystack: $results);
+
+        $resultArray = array_filter(
+            $results,
+            static fn (DataObject|ProductAttributeInterface $attribute): bool => (
+                $attribute->getAttributeCode() === KlevuParentSkuInterface::ATTRIBUTE_CODE
+            ),
+        );
+        /** @var DataObject|ProductAttributeInterface $result */
+        $result = array_shift($resultArray);
+
+        $this->assertSame(
+            expected: KlevuParentSkuInterface::ATTRIBUTE_ID,
+            actual: $result->getAttributeId(),
+        );
+        $this->assertSame(
+            expected: KlevuParentSkuInterface::ATTRIBUTE_CODE,
+            actual: $result->getAttributeCode(),
+        );
+        $this->assertSame(
+            expected: KlevuParentSkuInterface::IS_SEARCHABLE,
+            actual: $result->getIsSearchable(),
+        );
+        $this->assertSame(
+            expected: KlevuParentSkuInterface::IS_FILTERABLE,
+            actual: $result->getIsFilterable(),
+        );
+        $this->assertSame(
+            expected: KlevuParentSkuInterface::IS_RETURNABLE,
+            actual: $result->getData(key: 'used_in_product_listing'),
+        );
+        $this->assertSame(
+            expected: KlevuParentSkuInterface::ATTRIBUTE_LABEL,
+            actual: $result->getDefaultFrontendLabel(),
+        );
     }
 }

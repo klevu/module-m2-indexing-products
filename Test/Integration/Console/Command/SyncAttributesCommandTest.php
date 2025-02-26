@@ -604,13 +604,6 @@ class SyncAttributesCommandTest extends TestCase
         $patternApiKey1 = '#'
             . sprintf('Attribute Sync for API Key: %s.', $apiKey1)
             . '\s*'
-            . 'Attribute Sync for Action: KLEVU_PRODUCT::add\.'
-            . '\s*'
-            . sprintf(
-                'Attribute Sync for Attribute: "%s" Completed Successfully\.',
-                $attributeFixture2->getAttributeCode(),
-            )
-            . '\s*'
             . 'Attribute Sync for Action: KLEVU_PRODUCT::delete\.'
             . '\s*'
             . sprintf(
@@ -623,6 +616,13 @@ class SyncAttributesCommandTest extends TestCase
             . sprintf(
                 'Attribute Sync for Attribute: "%s" Completed Successfully\.',
                 $attributeFixture4->getAttributeCode(),
+            )
+            . '\s*'
+            . 'Attribute Sync for Action: KLEVU_PRODUCT::add\.'
+            . '\s*'
+            . sprintf(
+                'Attribute Sync for Attribute: "%s" Completed Successfully\.',
+                $attributeFixture2->getAttributeCode(),
             )
             . '#';
 
@@ -641,13 +641,6 @@ class SyncAttributesCommandTest extends TestCase
         $patternApiKey2 = '#'
             . sprintf('Attribute Sync for API Key: %s.', $apiKey2)
             . '\s*'
-            . 'Attribute Sync for Action: KLEVU_PRODUCT::add\.'
-            . '\s*'
-            . sprintf(
-                'Attribute Sync for Attribute: "%s" Completed Successfully\.',
-                $attributeFixture3->getAttributeCode(),
-            )
-            . '\s*'
             . 'Attribute Sync for Action: KLEVU_PRODUCT::update\.'
             . '\s*'
             . sprintf(
@@ -658,6 +651,13 @@ class SyncAttributesCommandTest extends TestCase
             . sprintf(
                 'Attribute Sync for Attribute: "%s" Completed Successfully\.',
                 $attributeFixture2->getAttributeCode(),
+            )
+            . '\s*'
+            . 'Attribute Sync for Action: KLEVU_PRODUCT::add\.'
+            . '\s*'
+            . sprintf(
+                'Attribute Sync for Attribute: "%s" Completed Successfully\.',
+                $attributeFixture3->getAttributeCode(),
             )
             . '#';
 

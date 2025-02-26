@@ -3,3 +3,6 @@ stages:
     pipeline: Stage\Extract
     args:
       extraction: currentProduct::getSku()
+      transformations:
+        - ToString
+        - Trim

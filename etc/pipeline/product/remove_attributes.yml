@@ -1,0 +1,61 @@
+stages:
+  registerCurrentProductData:
+    pipeline: Stage\RegisterContext
+    args:
+      contextKey: "currentProductData" # set variable so we access it again below
+  checkAttributes:
+    stages:
+      getAttributes:
+        pipeline: Stage\Extract
+        args:
+          extraction: currentProductData::attributes
+      registerAttributeData:
+        pipeline: Stage\RegisterContext
+        args:
+          contextKey: "currentProductAttributes"
+      getAttributeCodes:
+        pipeline: Stage\Transform
+        args:
+          transformation: Keys
+  iterateAttributes:
+    pipeline: Pipeline\Iterate # Loop over all product attributes in the data
+    args:
+      continueOnException: ~
+    stages:
+      registerCurrentAttribute:
+          pipeline: Stage\RegisterContext
+          args:
+            contextKey: "currentAttribute" # set $currentAttribute to the attribute code
+      getCurrentProductAttributes:
+        pipeline: Stage\Extract
+        args:
+          extraction: currentProductData::attributes
+      removeEmptyData:
+        pipeline: Pipeline\Fallback
+        stages:
+          default:
+            stages:
+              getValue:
+                pipeline: Stage\Extract
+                args:
+                  extraction: $.currentAttribute::
+              validateValue:
+                pipeline: Stage\Validate
+                args:
+                  validation: IsIn([null], true) # throw validation exception is value is not null or "", else unset this attribute
+              unsetAttribute:
+                pipeline: Stage\Extract
+                args:
+                  extraction: currentProductAttributes::
+                  transformations:
+                    - UnsetProperty($currentAttribute::, ".") # attribute removed if value was null above (i.e. validation passed)
+              updateAttributeDataInContext:
+                pipeline: Stage\RegisterContext
+                args:
+                  contextKey: "currentProductAttributes"
+  setAttributesOnProduct:
+    pipeline: Stage\Extract
+    args:
+      extraction: currentProductData::
+      transformations:
+        - SetPropertyValue("attributes", $currentProductAttributes::, ".")

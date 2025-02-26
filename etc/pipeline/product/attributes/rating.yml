@@ -1,9 +1,18 @@
 stages:
   getRating:
-    pipeline: Stage\Extract
-    args:
-      extraction: currentProduct::
-      transformations:
-        - ToRating($store::getForCurrentStore().store_id)
-        - FormatNumber("2",".")
-        - ToFloat
+    pipeline: Pipeline\Fallback
+    stages:
+      getData:
+        stages:
+          extract:
+            pipeline: Stage\Extract
+            args:
+              extraction: currentProduct::
+              transformations:
+                - ToRating($store::getForCurrentStore().store_id)
+                - FormatNumber("2",".","")
+                - ToFloat
+          validate:
+            pipeline: Stage\Validate
+            args:
+              validation: IsNotEqualTo(0, false)

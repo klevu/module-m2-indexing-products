@@ -1,0 +1,103 @@
+stages:
+  findImageToUse:
+    pipeline: Pipeline\Fallback
+    stages:
+      klevuImage:
+        import: Klevu_IndexingProducts::etc/pipeline/product/attributes/images/klevu_image.yml
+      image:
+        import: Klevu_IndexingProducts::etc/pipeline/product/attributes/images/base_image.yml
+      klevuImageParent:
+        import: Klevu_IndexingProducts::etc/pipeline/product/attributes/images/parent_product/klevu_image.yml
+      imageParent:
+        import: Klevu_IndexingProducts::etc/pipeline/product/attributes/images/parent_product/base_image.yml
+      placeholder:
+        import: Klevu_IndexingProducts::etc/pipeline/product/attributes/images/placeholder_image.yml
+      default:
+        stages:
+          getImage:
+            pipeline: Stage\StaticValue
+            args:
+              value: null
+  registerImage:
+    pipeline: Stage\RegisterContext
+    args:
+      contextKey: "productImage"
+  findHoverImageToUse:
+    pipeline: Pipeline\Fallback
+    stages:
+      klevuImageHover:
+        import: Klevu_IndexingProducts::etc/pipeline/product/attributes/images/klevu_image_hover.yml
+      klevuImageHoverParent:
+        import: Klevu_IndexingProducts::etc/pipeline/product/attributes/images/parent_product/klevu_image_hover.yml
+      default:
+        stages:
+          getImage:
+            pipeline: Stage\StaticValue
+            args:
+              value: null
+  registerImageHover:
+    pipeline: Stage\RegisterContext
+    args:
+      contextKey: "productImageHover"
+  fallbackImageCreation:
+    pipeline: Pipeline\Fallback
+    stages:
+      generateImage:
+        stages:
+          getImage:
+            pipeline: Stage\Extract
+            args:
+              extraction: productImage::
+          validateImage:
+            pipeline: Stage\Validate
+            args:
+              validation: IsNotEmpty
+          createRecord:
+            pipeline: Pipeline\CreateRecord
+            stages:
+              default:
+                stages:
+                  - pipeline: Pipeline\CreateRecord
+                    stages:
+                      url:
+                        pipeline: Stage\Extract
+                        args:
+                          extraction: productImage::
+                          transformations:
+                            - Prepend($store::getForCurrentStore().media_url)
+                      width:
+                        pipeline: Stage\Extract
+                        args:
+                          extraction: config::getForCurrentStore().image_width
+                      height:
+                        pipeline: Stage\Extract
+                        args:
+                          extraction: config::getForCurrentStore().image_height
+              hover:
+                stages:
+                  - pipeline: Pipeline\CreateRecord
+                    stages:
+                      url:
+                        pipeline: Stage\Extract
+                        args:
+                          extraction: productImageHover::
+                          transformations:
+                            - Prepend($store::getForCurrentStore().media_url)
+                      type:
+                        pipeline: Stage\StaticValue
+                        args:
+                          value: hover
+                      width:
+                        pipeline: Stage\Extract
+                        args:
+                          extraction: config::getForCurrentStore().image_width
+                      height:
+                        pipeline: Stage\Extract
+                        args:
+                          extraction: config::getForCurrentStore().image_height
+      default:
+        stages:
+          createRecord:
+            pipeline: Stage\StaticValue
+            args:
+              value: null

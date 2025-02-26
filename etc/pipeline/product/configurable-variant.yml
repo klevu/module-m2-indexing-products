@@ -21,7 +21,7 @@ stages:
       sku:
         import: Klevu_IndexingProducts::etc/pipeline/product/attributes/sku.yml
       image:
-        import: Klevu_IndexingProducts::etc/pipeline/product/attributes/image.yml
+        import: Klevu_IndexingProducts::etc/pipeline/product/attributes/image/variant.yml
       price:
         import: Klevu_IndexingProducts::etc/pipeline/product/attributes/price.yml
       url:

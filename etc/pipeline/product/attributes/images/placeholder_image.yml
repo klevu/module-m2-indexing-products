@@ -1,0 +1,11 @@
+stages:
+  getImage:
+    pipeline: Stage\Extract
+    args:
+      extraction: config::getForCurrentStore().placeholder_image
+      transformations:
+        - ResizeImage("placeholder", $config::getForCurrentStore().image_width, $config::getForCurrentStore().image_height, $store::getForCurrentStore().store_id)
+  validateImage:
+    pipeline: Stage\Validate
+    args:
+      validation: IsNotEqualTo("no_selection")|IsNotEmpty

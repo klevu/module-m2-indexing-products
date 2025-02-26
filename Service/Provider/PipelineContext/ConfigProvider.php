@@ -123,6 +123,9 @@ class ConfigProvider implements PipelineContextProviderInterface
                 $storeId,
             );
         }
+        if ($value) {
+            $value = 'placeholder' . DIRECTORY_SEPARATOR . $value;
+        }
 
         return $value;
     }

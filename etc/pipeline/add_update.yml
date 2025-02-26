@@ -2,7 +2,7 @@ stages:
   logStart:
     pipeline: Indexing\Stage\Log # log that the pipeline has begun
     args:
-      message: "Start Add Products Pipeline"
+      message: "Start Add/Update Products Pipeline"
   iterateIndexingRecordsBatch:
     pipeline: Pipeline\Iterate # LOOP OVER ALL PROVIDED BATCHES
     args:
@@ -39,14 +39,6 @@ stages:
                     pipeline: Stage\RegisterContext
                     args:
                       contextKey: "currentParentProduct" # i.e. $currentParentProduct = currentIndexingRecord::getParent();
-              setCustomerGroupId:
-                stages:
-                  GetDefaultCustomerGroupId:
-                    pipeline: Stage\StaticValue
-                    args:
-                      value: 0
-                  SetCustomerGroupId:
-                    pipeline: Stage\SetCustomerGroupId
               registerActionToContext:
                 stages:
                   extractAction:
@@ -146,6 +138,8 @@ stages:
                 stages:
                   generateRecord:
                     import: Klevu_IndexingProducts::etc/pipeline/product/default.yml # use this file for all other product types product data
+          removeEmptyValues:
+            import: Klevu_IndexingProducts::etc/pipeline/product/remove_attributes.yml
       processPayload:
         stages:
           processRecords: # send generated data to Klevu

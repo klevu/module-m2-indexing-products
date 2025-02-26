@@ -1,12 +1,40 @@
-pipeline: Pipeline\CreateRecord
 stages:
-  default:
+  generateData:
+    pipeline: Pipeline\CreateRecord
     stages:
-      getDefaultLanguageValue:
-        pipeline: Stage\Extract
-        args:
-          extraction: currentProduct::getShortDescription()
-          transformations:
-            - StripTags(["p", "br", "hr", "h1", "h2", "h3", "h4", "h5", "h6", "strong", "em", "ul", "ol", "li", "dl", "dt", "dd", "img", "sub", "sup", "small"], ["script"])
-            - EscapeHtml
-            - Trim
+      default:
+        stages:
+          getDefaultLanguageValue:
+            pipeline: Pipeline\Fallback
+            stages:
+              getData:
+                stages:
+                  extract:
+                    pipeline: Stage\Extract
+                    args:
+                      extraction: currentProduct::getShortDescription()
+                      transformations:
+                        - StripTags(["p", "br", "hr", "h1", "h2", "h3", "h4", "h5", "h6", "strong", "em", "ul", "ol", "li", "dl", "dt", "dd", "img", "sub", "sup", "small"], ["script"])
+                        - EscapeHtml
+                        - Trim
+                  validate:
+                    pipeline: Stage\Validate
+                    args:
+                      validation: IsNotEqualTo("", true)
+                defaultValue:
+                  pipeline: Stage\StaticValue
+                  args:
+                    value: null
+  validateData:
+    pipeline: Pipeline\Fallback
+    stages:
+      isAtLeastOneValueSet:
+        stages:
+          transform:
+            pipeline: Stage\Transform
+            args:
+              transformation: FilterCompare([$, "nempty"])
+          validate:
+            pipeline: Stage\Validate
+            args:
+              validation: IsNotEmpty
