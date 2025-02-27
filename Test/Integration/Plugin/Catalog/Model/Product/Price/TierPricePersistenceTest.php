@@ -155,7 +155,6 @@ class TierPricePersistenceTest extends TestCase
     public function testDelete_UpdatesIndexingEntity(): void
     {
         $apiKey = 'klevu-js-api-key';
-        $this->cleanIndexingEntities($apiKey);
 
         $this->createStore();
         $storeFixture = $this->storeFixturesPool->get('test_store');
@@ -185,6 +184,7 @@ class TierPricePersistenceTest extends TestCase
 
         $this->createIndexingEntity([
             IndexingEntity::TARGET_ID => (int)$product->getId(),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
             IndexingEntity::LAST_ACTION => Actions::ADD,
@@ -203,13 +203,18 @@ class TierPricePersistenceTest extends TestCase
         );
 
         $this->assertNotNull($indexingEntity);
-        $this->assertSame(expected: Actions::UPDATE, actual: $indexingEntity->getNextAction());
+        $this->assertSame(
+            expected: Actions::UPDATE,
+            actual: $indexingEntity->getNextAction(),
+            message: 'Expected ' . Actions::UPDATE->value . ', received ' . $indexingEntity->getNextAction()->value,
+        );
         $this->assertTrue(condition: $indexingEntity->getIsIndexable());
 
         $this->cleanIndexingEntities($apiKey);
     }
 
     /**
+     * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/js_api_key klevu-js-api-key
      * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/rest_auth_key klevu-rest-auth-key
@@ -218,7 +223,6 @@ class TierPricePersistenceTest extends TestCase
     public function testAfterReplace_UpdatesIndexingEntity(): void
     {
         $apiKey = 'klevu-js-api-key';
-        $this->cleanIndexingEntities($apiKey);
 
         $this->createStore();
         $storeFixture = $this->storeFixturesPool->get('test_store');
@@ -248,6 +252,7 @@ class TierPricePersistenceTest extends TestCase
 
         $this->createIndexingEntity([
             IndexingEntity::TARGET_ID => (int)$product->getId(),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
             IndexingEntity::LAST_ACTION => Actions::ADD,
@@ -297,7 +302,6 @@ class TierPricePersistenceTest extends TestCase
     public function testAfterUpdate_UpdatesIndexingEntity(): void
     {
         $apiKey = 'klevu-js-api-key';
-        $this->cleanIndexingEntities($apiKey);
 
         $this->createStore();
         $storeFixture = $this->storeFixturesPool->get('test_store');
@@ -327,6 +331,7 @@ class TierPricePersistenceTest extends TestCase
 
         $this->createIndexingEntity([
             IndexingEntity::TARGET_ID => (int)$product->getId(),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
             IndexingEntity::LAST_ACTION => Actions::ADD,

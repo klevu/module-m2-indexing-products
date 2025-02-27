@@ -170,7 +170,7 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->mockBatchServicePutApiCall(isCalled: false);
 
         $service = $this->instantiateTestObject();
-        $service->execute(apiKey: $apiKey);
+        iterator_to_array($service->execute(apiKey: $apiKey));
 
         $this->cleanIndexingEntities(apiKey: $apiKey);
     }
@@ -213,7 +213,7 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->mockBatchServicePutApiCall(isCalled: false);
 
         $service = $this->instantiateTestObject();
-        $service->execute(apiKey: $apiKey);
+        iterator_to_array($service->execute(apiKey: $apiKey));
 
         $this->cleanIndexingEntities(apiKey: $apiKey);
     }
@@ -221,7 +221,7 @@ class EntityIndexerServiceAddTest extends TestCase
     /**
      * @magentoAppIsolation enabled
      */
-    public function testExecute_ReturnsNoop_WhenNoProductsToAdd(): void
+    public function testExecute_ReturnsNull_WhenNoProductsToAdd(): void
     {
         $apiKey = 'klevu-js-key';
         $this->cleanIndexingEntities(apiKey: $apiKey);
@@ -239,13 +239,10 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->mockBatchServicePutApiCall(isCalled: false);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(apiKey: $apiKey);
+        $results = $service->execute(apiKey: $apiKey);
+        $result = $results->current();
 
-        $this->assertSame(
-            expected: IndexerResultStatuses::NOOP,
-            actual: $result->getStatus(),
-            message: 'Status: ' . $result->getStatus()->name,
-        );
+        $this->assertNull(actual: $result);
     }
 
     /**
@@ -290,7 +287,8 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->mockBatchServiceDeleteApiCall(isCalled: false);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(apiKey: $apiKey);
+        $results = $service->execute(apiKey: $apiKey);
+        $result = $results->current();
 
         $this->assertSame(
             expected: IndexerResultStatuses::NOOP,
@@ -333,7 +331,8 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->mockBatchServicePutApiCall(isCalled: true, isSuccessful: false);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(apiKey: $apiKey);
+        $results = $service->execute(apiKey: $apiKey);
+        $result = $results->current();
 
         $this->assertSame(
             expected: IndexerResultStatuses::PARTIAL,
@@ -411,6 +410,7 @@ class EntityIndexerServiceAddTest extends TestCase
             'images' => [
                 'klevu_image' => 'klevu_test_image_name.jpg',
                 'image' => 'klevu_test_image_symbol.jpg',
+                'klevu_image_hover' => 'klevu_test_image_symbol.jpg',
             ],
         ]);
         $productFixture = $this->productFixturePool->get('test_product');
@@ -457,7 +457,8 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->mockBatchServicePutApiCall();
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(apiKey: $apiKey);
+        $results = $service->execute(apiKey: $apiKey);
+        $result = $results->current();
 
         $this->assertSame(
             expected: IndexerResultStatuses::SUCCESS,
@@ -559,6 +560,20 @@ class EntityIndexerServiceAddTest extends TestCase
             pattern: '#/media/catalog/product/cache/.*/k/l/klevu_test_image_name(_.*)?\.jpg#',
             string: $image['url'],
             message: 'Image URL: ' . $image['url'],
+        );
+        $this->assertArrayHasKey(key: 'hover', array: $attributes['image']);
+        $imageHover = $attributes['image']['hover'];
+        $this->assertArrayHasKey(key: 'type', array: $imageHover);
+        $this->assertSame(expected: 'hover', actual: $imageHover['type']);
+        $this->assertArrayHasKey(key: 'height', array: $imageHover);
+        $this->assertSame(expected: 800, actual: $imageHover['height']);
+        $this->assertArrayHasKey(key: 'width', array: $imageHover);
+        $this->assertSame(expected: 800, actual: $imageHover['width']);
+        $this->assertArrayHasKey(key: 'url', array: $imageHover);
+        $this->assertMatchesRegularExpression(
+            pattern: '#/media/catalog/product/cache/.*/k/l/klevu_test_image_symbol(_.*)?\.jpg#',
+            string: $imageHover['url'],
+            message: 'Image Hover URL: ' . $imageHover['url'],
         );
 
         $this->assertArrayHasKey(key: 'rating', array: $attributes);
@@ -729,7 +744,8 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->mockBatchServicePutApiCall();
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(apiKey: $apiKey);
+        $results = $service->execute(apiKey: $apiKey);
+        $result = $results->current();
 
         $this->assertSame(
             expected: IndexerResultStatuses::SUCCESS,
@@ -832,7 +848,7 @@ class EntityIndexerServiceAddTest extends TestCase
                 $categoryFixture->getId(),
             ],
             'data' => [
-                'short_description' => 'This is a Virtual product short description',
+                'short_description' => '',
                 'description' => 'This is a Virtual product longer description than the short description',
             ],
             'images' => [
@@ -870,7 +886,8 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->mockBatchServicePutApiCall();
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(apiKey: $apiKey);
+        $results = $service->execute(apiKey: $apiKey);
+        $result = $results->current();
 
         $this->assertSame(
             expected: IndexerResultStatuses::SUCCESS,
@@ -927,13 +944,7 @@ class EntityIndexerServiceAddTest extends TestCase
             message: 'Name: ' . $attributes['name']['default'],
         );
 
-        $this->assertArrayHasKey(key: 'shortDescription', array: $attributes);
-        $this->assertArrayHasKey(key: 'default', array: $attributes['shortDescription']);
-        $this->assertSame(
-            expected: 'This is a Virtual product short description',
-            actual: $attributes['shortDescription']['default'],
-            message: 'Short Description: ' . $attributes['shortDescription']['default'],
-        );
+        $this->assertArrayNotHasKey(key: 'shortDescription', array: $attributes);
 
         $this->assertArrayHasKey(key: 'description', array: $attributes);
         $this->assertArrayHasKey(key: 'default', array: $attributes['description']);
@@ -973,10 +984,18 @@ class EntityIndexerServiceAddTest extends TestCase
             string: $image['url'],
             message: 'Image URL: ' . $image['url'],
         );
+        $this->assertArrayHasKey(key: 'hover', array: $attributes['image']);
+        $imageHover = $attributes['image']['hover'];
+        $this->assertArrayHasKey(key: 'type', array: $imageHover);
+        $this->assertSame(expected: 'hover', actual: $imageHover['type']);
+        $this->assertArrayHasKey(key: 'height', array: $imageHover);
+        $this->assertSame(expected: 800, actual: $imageHover['height']);
+        $this->assertArrayHasKey(key: 'width', array: $imageHover);
+        $this->assertSame(expected: 800, actual: $imageHover['width']);
+        $this->assertArrayHasKey(key: 'url', array: $imageHover);
+        $this->assertNull(actual: $imageHover['url']);
 
-        $this->assertArrayHasKey(key: 'rating', array: $attributes);
-        $this->assertSame(expected: 0.0, actual: $attributes['rating']);
-
+        $this->assertArrayNotHasKey(key: 'rating', array: $attributes);
         $this->assertArrayHasKey(key: 'ratingCount', array: $attributes);
         $this->assertSame(expected: 0, actual: $attributes['ratingCount']);
 
@@ -1128,7 +1147,8 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->mockBatchServicePutApiCall();
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(apiKey: $apiKey);
+        $results = $service->execute(apiKey: $apiKey);
+        $result = $results->current();
 
         $this->assertSame(
             expected: IndexerResultStatuses::SUCCESS,
@@ -1241,7 +1261,7 @@ class EntityIndexerServiceAddTest extends TestCase
             ],
             'data' => [
                 'short_description' => 'This is a Downloadable product short description',
-                'description' => 'This is a Downloadable product longer description than the short description',
+                'description' => '',
                 'special_price' => 5400.99,
                 'special_price_from' => '1970-01-01',
                 'special_price_to' => '2099-12-31',
@@ -1278,7 +1298,8 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->mockBatchServicePutApiCall();
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(apiKey: $apiKey);
+        $results = $service->execute(apiKey: $apiKey);
+        $result = $results->current();
 
         $this->assertSame(
             expected: IndexerResultStatuses::SUCCESS,
@@ -1343,13 +1364,7 @@ class EntityIndexerServiceAddTest extends TestCase
             message: 'Short Description: ' . $attributes['shortDescription']['default'],
         );
 
-        $this->assertArrayHasKey(key: 'description', array: $attributes);
-        $this->assertArrayHasKey(key: 'default', array: $attributes['description']);
-        $this->assertSame(
-            expected: 'This is a Downloadable product longer description than the short description',
-            actual: $attributes['description']['default'],
-            message: 'Description: ' . $attributes['description']['default'],
-        );
+        $this->assertArrayNotHasKey(key: 'description', array: $attributes);
 
         $this->assertArrayHasKey(key: 'visibility', array: $attributes);
         $this->assertNotContains(needle: 'catalog', haystack: $attributes['visibility']);
@@ -1368,12 +1383,9 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->assertArrayHasKey(key: 'salePrice', array: $attributes['price']['USD']);
         $this->assertSame(expected: 5400.99, actual: $attributes['price']['USD']['salePrice']);
 
-        $this->assertArrayHasKey(key: 'image', array: $attributes);
-        $this->assertNull($attributes['image']);
+        $this->assertArrayNotHasKey(key: 'image', array: $attributes);
 
-        $this->assertArrayHasKey(key: 'rating', array: $attributes);
-        $this->assertSame(expected: 0.0, actual: $attributes['rating']);
-
+        $this->assertArrayNotHasKey(key: 'rating', array: $attributes);
         $this->assertArrayHasKey(key: 'ratingCount', array: $attributes);
         $this->assertSame(expected: 0, actual: $attributes['ratingCount']);
 
@@ -1531,7 +1543,8 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->mockBatchServicePutApiCall();
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(apiKey: $apiKey);
+        $results = $service->execute(apiKey: $apiKey);
+        $result = $results->current();
 
         $this->assertSame(
             expected: IndexerResultStatuses::SUCCESS,
@@ -1580,6 +1593,13 @@ class EntityIndexerServiceAddTest extends TestCase
             message: 'SKU: ' . $attributes['sku'],
         );
 
+        $this->assertArrayHasKey(key: 'klevu_parent_sku', array: $attributes);
+        $this->assertSame(
+            expected: 'KLEVU-CONFIGURABLE-SKU-001',
+            actual: $attributes['klevu_parent_sku'],
+            message: 'Parent SKU: ' . $attributes['klevu_parent_sku'],
+        );
+
         $this->assertArrayHasKey(key: 'name', array: $attributes);
         $this->assertArrayHasKey(key: 'default', array: $attributes['name']);
         $this->assertSame(
@@ -1620,18 +1640,7 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->assertArrayHasKey(key: 'salePrice', array: $attributes['price']['USD']);
         $this->assertSame(expected: 3900.99, actual: $attributes['price']['USD']['salePrice']);
 
-        $this->assertArrayHasKey(key: 'image', array: $attributes);
-        $this->assertArrayHasKey(key: 'default', array: $attributes['image']);
-        $image = $attributes['image']['default'];$this->assertArrayHasKey(key: 'height', array: $image);
-        $this->assertSame(expected: 800, actual: $image['height']);
-        $this->assertArrayHasKey(key: 'width', array: $image);
-        $this->assertSame(expected: 800, actual: $image['width']);
-        $this->assertArrayHasKey(key: 'url', array: $image);
-        $this->assertMatchesRegularExpression(
-            pattern: '#/media/catalog/product/cache/.*/k/l/klevu_test_image_name(_.*)?\.jpg#',
-            string: $image['url'],
-            message: 'Image URL: ' . $image['url'],
-        );
+        $this->assertArrayNotHasKey(key: 'image', array: $attributes);
 
         $this->assertArrayHasKey(key: 'rating', array: $attributes);
         $this->assertSame(expected: 4.0, actual: $attributes['rating']);
@@ -1785,6 +1794,9 @@ class EntityIndexerServiceAddTest extends TestCase
                 'special_price_from' => '1970-01-01',
                 'special_price_to' => '2099-12-31',
             ],
+            'images' => [
+                'klevu_image_hover' => 'klevu_test_image_symbol.jpg',
+            ],
         ]);
         $productFixture = $this->productFixturePool->get('test_product');
 
@@ -1800,7 +1812,8 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->mockBatchServicePutApiCall();
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(apiKey: $apiKey);
+        $results = $service->execute(apiKey: $apiKey);
+        $result = $results->current();
 
         $this->assertSame(
             expected: IndexerResultStatuses::SUCCESS,
@@ -1887,6 +1900,20 @@ class EntityIndexerServiceAddTest extends TestCase
             pattern: '#/media/catalog/product/cache/.*/k/l/klevu_test_image_name(_.*)?\.jpg#',
             string: $image['url'],
             message: 'Image URL: ' . $image['url'],
+        );
+        $this->assertArrayHasKey(key: 'hover', array: $attributes['image']);
+        $imageHover = $attributes['image']['hover'];
+        $this->assertArrayHasKey(key: 'type', array: $imageHover);
+        $this->assertSame(expected: 'hover', actual: $imageHover['type']);
+        $this->assertArrayHasKey(key: 'height', array: $imageHover);
+        $this->assertSame(expected: 800, actual: $imageHover['height']);
+        $this->assertArrayHasKey(key: 'width', array: $imageHover);
+        $this->assertSame(expected: 800, actual: $imageHover['width']);
+        $this->assertArrayHasKey(key: 'url', array: $imageHover);
+        $this->assertMatchesRegularExpression(
+            pattern: '#/media/catalog/product/cache/.*/k/l/klevu_test_image_symbol(_.*)?\.jpg#',
+            string: $imageHover['url'],
+            message: 'Image Hover URL: ' . $imageHover['url'],
         );
 
         $this->assertArrayHasKey(key: 'rating', array: $attributes);
@@ -2071,7 +2098,8 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->mockBatchServicePutApiCall();
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(apiKey: $apiKey);
+        $results = $service->execute(apiKey: $apiKey);
+        $result = $results->current();
 
         $this->assertSame(
             expected: IndexerResultStatuses::SUCCESS,
@@ -2300,7 +2328,8 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->mockBatchServicePutApiCall();
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(apiKey: $apiKey);
+        $results = $service->execute(apiKey: $apiKey);
+        $result = $results->current();
 
         $this->assertSame(
             expected: IndexerResultStatuses::SUCCESS,
@@ -2383,6 +2412,8 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->assertArrayHasKey(key: 'url', array: $attributes);
         $this->assertStringContainsString(needle: '/klevu-grouped-sku-001', haystack: $attributes['url']);
 
+        $this->assertArrayNotHasKey(key: 'image', array: $attributes);
+
         $this->assertArrayHasKey(key: 'price', array: $attributes);
         $this->assertArrayHasKey(key: 'USD', array: $attributes['price']);
         $this->assertArrayHasKey(key: 'defaultPrice', array: $attributes['price']['USD']);
@@ -2390,9 +2421,7 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->assertArrayHasKey(key: 'salePrice', array: $attributes['price']['USD']);
         $this->assertSame(expected: 0.00, actual: $attributes['price']['USD']['salePrice']);
 
-        $this->assertArrayHasKey(key: 'rating', array: $attributes);
-        $this->assertSame(expected: 0.0, actual: $attributes['rating']);
-
+        $this->assertArrayNotHasKey(key: 'rating', array: $attributes);
         $this->assertArrayHasKey(key: 'ratingCount', array: $attributes);
         $this->assertSame(expected: 0, actual: $attributes['ratingCount']);
 
@@ -2509,6 +2538,7 @@ class EntityIndexerServiceAddTest extends TestCase
             'images' => [
                 'klevu_image' => 'klevu_test_image_name.jpg',
                 'image' => 'klevu_test_image_symbol.jpg',
+                'klevu_image_hover' => 'klevu_test_image_symbol.jpg',
             ],
         ]);
         $productFixture = $this->productFixturePool->get('test_product');
@@ -2529,13 +2559,15 @@ class EntityIndexerServiceAddTest extends TestCase
         $this->cleanIndexingEntities(apiKey: $jsApiKey);
         $this->createIndexingEntity([
             IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
             IndexingEntity::API_KEY => $jsApiKey,
             IndexingEntity::TARGET_ID => $productFixture->getId(),
             IndexingEntity::NEXT_ACTION => Actions::ADD,
         ]);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(apiKey: $jsApiKey);
+        $results = $service->execute(apiKey: $jsApiKey);
+        $result = $results->current();
 
         $this->assertSame(
             expected: IndexerResultStatuses::SUCCESS,
@@ -2638,6 +2670,20 @@ class EntityIndexerServiceAddTest extends TestCase
             pattern: '#/media/catalog/product/cache/.*/k/l/klevu_test_image_name(_.*)?\.jpg#',
             string: $image['url'],
             message: 'Image URL: ' . $image['url'],
+        );
+        $this->assertArrayHasKey(key: 'hover', array: $attributes['image']);
+        $imageHover = $attributes['image']['hover'];
+        $this->assertArrayHasKey(key: 'type', array: $imageHover);
+        $this->assertSame(expected: 'hover', actual: $imageHover['type']);
+        $this->assertArrayHasKey(key: 'height', array: $imageHover);
+        $this->assertSame(expected: 800, actual: $imageHover['height']);
+        $this->assertArrayHasKey(key: 'width', array: $imageHover);
+        $this->assertSame(expected: 800, actual: $imageHover['width']);
+        $this->assertArrayHasKey(key: 'url', array: $imageHover);
+        $this->assertMatchesRegularExpression(
+            pattern: '#/media/catalog/product/cache/.*/k/l/klevu_test_image_symbol(_.*)?\.jpg#',
+            string: $imageHover['url'],
+            message: 'Image Hover URL: ' . $imageHover['url'],
         );
 
         $this->assertArrayHasKey(key: 'rating', array: $attributes);

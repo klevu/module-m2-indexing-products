@@ -80,6 +80,7 @@ class ConfigurableProductEntityProviderTest extends TestCase
     }
 
     /**
+     * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      */
     public function testGet_ReturnsProductData_AtStoreScope(): void

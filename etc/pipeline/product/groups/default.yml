@@ -9,8 +9,6 @@ stages:
     args:
       continueOnException: ~
     stages:
-      SetCustomerGroupId:
-        pipeline: Stage\SetCustomerGroupId
       RegisterCurrentGroupId:
         pipeline: Stage\RegisterContext
         args:
@@ -23,6 +21,16 @@ stages:
         pipeline: Stage\RegisterContext
         args:
           contextKey: "currentGroupKey"
+      SetCustomerGroupIdOnProduct:
+        pipeline: Stage\Extract
+        args:
+          extraction: currentProduct::
+          transformations:
+            - SetDataOnProduct("customer_group_id", $currentGroupId::)
+      RegisterCurrentProductWithGroupId:
+        pipeline: Stage\RegisterContext
+        args:
+          contextKey: "currentProduct"
       AddCustomerGroupDataToRecord:
         pipeline: Pipeline\CreateRecord
         stages:

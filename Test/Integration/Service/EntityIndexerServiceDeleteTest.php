@@ -105,7 +105,6 @@ class EntityIndexerServiceDeleteTest extends TestCase
     public function testExecute_ThrowsException_ForInvalidJsApiKey(): void
     {
         $apiKey = 'invalid-js-api-key';
-        $this->cleanIndexingEntities(apiKey: $apiKey);
 
         $this->createStore();
         $storeFixture = $this->storeFixturesPool->get('test_store');
@@ -138,7 +137,7 @@ class EntityIndexerServiceDeleteTest extends TestCase
         $this->mockBatchServiceDeleteApiCall(isCalled: false);
 
         $service = $this->instantiateTestObject();
-        $service->execute(apiKey: $apiKey);
+        iterator_to_array($service->execute(apiKey: $apiKey));
     }
 
     /**
@@ -148,7 +147,6 @@ class EntityIndexerServiceDeleteTest extends TestCase
     public function testExecute_ThrowsException_ForInvalidRestAuthKey(): void
     {
         $apiKey = 'klevu-123456789';
-        $this->cleanIndexingEntities(apiKey: $apiKey);
 
         $this->createStore();
         $storeFixture = $this->storeFixturesPool->get('test_store');
@@ -181,13 +179,12 @@ class EntityIndexerServiceDeleteTest extends TestCase
         $this->mockBatchServiceDeleteApiCall(isCalled: false);
 
         $service = $this->instantiateTestObject();
-        $service->execute(apiKey: $apiKey);
+        iterator_to_array( $service->execute(apiKey: $apiKey));
     }
 
-    public function testExecute_ReturnsNoop_WhenNoProductsToDelete(): void
+    public function testExecute_ReturnsNull_WhenNoProductsToDelete(): void
     {
         $apiKey = 'klevu-js-key';
-        $this->cleanIndexingEntities(apiKey: $apiKey);
 
         $this->createStore();
         $storeFixture = $this->storeFixturesPool->get('test_store');
@@ -198,27 +195,24 @@ class EntityIndexerServiceDeleteTest extends TestCase
             jsApiKey: $apiKey,
             restAuthKey: 'klevu-rest-key',
         );
+        $this->cleanIndexingEntities(apiKey: $apiKey);
 
         $this->mockBatchServicePutApiCall(isCalled: false);
         $this->mockBatchServiceDeleteApiCall(isCalled: false);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(apiKey: $apiKey);
+        $results = $service->execute(apiKey: $apiKey);
+        $result = $results->current();
 
-        $this->assertSame(
-            expected: IndexerResultStatuses::NOOP,
-            actual: $result->getStatus(),
-            message: 'Status: ' . $result->getStatus()->name,
-        );
+        $this->assertNull(actual: $result);
     }
 
     /**
      * @magentoDbIsolation disabled
      */
-    public function testExecute_ReturnsNoop_WhenProductSyncDisabled(): void
+    public function testExecute_ReturnsNull_WhenProductSyncDisabled(): void
     {
         $apiKey = 'klevu-js-key';
-        $this->cleanIndexingEntities(apiKey: $apiKey);
 
         $this->createStore();
         $storeFixture = $this->storeFixturesPool->get('test_store');
@@ -253,13 +247,10 @@ class EntityIndexerServiceDeleteTest extends TestCase
         $this->mockBatchServiceDeleteApiCall(isCalled: false);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(apiKey: $apiKey);
+        $results = $service->execute(apiKey: $apiKey);
+        $result = $results->current();
 
-        $this->assertSame(
-            expected: IndexerResultStatuses::NOOP,
-            actual: $result->getStatus(),
-            message: 'Status: ' . $result->getStatus()->name,
-        );
+        $this->assertNull(actual: $result);
     }
 
     /**
@@ -297,7 +288,8 @@ class EntityIndexerServiceDeleteTest extends TestCase
         $this->mockBatchServiceDeleteApiCall(isCalled: true, isSuccessful: false);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(apiKey: $apiKey);
+        $results = $service->execute(apiKey: $apiKey);
+        $result = $results->current();
 
         $this->assertSame(
             expected: IndexerResultStatuses::PARTIAL,
@@ -352,7 +344,8 @@ class EntityIndexerServiceDeleteTest extends TestCase
         $this->mockBatchServiceDeleteApiCall(isCalled: true, isSuccessful: true);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(apiKey: $apiKey);
+        $results = $service->execute(apiKey: $apiKey);
+        $result = $results->current();
 
         $this->assertSame(
             expected: IndexerResultStatuses::SUCCESS,
@@ -417,7 +410,8 @@ class EntityIndexerServiceDeleteTest extends TestCase
         $this->mockBatchServiceDeleteApiCall(isCalled: true, isSuccessful: true);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(apiKey: $apiKey);
+        $results = $service->execute(apiKey: $apiKey);
+        $result = $results->current();
 
         $this->assertSame(
             expected: IndexerResultStatuses::SUCCESS,
@@ -481,7 +475,8 @@ class EntityIndexerServiceDeleteTest extends TestCase
         $this->mockBatchServiceDeleteApiCall(isCalled: true, isSuccessful: true);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(apiKey: $apiKey);
+        $results = $service->execute(apiKey: $apiKey);
+        $result = $results->current();
 
         $this->assertSame(
             expected: IndexerResultStatuses::SUCCESS,
@@ -615,7 +610,8 @@ class EntityIndexerServiceDeleteTest extends TestCase
         $this->mockBatchServiceDeleteApiCall(isCalled: true, isSuccessful: true);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(apiKey: $apiKey);
+        $results = $service->execute(apiKey: $apiKey);
+        $result = $results->current();
 
         $this->assertSame(
             expected: IndexerResultStatuses::SUCCESS,
@@ -761,7 +757,8 @@ class EntityIndexerServiceDeleteTest extends TestCase
         $this->mockBatchServiceDeleteApiCall(isCalled: true, isSuccessful: true);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(apiKey: $apiKey);
+        $results = $service->execute(apiKey: $apiKey);
+        $result = $results->current();
 
         $this->assertSame(
             expected: IndexerResultStatuses::SUCCESS,
@@ -892,7 +889,8 @@ class EntityIndexerServiceDeleteTest extends TestCase
         $this->mockBatchServiceDeleteApiCall(isCalled: true, isSuccessful: true);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(apiKey: $apiKey);
+        $results = $service->execute(apiKey: $apiKey);
+        $result = $results->current();
 
         $this->assertSame(
             expected: IndexerResultStatuses::SUCCESS,
@@ -988,7 +986,8 @@ class EntityIndexerServiceDeleteTest extends TestCase
         ]);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(apiKey: $jsApiKey);
+        $results = $service->execute(apiKey: $jsApiKey);
+        $result = $results->current();
 
         $this->assertSame(
             expected: IndexerResultStatuses::SUCCESS,

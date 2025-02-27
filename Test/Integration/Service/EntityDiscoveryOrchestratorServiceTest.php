@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace Klevu\IndexingProducts\Test\Integration\Service;
 
+use Klevu\Configuration\Service\Provider\ScopeProviderInterface;
 use Klevu\Indexing\Model\IndexingEntity;
 use Klevu\Indexing\Model\ResourceModel\IndexingEntity\Collection;
 use Klevu\Indexing\Service\EntityDiscoveryOrchestratorService;
@@ -16,10 +17,13 @@ use Klevu\IndexingApi\Api\Data\IndexingEntityInterface;
 use Klevu\IndexingApi\Model\Source\Actions;
 use Klevu\IndexingApi\Service\EntityDiscoveryOrchestratorServiceInterface;
 use Klevu\IndexingProducts\Service\Provider\EntityDiscoveryProvider as ProductDiscoveryProviderVirtualType;
+use Klevu\TestFixtures\Catalog\Attribute\AttributeFixturePool;
+use Klevu\TestFixtures\Catalog\AttributeTrait;
 use Klevu\TestFixtures\Catalog\ProductTrait;
 use Klevu\TestFixtures\Store\StoreFixturesPool;
 use Klevu\TestFixtures\Store\StoreTrait;
 use Klevu\TestFixtures\Traits\ObjectInstantiationTrait;
+use Klevu\TestFixtures\Traits\SetAuthKeysTrait;
 use Klevu\TestFixtures\Traits\TestImplementsInterfaceTrait;
 use Klevu\TestFixtures\Traits\TestInterfacePreferenceTrait;
 use Klevu\TestFixtures\Website\WebsiteFixturesPool;
@@ -27,6 +31,8 @@ use Klevu\TestFixtures\Website\WebsiteTrait;
 use Magento\Catalog\Api\ProductWebsiteLinkRepositoryInterface;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\Product\Type;
+use Magento\Catalog\Model\Product\Visibility;
+use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\Downloadable\Model\Product\Type as DownloadableType;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\LocalizedException;
@@ -45,9 +51,11 @@ use TddWizard\Fixtures\Catalog\ProductFixturePool;
  */
 class EntityDiscoveryOrchestratorServiceTest extends TestCase
 {
+    use AttributeTrait;
     use IndexingEntitiesTrait;
     use ObjectInstantiationTrait;
     use ProductTrait;
+    use SetAuthKeysTrait;
     use StoreTrait;
     use TestImplementsInterfaceTrait;
     use TestInterfacePreferenceTrait;
@@ -70,6 +78,7 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $this->objectManager = Bootstrap::getObjectManager();
         $this->websiteFixturesPool = $this->objectManager->get(WebsiteFixturesPool::class);
         $this->storeFixturesPool = $this->objectManager->get(StoreFixturesPool::class);
+        $this->attributeFixturePool = $this->objectManager->get(AttributeFixturePool::class);
         $this->productFixturePool = $this->objectManager->get(ProductFixturePool::class);
     }
 
@@ -82,6 +91,7 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         parent::tearDown();
 
         $this->productFixturePool->rollback();
+        $this->attributeFixturePool->rollback();
         $this->storeFixturesPool->rollback();
         $this->websiteFixturesPool->rollback();
     }
@@ -153,7 +163,16 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $this->cleanIndexingEntities($apiKey);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT'], apiKeys: [$apiKey]);
+        $resultGenerators = $service->execute(entityTypes: ['KLEVU_PRODUCT'], apiKeys: [$apiKey]);
+        $resultsArray = [];
+        foreach ($resultGenerators as $resultGenerator) {
+            $resultsArray[] = iterator_to_array($resultGenerator);
+        }
+        $results = array_filter(
+            array_merge(...$resultsArray),
+        );
+        $result = array_shift($results);
+
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);
@@ -235,7 +254,16 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $this->cleanIndexingEntities($apiKey);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT'], apiKeys: [$apiKey]);
+        $resultGenerators = $service->execute(entityTypes: ['KLEVU_PRODUCT'], apiKeys: [$apiKey]);
+        $resultsArray = [];
+        foreach ($resultGenerators as $resultGenerator) {
+            $resultsArray[] = iterator_to_array($resultGenerator);
+        }
+        $results = array_filter(
+            array_merge(...$resultsArray),
+        );
+        $result = array_shift($results);
+
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);
@@ -314,7 +342,16 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $this->cleanIndexingEntities($apiKey2);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
+        $resultGenerators = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
+        $resultsArray = [];
+        foreach ($resultGenerators as $resultGenerator) {
+            $resultsArray[] = iterator_to_array($resultGenerator);
+        }
+        $results = array_filter(
+            array_merge(...$resultsArray),
+        );
+        $result = array_shift($results);
+
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);
@@ -423,7 +460,16 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $this->cleanIndexingEntities($apiKey);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
+        $resultGenerators = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
+        $resultsArray = [];
+        foreach ($resultGenerators as $resultGenerator) {
+            $resultsArray[] = iterator_to_array($resultGenerator);
+        }
+        $results = array_filter(
+            array_merge(...$resultsArray),
+        );
+        $result = array_shift($results);
+
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);
@@ -476,7 +522,16 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
+        $resultGenerators = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
+        $resultsArray = [];
+        foreach ($resultGenerators as $resultGenerator) {
+            $resultsArray[] = iterator_to_array($resultGenerator);
+        }
+        $results = array_filter(
+            array_merge(...$resultsArray),
+        );
+        $result = array_shift($results);
+
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);
@@ -562,6 +617,7 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $this->createIndexingEntity(data: [
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => DownloadableType::TYPE_DOWNLOADABLE,
             IndexingEntity::TARGET_ID => (int)$product1->getId(),
             IndexingEntity::IS_INDEXABLE => true,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
@@ -579,7 +635,16 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
+        $resultGenerators = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
+        $resultsArray = [];
+        foreach ($resultGenerators as $resultGenerator) {
+            $resultsArray[] = iterator_to_array($resultGenerator);
+        }
+        $results = array_filter(
+            array_merge(...$resultsArray),
+        );
+        $result = array_shift($results);
+
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);
@@ -631,7 +696,16 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
+        $resultGenerators = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
+        $resultsArray = [];
+        foreach ($resultGenerators as $resultGenerator) {
+            $resultsArray[] = iterator_to_array($resultGenerator);
+        }
+        $results = array_filter(
+            array_merge(...$resultsArray),
+        );
+        $result = array_shift($results);
+
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);
@@ -766,7 +840,16 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
+        $resultGenerators = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
+        $resultsArray = [];
+        foreach ($resultGenerators as $resultGenerator) {
+            $resultsArray[] = iterator_to_array($resultGenerator);
+        }
+        $results = array_filter(
+            array_merge(...$resultsArray),
+        );
+        $result = array_shift($results);
+
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);
@@ -866,7 +949,16 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
+        $resultGenerators = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
+        $resultsArray = [];
+        foreach ($resultGenerators as $resultGenerator) {
+            $resultsArray[] = iterator_to_array($resultGenerator);
+        }
+        $results = array_filter(
+            array_merge(...$resultsArray),
+        );
+        $result = array_shift($results);
+
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);
@@ -1003,6 +1095,7 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $this->createIndexingEntity(data: [
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => DownloadableType::TYPE_DOWNLOADABLE,
             IndexingEntity::TARGET_ID => (int)$product1->getId(),
             IndexingEntity::IS_INDEXABLE => true,
             IndexingEntity::NEXT_ACTION => Actions::DELETE,
@@ -1020,7 +1113,16 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
+        $resultGenerators = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
+        $resultsArray = [];
+        foreach ($resultGenerators as $resultGenerator) {
+            $resultsArray[] = iterator_to_array($resultGenerator);
+        }
+        $results = array_filter(
+            array_merge(...$resultsArray),
+        );
+        $result = array_shift($results);
+
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);
@@ -1129,7 +1231,16 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
+        $resultGenerators = $service->execute(entityTypes: ['KLEVU_PRODUCT']);
+        $resultsArray = [];
+        foreach ($resultGenerators as $resultGenerator) {
+            $resultsArray[] = iterator_to_array($resultGenerator);
+        }
+        $results = array_filter(
+            array_merge(...$resultsArray),
+        );
+        $result = array_shift($results);
+
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);
@@ -1152,7 +1263,6 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
     public function testExecute_UpdatesAllProductsWhenEmptyArrayProvided(): void
     {
         $apiKey = 'klevu-js-api-key';
-        $this->cleanIndexingEntities($apiKey);
 
         $this->createWebsite();
         $websiteFixture = $this->websiteFixturesPool->get('test_website');
@@ -1200,6 +1310,7 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $this->createIndexingEntity(data: [
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => DownloadableType::TYPE_DOWNLOADABLE,
             IndexingEntity::TARGET_ID => (int)$product1->getId(),
             IndexingEntity::IS_INDEXABLE => true,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
@@ -1217,7 +1328,16 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT'], entityIds: []);
+        $resultGenerators = $service->execute(entityTypes: ['KLEVU_PRODUCT'], entityIds: []);
+        $resultsArray = [];
+        foreach ($resultGenerators as $resultGenerator) {
+            $resultsArray[] = iterator_to_array($resultGenerator);
+        }
+        $results = array_filter(
+            array_merge(...$resultsArray),
+        );
+        $result = array_shift($results);
+
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);
@@ -1304,6 +1424,7 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $this->createIndexingEntity(data: [
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => DownloadableType::TYPE_DOWNLOADABLE,
             IndexingEntity::TARGET_ID => (int)$product1->getId(),
             IndexingEntity::IS_INDEXABLE => true,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
@@ -1321,7 +1442,16 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         ]);
 
         $service = $this->instantiateTestObject();
-        $result = $service->execute(entityTypes: ['KLEVU_PRODUCT'], entityIds: [(int)$product1->getId()]);
+        $resultGenerators = $service->execute(entityTypes: ['KLEVU_PRODUCT'], entityIds: [(int)$product1->getId()]);
+        $resultsArray = [];
+        foreach ($resultGenerators as $resultGenerator) {
+            $resultsArray[] = iterator_to_array($resultGenerator);
+        }
+        $results = array_filter(
+            array_merge(...$resultsArray),
+        );
+        $result = array_shift($results);
+
         $this->assertTrue($result->isSuccess());
 
         $collection = $this->objectManager->create(Collection::class);
@@ -1329,6 +1459,139 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
         $indexingEntities = $collection->getItems();
         $this->assertUpdateIndexingEntity($indexingEntities, $product1, $apiKey, Actions::ADD);
         $this->assertUpdateIndexingEntity($indexingEntities, $product2, $apiKey, Actions::ADD, false);
+
+        $this->cleanIndexingEntities($apiKey);
+    }
+
+    /**
+     * @magentoDbIsolation disabled
+     */
+    public function testExecute_HandlesProductTypeChange(): void
+    {
+        $apiKey = 'klevu-123456789';
+
+        $this->createStore();
+        $storeFixture = $this->storeFixturesPool->get('test_store');
+        $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
+        $scopeProvider->setCurrentScope($storeFixture->get());
+        $this->setAuthKeys(
+            scopeProvider: $scopeProvider,
+            jsApiKey: $apiKey,
+            restAuthKey: 'klevu-test-rest-auth-key',
+        );
+
+        $this->createAttribute([
+            'attribute_type' => 'configurable',
+        ]);
+        $attributeFixture = $this->attributeFixturePool->get('test_attribute');
+
+        $this->createProduct([
+            'key' => 'test_product_variant_1',
+            'name' => 'Klevu Simple Product Test',
+            'sku' => 'KLEVU-SIMPLE-SKU-001',
+            'price' => 4900.99,
+            'in_stock' => true,
+            'qty' => 3,
+            'data' => [
+                'short_description' => 'This is a short description variant 1',
+                'description' => 'This is a longer description than the short description variant 1',
+                $attributeFixture->getAttributeCode() => '1',
+            ],
+        ]);
+        $variantProductFixture1 = $this->productFixturePool->get('test_product_variant_1');
+        $this->createProduct([
+            'key' => 'test_product_variant_2',
+            'name' => 'Klevu Simple Product Test',
+            'sku' => 'KLEVU-SIMPLE-SKU-002',
+            'price' => 3900.99,
+            'in_stock' => true,
+            'qty' => 3,
+            'data' => [
+                'short_description' => 'This is a short description variant 2',
+                'description' => 'This is a longer description than the short description variant 2',
+                $attributeFixture->getAttributeCode() => '2',
+            ],
+        ]);
+        $variantProductFixture2 = $this->productFixturePool->get('test_product_variant_2');
+
+        $this->createProduct([
+            'type_id' => Configurable::TYPE_CODE,
+            'name' => 'Klevu Configurable Product Test',
+            'sku' => 'KLEVU-CONFIGURABLE-SKU-001',
+            'price' => 9900.99,
+            'in_stock' => true,
+            'visibility' => Visibility::VISIBILITY_IN_SEARCH,
+            'configurable_attributes' => [
+                $attributeFixture->getAttribute(),
+            ],
+            'variants' => [
+                $variantProductFixture1->getProduct(),
+                $variantProductFixture2->getProduct(),
+            ],
+            'data' => [
+                'short_description' => 'This is a Configurable product short description',
+                'description' => 'This is a Configurable product longer description than the short description',
+                'special_price' => 5400.99,
+                'special_price_from' => '1970-01-01',
+                'special_price_to' => '2099-12-31',
+            ],
+            'images' => [
+                'klevu_image' => 'klevu_test_image_name.jpg',
+                'image' => 'klevu_test_image_symbol.jpg',
+            ],
+        ]);
+        $productFixture = $this->productFixturePool->get('test_product');
+
+        $this->cleanIndexingEntities(apiKey: $apiKey);
+        // spoof that this configurable product was a simple product last time discovery ran
+        $this->createIndexingEntity([
+            IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
+            IndexingEntity::API_KEY => $apiKey,
+            IndexingEntity::TARGET_ID => $productFixture->getId(),
+            IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
+            IndexingEntity::LAST_ACTION => Actions::ADD,
+            IndexingEntity::LAST_ACTION_TIMESTAMP => date('Y-m-d H:i:s'),
+        ]);
+
+        $service = $this->instantiateTestObject();
+        $resultGenerators = $service->execute(
+            entityTypes: ['KLEVU_PRODUCT'],
+            entityIds: [(int)$productFixture->getId()],
+        );
+        $resultsArray = [];
+        foreach ($resultGenerators as $resultGenerator) {
+            $resultsArray[] = iterator_to_array($resultGenerator);
+        }
+        $results = array_filter(
+            array_merge(...$resultsArray),
+        );
+        $result = array_shift($results);
+
+        $this->assertTrue($result->isSuccess());
+
+        $collection = $this->objectManager->create(Collection::class);
+        $collection->addFieldToFilter(IndexingEntity::API_KEY, ['eq' => $apiKey]);
+        $collection->addFieldToFilter(IndexingEntity::TARGET_ID, ['eq' => $productFixture->getId()]);
+        $indexingEntities = $collection->getItems();
+
+        $simpleIndexingEntities = array_filter(
+            array: $indexingEntities,
+            callback: static fn (IndexingEntityInterface $indexingEntity): bool => (
+                $indexingEntity->getTargetEntitySubtype() === Type::TYPE_SIMPLE
+            ),
+        );
+        $simpleIndexingEntity = array_shift($simpleIndexingEntities);
+        $this->assertSame(expected: Actions::DELETE, actual: $simpleIndexingEntity->getNextAction());
+
+        $configurableIndexingEntities = array_filter(
+            array: $indexingEntities,
+            callback: static fn (IndexingEntityInterface $indexingEntity): bool => (
+                $indexingEntity->getTargetEntitySubtype() === Configurable::TYPE_CODE
+            ),
+        );
+        $configurableIndexingEntity = array_shift($configurableIndexingEntities);
+        $this->assertSame(expected: Actions::ADD, actual: $configurableIndexingEntity->getNextAction());
 
         $this->cleanIndexingEntities($apiKey);
     }
@@ -1463,12 +1726,19 @@ class EntityDiscoveryOrchestratorServiceTest extends TestCase
                 ? Actions::UPDATE
                 : Actions::NO_ACTION,
             actual: $indexingEntity->getNextAction(),
-            message: 'Next Action',
+            message: sprintf(
+                'Next Action: Expected %s, Received %s',
+                $updateRequired ? Actions::UPDATE->value : Actions::NO_ACTION->value,
+                $indexingEntity->getNextAction()->value,
+            ),
         );
         $this->assertSame(
             expected: $lastAction,
             actual: $indexingEntity->getLastAction(),
-            message: 'Last Action',
+            message: sprintf('Last Action Expected %s, Received %s',
+                $lastAction->value,
+                $indexingEntity->getLastAction()->value,
+            ),
         );
         $this->assertNotNull(
             actual: $indexingEntity->getLastActionTimestamp(),

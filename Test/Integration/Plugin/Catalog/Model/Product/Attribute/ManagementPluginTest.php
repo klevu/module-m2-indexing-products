@@ -120,7 +120,6 @@ class ManagementPluginTest extends TestCase
     public function testAfterAssign_AllProductsInAttributeSetAreSetToUpdate(): void
     {
         $apiKey = 'klevu-js-api-key';
-        $this->cleanIndexingEntities($apiKey);
 
         $this->createStore();
         $storeFixture = $this->storeFixturesPool->get('test_store');
@@ -169,6 +168,7 @@ class ManagementPluginTest extends TestCase
 
         $this->createIndexingEntity([
             IndexingEntity::TARGET_ID => $productFixture1->getId(),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
             IndexingEntity::LAST_ACTION => Actions::ADD,
@@ -176,6 +176,7 @@ class ManagementPluginTest extends TestCase
         ]);
         $this->createIndexingEntity([
             IndexingEntity::TARGET_ID => $productFixture2->getId(),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
             IndexingEntity::LAST_ACTION => Actions::ADD,
@@ -225,7 +226,6 @@ class ManagementPluginTest extends TestCase
     public function testAfterUnassign_AllProductsInAttributeSetAreSetToUpdate(): void
     {
         $apiKey = 'klevu-js-api-key';
-        $this->cleanIndexingEntities($apiKey);
 
         $this->createStore();
         $storeFixture = $this->storeFixturesPool->get('test_store');
@@ -274,6 +274,7 @@ class ManagementPluginTest extends TestCase
 
         $this->createIndexingEntity([
             IndexingEntity::TARGET_ID => $productFixture1->getId(),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
             IndexingEntity::LAST_ACTION => Actions::ADD,
@@ -281,6 +282,7 @@ class ManagementPluginTest extends TestCase
         ]);
         $this->createIndexingEntity([
             IndexingEntity::TARGET_ID => $productFixture2->getId(),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
             IndexingEntity::LAST_ACTION => Actions::ADD,

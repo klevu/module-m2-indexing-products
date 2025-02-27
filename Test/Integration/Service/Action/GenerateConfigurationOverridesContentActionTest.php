@@ -300,13 +300,36 @@ class GenerateConfigurationOverridesContentActionTest extends TestCase
             );
             $this->assertSame(
                 expected: [
-                'pipeline' => 'Stage\Extract',
-                    'args' => [
-                        'extraction' => 'currentProduct::getTestAttributeString()',
-                        'transformations' => [
-                            'ToString',
-                            'StripTags(null, ["script"])',
-                            'Trim',
+                    'stages' => [
+                        'processAttribute' => [
+                            'pipeline' => 'Pipeline\Fallback',
+                            'stages' => [
+                                'getData' => [
+                                    'stages' => [
+                                        'extract' => [
+                                            'pipeline' => 'Stage\Extract',
+                                            'args' => [
+                                                'extraction' => 'currentProduct::getTestAttributeString()',
+                                                'transformations' => [],
+                                            ],
+                                        ],
+                                        'validate' => [
+                                            'pipeline' => 'Stage\Validate',
+                                            'args' => [
+                                                'validation' => [
+                                                    'IsNotIn([null, ""], true)',
+                                                ],
+                                            ],
+                                        ],
+                                        'transform' => [
+                                            'pipeline' => 'Stage\Transform',
+                                            'args' => [
+                                                'transformation' => 'ToString|StripTags(null, ["script"])|Trim',
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
                         ],
                     ],
                 ],
@@ -320,13 +343,36 @@ class GenerateConfigurationOverridesContentActionTest extends TestCase
             );
             $this->assertSame(
                 expected: [
-                    'pipeline' => 'Stage\Extract',
-                    'args' => [
-                        'extraction' => 'currentProduct::getTestAttributeStringGlobal()',
-                        'transformations' => [
-                            'ToString',
-                            'StripTags(null, ["script"])',
-                            'Trim',
+                    'stages' => [
+                        'processAttribute' => [
+                            'pipeline' => 'Pipeline\Fallback',
+                            'stages' => [
+                                'getData' => [
+                                    'stages' => [
+                                        'extract' => [
+                                            'pipeline' => 'Stage\Extract',
+                                            'args' => [
+                                                'extraction' => 'currentProduct::getTestAttributeStringGlobal()',
+                                                'transformations' => [],
+                                            ],
+                                        ],
+                                        'validate' => [
+                                            'pipeline' => 'Stage\Validate',
+                                            'args' => [
+                                                'validation' => [
+                                                    'IsNotIn([null, ""], true)',
+                                                ],
+                                            ],
+                                        ],
+                                        'transform' => [
+                                            'pipeline' => 'Stage\Transform',
+                                            'args' => [
+                                                'transformation' => 'ToString|StripTags(null, ["script"])|Trim',
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
                         ],
                     ],
                 ],
@@ -340,14 +386,36 @@ class GenerateConfigurationOverridesContentActionTest extends TestCase
             );
             $this->assertSame(
                 expected: [
-                    'pipeline' => 'Stage\Extract',
-                    'args' => [
-                        'extraction' => 'currentProduct::getTestAttributeStringHtml()',
-                        'transformations' => [
-                            'ToString',
-                            'StripTags(["p", "br", "hr", "h1", "h2", "h3", "h4", "h5", "h6", "strong", "em", "ul", "ol", "li", "dl", "dt", "dd", "img", "sub", "sup", "small"], ["script"])', //phpcs:ignore Generic.Files.LineLength.TooLong
-                            'EscapeHtml',
-                            'Trim',
+                    'stages' => [
+                        'processAttribute' => [
+                            'pipeline' => 'Pipeline\Fallback',
+                            'stages' => [
+                                'getData' => [
+                                    'stages' => [
+                                        'extract' => [
+                                            'pipeline' => 'Stage\Extract',
+                                            'args' => [
+                                                'extraction' => 'currentProduct::getTestAttributeStringHtml()',
+                                                'transformations' => [],
+                                            ],
+                                        ],
+                                        'validate' => [
+                                            'pipeline' => 'Stage\Validate',
+                                            'args' => [
+                                                'validation' => [
+                                                    'IsNotIn([null, ""], true)',
+                                                ],
+                                            ],
+                                        ],
+                                        'transform' => [
+                                            'pipeline' => 'Stage\Transform',
+                                            'args' => [
+                                                'transformation' => 'ToString|StripTags(["p", "br", "hr", "h1", "h2", "h3", "h4", "h5", "h6", "strong", "em", "ul", "ol", "li", "dl", "dt", "dd", "img", "sub", "sup", "small"], ["script"])|EscapeHtml|Trim', // phpcs:ignore Generic.Files.LineLength.TooLong
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
                         ],
                     ],
                 ],
@@ -378,11 +446,36 @@ class GenerateConfigurationOverridesContentActionTest extends TestCase
             );
             $this->assertSame(
                 expected: [
-                    'pipeline' => 'Stage\Extract',
-                    'args' => [
-                        'extraction' => 'currentProduct::getTestAttributeNumber()',
-                        'transformations' => [
-                            'ToFloat',
+                    'stages' => [
+                        'processAttribute' => [
+                            'pipeline' => 'Pipeline\Fallback',
+                            'stages' => [
+                                'getData' => [
+                                    'stages' => [
+                                        'extract' => [
+                                            'pipeline' => 'Stage\Extract',
+                                            'args' => [
+                                                'extraction' => 'currentProduct::getTestAttributeNumber()',
+                                                'transformations' => [],
+                                            ],
+                                        ],
+                                        'validate' => [
+                                            'pipeline' => 'Stage\Validate',
+                                            'args' => [
+                                                'validation' => [
+                                                    'IsNotIn([null, ""], true)',
+                                                ],
+                                            ],
+                                        ],
+                                        'transform' => [
+                                            'pipeline' => 'Stage\Transform',
+                                            'args' => [
+                                                'transformation' => 'ToFloat',
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
                         ],
                     ],
                 ],
@@ -396,11 +489,36 @@ class GenerateConfigurationOverridesContentActionTest extends TestCase
             );
             $this->assertSame(
                 expected: [
-                    'pipeline' => 'Stage\Extract',
-                    'args' => [
-                        'extraction' => 'currentProduct::getTestAttributeNumberGlobal()',
-                        'transformations' => [
-                            'ToFloat',
+                    'stages' => [
+                        'processAttribute' => [
+                            'pipeline' => 'Pipeline\Fallback',
+                            'stages' => [
+                                'getData' => [
+                                    'stages' => [
+                                        'extract' => [
+                                            'pipeline' => 'Stage\Extract',
+                                            'args' => [
+                                                'extraction' => 'currentProduct::getTestAttributeNumberGlobal()',
+                                                'transformations' => [],
+                                            ],
+                                        ],
+                                        'validate' => [
+                                            'pipeline' => 'Stage\Validate',
+                                            'args' => [
+                                                'validation' => [
+                                                    'IsNotIn([null, ""], true)',
+                                                ],
+                                            ],
+                                        ],
+                                        'transform' => [
+                                            'pipeline' => 'Stage\Transform',
+                                            'args' => [
+                                                'transformation' => 'ToFloat',
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
                         ],
                     ],
                 ],
@@ -441,14 +559,38 @@ class GenerateConfigurationOverridesContentActionTest extends TestCase
             );
             $this->assertSame(
                 expected: [
-                    'pipeline' => 'Stage\Extract',
-                    'args' => [
-                        'extraction' => 'currentProduct::getTestAttributeMultivalue()',
-                        'transformations' => [
-                            'ToArray',
-                            'ToString',
-                            'StripTags(null, ["script"])',
-                            'Trim',
+                    'stages' => [
+                        'processAttribute' => [
+                            'pipeline' => 'Pipeline\Fallback',
+                            'stages' => [
+                                'getData' => [
+                                    'stages' => [
+                                        'extract' => [
+                                            'pipeline' => 'Stage\Extract',
+                                            'args' => [
+                                                'extraction' => 'currentProduct::getTestAttributeMultivalue()',
+                                                'transformations' => [
+                                                    'ToArray',
+                                                ],
+                                            ],
+                                        ],
+                                        'validate' => [
+                                            'pipeline' => 'Stage\Validate',
+                                            'args' => [
+                                                'validation' => [
+                                                    'IsNotEqualTo([], true)',
+                                                ],
+                                            ],
+                                        ],
+                                        'transform' => [
+                                            'pipeline' => 'Stage\Transform',
+                                            'args' => [
+                                                'transformation' => 'ToString|StripTags(null, ["script"])|Trim|FilterCompare([$, "nempty"])', // phpcs:ignore Generic.Files.LineLength.TooLong
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
                         ],
                     ],
                 ],
@@ -462,14 +604,38 @@ class GenerateConfigurationOverridesContentActionTest extends TestCase
             );
             $this->assertSame(
                 expected: [
-                    'pipeline' => 'Stage\Extract',
-                    'args' => [
-                        'extraction' => 'currentProduct::getTestAttributeMultivalueGlobal()',
-                        'transformations' => [
-                            'ToArray',
-                            'ToString',
-                            'StripTags(null, ["script"])',
-                            'Trim',
+                    'stages' => [
+                        'processAttribute' => [
+                            'pipeline' => 'Pipeline\Fallback',
+                            'stages' => [
+                                'getData' => [
+                                    'stages' => [
+                                        'extract' => [
+                                            'pipeline' => 'Stage\Extract',
+                                            'args' => [
+                                                'extraction' => 'currentProduct::getTestAttributeMultivalueGlobal()',
+                                                'transformations' => [
+                                                    'ToArray',
+                                                ],
+                                            ],
+                                        ],
+                                        'validate' => [
+                                            'pipeline' => 'Stage\Validate',
+                                            'args' => [
+                                                'validation' => [
+                                                    'IsNotEqualTo([], true)',
+                                                ],
+                                            ],
+                                        ],
+                                        'transform' => [
+                                            'pipeline' => 'Stage\Transform',
+                                            'args' => [
+                                                'transformation' => 'ToString|StripTags(null, ["script"])|Trim|FilterCompare([$, "nempty"])', // phpcs:ignore Generic.Files.LineLength.TooLong
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
                         ],
                     ],
                 ],
@@ -483,15 +649,39 @@ class GenerateConfigurationOverridesContentActionTest extends TestCase
             );
             $this->assertSame(
                 expected: [
-                    'pipeline' => 'Stage\Extract',
-                    'args' => [
-                        'extraction' => 'currentProduct::',
-                        'transformations' => [
-                            'GetAttributeText("test_attribute_multivalue_usessource")',
-                            'ToArray',
-                            'ToString',
-                            'StripTags(null, ["script"])',
-                            'Trim',
+                    'stages' => [
+                        'processAttribute' => [
+                            'pipeline' => 'Pipeline\Fallback',
+                            'stages' => [
+                                'getData' => [
+                                    'stages' => [
+                                        'extract' => [
+                                            'pipeline' => 'Stage\Extract',
+                                            'args' => [
+                                                'extraction' => 'currentProduct::',
+                                                'transformations' => [
+                                                    'GetAttributeText("test_attribute_multivalue_usessource")',
+                                                    'ToArray',
+                                                ],
+                                            ],
+                                        ],
+                                        'validate' => [
+                                            'pipeline' => 'Stage\Validate',
+                                            'args' => [
+                                                'validation' => [
+                                                    'IsNotEqualTo([], true)',
+                                                ],
+                                            ],
+                                        ],
+                                        'transform' => [
+                                            'pipeline' => 'Stage\Transform',
+                                            'args' => [
+                                                'transformation' => 'ToString|StripTags(null, ["script"])|Trim|FilterCompare([$, "nempty"])', // phpcs:ignore Generic.Files.LineLength.TooLong
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
                         ],
                     ],
                 ],
@@ -505,15 +695,39 @@ class GenerateConfigurationOverridesContentActionTest extends TestCase
             );
             $this->assertSame(
                 expected: [
-                    'pipeline' => 'Stage\Extract',
-                    'args' => [
-                        'extraction' => 'currentProduct::',
-                        'transformations' => [
-                            'GetAttributeText("test_attribute_multivalue_global_usessource")',
-                            'ToArray',
-                            'ToString',
-                            'StripTags(null, ["script"])',
-                            'Trim',
+                    'stages' => [
+                        'processAttribute' => [
+                            'pipeline' => 'Pipeline\Fallback',
+                            'stages' => [
+                                'getData' => [
+                                    'stages' => [
+                                        'extract' => [
+                                            'pipeline' => 'Stage\Extract',
+                                            'args' => [
+                                                'extraction' => 'currentProduct::',
+                                                'transformations' => [
+                                                    'GetAttributeText("test_attribute_multivalue_global_usessource")',
+                                                    'ToArray',
+                                                ],
+                                            ],
+                                        ],
+                                        'validate' => [
+                                            'pipeline' => 'Stage\Validate',
+                                            'args' => [
+                                                'validation' => [
+                                                    'IsNotEqualTo([], true)',
+                                                ],
+                                            ],
+                                        ],
+                                        'transform' => [
+                                            'pipeline' => 'Stage\Transform',
+                                            'args' => [
+                                                'transformation' => 'ToString|StripTags(null, ["script"])|Trim|FilterCompare([$, "nempty"])', // phpcs:ignore Generic.Files.LineLength.TooLong
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
                         ],
                     ],
                 ],

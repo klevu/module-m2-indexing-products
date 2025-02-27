@@ -61,6 +61,10 @@ class ImagePathProviderTest extends TestCase
         $this->productFixturePool->rollback();
     }
 
+    /**
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     */
     public function testGet_ReturnsAssetPath(): void
     {
         $this->createProduct([

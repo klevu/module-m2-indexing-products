@@ -118,11 +118,15 @@ class ProductEntityProvider implements EntityProviderInterface
             /** @var ProductInterface[] $products */
             $products = $collection->getItems();
             if (!$products) {
+                $collection->clear();
+                unset($products, $collection);
                 break;
             }
             yield $products;
             $lastProduct = array_pop($products);
             $currentEntityId = (int)$lastProduct->getId();
+            $collection->clear();
+            unset($products, $collection);
             if (null === $this->batchSize || !$currentEntityId) {
                 break;
             }

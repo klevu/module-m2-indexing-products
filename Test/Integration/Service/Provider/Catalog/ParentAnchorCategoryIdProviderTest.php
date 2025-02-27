@@ -75,6 +75,10 @@ class ParentAnchorCategoryIdProviderTest extends TestCase
         $this->assertCount(expectedCount: 0, haystack: $result);
     }
 
+    /**
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     */
     public function testGet_ReturnsArrayOfParentAnchorCategoryIds(): void
     {
         $this->createCategory([

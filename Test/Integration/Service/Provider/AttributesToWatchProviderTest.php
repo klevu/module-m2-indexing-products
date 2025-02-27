@@ -60,6 +60,9 @@ class AttributesToWatchProviderTest extends TestCase
         $this->attributeFixturePool->rollback();
     }
 
+    /**
+     * @magentoAppIsolation enabled
+     */
     public function testGetAttributeCode_ReturnsMergedListOfAttributeCodes(): void
     {
         $this->createAttribute([

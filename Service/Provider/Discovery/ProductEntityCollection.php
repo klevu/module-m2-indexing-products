@@ -11,6 +11,7 @@ namespace Klevu\IndexingProducts\Service\Provider\Discovery;
 use Klevu\IndexingApi\Service\Provider\Discovery\ProductEntityCollectionInterface;
 use Klevu\IndexingProducts\Model\ResourceModel\Product\Collection as ProductCollection;
 use Klevu\IndexingProducts\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
+use Klevu\IndexingProducts\Service\Action\JoinStockToCollectionActionInterface;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Model\ResourceModel\Product\Collection as MagentoProductCollection;
 use Magento\CatalogInventory\Helper\Stock as StockHelper;
@@ -29,13 +30,11 @@ class ProductEntityCollection implements ProductEntityCollectionInterface
      */
     private readonly ProductCollectionFactory $productCollectionFactory;
     /**
-     * Would rather not use this deprecated class,
-     * however MSI has a plugin on this method to set the right data
-     * and this allows us to be compatible if MSI is removed from the codebase
-     *
+     * @deprecated changed to use JoinStockToCollectionActionInterface for performance gains
+     * @use $joinStockToCollectionAction
      * @var StockHelper
      */
-    private readonly StockHelper $stockHelper;
+    private readonly StockHelper $stockHelper; // @phpstan-ignore-line
     /**
      * @var string|null
      */
@@ -48,6 +47,10 @@ class ProductEntityCollection implements ProductEntityCollectionInterface
      * @var ExpressionFactory
      */
     private readonly ExpressionFactory $expressionFactory;
+    /**
+     * @var JoinStockToCollectionActionInterface
+     */
+    private readonly JoinStockToCollectionActionInterface $joinStockToCollectionAction;
 
     /**
      * @param ProductCollectionFactory $productCollectionFactory
@@ -55,6 +58,7 @@ class ProductEntityCollection implements ProductEntityCollectionInterface
      * @param string|null $productType
      * @param LoggerInterface|null $logger
      * @param ExpressionFactory|null $expressionFactory
+     * @param JoinStockToCollectionActionInterface|null $joinStockToCollectionAction
      */
     public function __construct(
         ProductCollectionFactory $productCollectionFactory,
@@ -62,6 +66,7 @@ class ProductEntityCollection implements ProductEntityCollectionInterface
         ?string $productType = null,
         ?LoggerInterface $logger = null,
         ?ExpressionFactory $expressionFactory = null,
+        ?JoinStockToCollectionActionInterface $joinStockToCollectionAction = null,
     ) {
         $this->productCollectionFactory = $productCollectionFactory;
         $this->stockHelper = $stockHelper;
@@ -69,6 +74,8 @@ class ProductEntityCollection implements ProductEntityCollectionInterface
         $objectManager = ObjectManager::getInstance();
         $this->logger = $logger ?: $objectManager->get(LoggerInterface::class);
         $this->expressionFactory = $expressionFactory ?: $objectManager->get(ExpressionFactory::class);
+        $this->joinStockToCollectionAction = $joinStockToCollectionAction
+            ?: $objectManager->get(JoinStockToCollectionActionInterface::class);
     }
 
     /**
@@ -118,12 +125,7 @@ class ProductEntityCollection implements ProductEntityCollectionInterface
         if ($this->productType) {
             $collection->addFieldToFilter(ProductInterface::TYPE_ID, $this->productType);
         }
-        /**
-         * Would rather not use this deprecated method,
-         * however MSI has a plugin on this method to set the right data
-         * and this allows us to be compatible if MSI is removed from the codebase
-         */
-        $this->stockHelper->addStockStatusToProducts(productCollection: $collection);
+        $this->joinStockToCollectionAction->execute(collection: $collection);
 
         return $collection;
     }
@@ -163,7 +165,10 @@ class ProductEntityCollection implements ProductEntityCollectionInterface
             ],
         );
         $connection = $collection->getConnection();
+        $return = (int)$connection->fetchOne(sql: $select->__toString());
+        $collection->clear();
+        unset($collection);
 
-        return (int)$connection->fetchOne(sql: $select->__toString());
+        return $return;
     }
 }

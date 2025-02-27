@@ -1,7 +1,18 @@
 stages:
   getCreatedAt:
-    pipeline: Stage\Extract
-    args:
-      extraction: currentProduct::getCreatedAt()
-      transformations:
-        - ToDateString("Y-m-d\TH:i:s.v\Z")
+    pipeline: Pipeline\Fallback
+    stages:
+      getData:
+        stages:
+          extract:
+            pipeline: Stage\Extract
+            args:
+              extraction: currentProduct::getCreatedAt()
+          validate:
+            pipeline: Stage\Validate
+            args:
+              validation: IsNotEmpty
+          transform:
+            pipeline: Stage\Transform
+            args:
+              transformation: ToDateString("Y-m-d\TH:i:s.v\Z")

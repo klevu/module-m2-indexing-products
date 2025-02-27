@@ -138,7 +138,7 @@ class SyncEntitiesCommandTest extends TestCase
             ],
         );
 
-        $this->assertSame(expected: Cli::RETURN_SUCCESS, actual: $isFailure, message: 'Entity Sync Succeeds');
+        $this->assertSame(expected: Cli::RETURN_FAILURE, actual: $isFailure, message: 'Entity Sync Succeeds');
 
         $display = $tester->getDisplay();
         $this->assertStringContainsString(
@@ -146,19 +146,20 @@ class SyncEntitiesCommandTest extends TestCase
             haystack: $display,
         );
         $this->assertStringContainsString(
-            needle: sprintf('Entity Sync for API Key: %s.', $apiKey),
+            needle: sprintf('Entity sync for API key: %s.', $apiKey),
             haystack: $display,
         );
 
         $pattern = '#'
-            . 'Action  : KLEVU_PRODUCT::add'
+            . 'Action: KLEVU_PRODUCT::add'
+            . '\s*partial'
             . '\s*Batch        : 0'
             . '\s*Success      : False'
             . '\s*API Response : .*'
             . '\s*Job ID       : n/a'
             . '\s*Record Count : 1'
             . '\s*There has been an ERROR'
-            . '\s*Batches : 1'
+            . '\s*Batches processed : 1'
             . '\s*--'
             . '#';
         $matches = [];
@@ -169,28 +170,25 @@ class SyncEntitiesCommandTest extends TestCase
         );
         $this->assertCount(1, $matches, 'KLEVU_PRODUCT::add batches');
 
-        $pattern = '#'
-            . 'Action  : KLEVU_PRODUCT::delete'
-            . '\s*Batches : 0'
-            . '\s*--'
-            . '#';
+        $pattern = '#Action: KLEVU_PRODUCT::delete#';
         $matches = [];
         preg_match(
             pattern: $pattern,
             subject: $display,
             matches: $matches,
         );
-        $this->assertCount(1, $matches, 'KLEVU_PRODUCT::delete batches');
+        $this->assertCount(0, $matches, 'KLEVU_PRODUCT::delete batches');
 
         $pattern = '#'
-            . 'Action  : KLEVU_PRODUCT::update'
+            . 'Action: KLEVU_PRODUCT::update'
+            . '\s*partial'
             . '\s*Batch        : 0'
             . '\s*Success      : False'
             . '\s*API Response : .*'
             . '\s*Job ID       : n/a'
             . '\s*Record Count : 1'
             . '\s*There has been an ERROR'
-            . '\s*Batches : 1'
+            . '\s*Batches processed : 1'
             . '\s*--'
             . '#';
         $matches = [];
@@ -202,7 +200,7 @@ class SyncEntitiesCommandTest extends TestCase
         $this->assertCount(1, $matches, 'KLEVU_PRODUCT::update batches');
 
         $this->assertStringContainsString(
-            needle: 'All or part of Entity Sync Failed. See Logs for more details.',
+            needle: 'All or part of entity sync failed. See logs for more details.',
             haystack: $display,
         );
 
@@ -282,19 +280,20 @@ class SyncEntitiesCommandTest extends TestCase
             haystack: $display,
         );
         $this->assertStringContainsString(
-            needle: sprintf('Entity Sync for API Key: %s.', $apiKey),
+            needle: sprintf('Entity sync for API key: %s.', $apiKey),
             haystack: $display,
         );
 
         $pattern = '#'
-            . 'Action  : KLEVU_PRODUCT::add'
+            . 'Action: KLEVU_PRODUCT::add'
+            . '\s*success'
             . '\s*Batch        : 0'
             . '\s*Success      : True'
             . '\s*API Response : 0'
             . '\s*Job ID       : n/a'
             . '\s*Record Count : 1'
             . '\s*Batch accepted successfully'
-            . '\s*Batches : 1'
+            . '\s*Batches processed : 1'
             . '\s*--'
             . '#';
         $matches = [];
@@ -305,28 +304,25 @@ class SyncEntitiesCommandTest extends TestCase
         );
         $this->assertCount(1, $matches, 'KLEVU_PRODUCT::add batches');
 
-        $pattern = '#'
-            . 'Action  : KLEVU_PRODUCT::delete'
-            . '\s*Batches : 0'
-            . '\s*--'
-            . '#';
+        $pattern = '#Action: KLEVU_PRODUCT::delete#';
         $matches = [];
         preg_match(
             pattern: $pattern,
             subject: $display,
             matches: $matches,
         );
-        $this->assertCount(1, $matches, 'KLEVU_PRODUCT::delete batches');
+        $this->assertCount(0, $matches, 'KLEVU_PRODUCT::delete batches');
 
         $pattern = '#'
-            . 'Action  : KLEVU_PRODUCT::update'
+            . 'Action: KLEVU_PRODUCT::update'
+            . '\s*success'
             . '\s*Batch        : 0'
             . '\s*Success      : True'
             . '\s*API Response : 0'
             . '\s*Job ID       : n/a'
             . '\s*Record Count : 1'
             . '\s*Batch accepted successfully'
-            . '\s*Batches : 1'
+            . '\s*Batches processed : 1'
             . '\s*--'
             . '#';
         $matches = [];
@@ -338,7 +334,7 @@ class SyncEntitiesCommandTest extends TestCase
         $this->assertCount(1, $matches, 'KLEVU_PRODUCT::update batches');
 
         $this->assertStringContainsString(
-            needle: 'Entity sync command completed successfully.',
+            needle: 'Entity sync completed successfully.',
             haystack: $display,
         );
 
@@ -419,32 +415,29 @@ class SyncEntitiesCommandTest extends TestCase
             haystack: $display,
         );
         $this->assertStringContainsString(
-            needle: sprintf('Entity Sync for API Key: %s.', $apiKey),
+            needle: sprintf('Entity sync for API key: %s.', $apiKey),
             haystack: $display,
         );
 
-        $pattern = '#'
-            . 'Action  : KLEVU_PRODUCT::add'
-            . '\s*Batches : 0'
-            . '\s*--'
-            . '#';
+        $pattern = '#Action: KLEVU_PRODUCT::add#';
         $matches = [];
         preg_match(
             pattern: $pattern,
             subject: $display,
             matches: $matches,
         );
-        $this->assertCount(1, $matches, 'KLEVU_PRODUCT::add batches');
+        $this->assertCount(0, $matches, 'KLEVU_PRODUCT::add batches');
 
         $pattern = '#'
-            . 'Action  : KLEVU_PRODUCT::delete'
+            . 'Action: KLEVU_PRODUCT::delete'
+            . '\s*success'
             . '\s*Batch        : 0'
             . '\s*Success      : True'
             . '\s*API Response : 0'
             . '\s*Job ID       : n/a'
             . '\s*Record Count : 2'
             . '\s*Batch accepted successfully'
-            . '\s*Batches : 1'
+            . '\s*Batches processed : 1'
             . '\s*--'
             . '#';
         $matches = [];
@@ -455,21 +448,17 @@ class SyncEntitiesCommandTest extends TestCase
         );
         $this->assertCount(1, $matches, 'KLEVU_PRODUCT::delete batches');
 
-        $pattern = '#'
-            . 'Action  : KLEVU_PRODUCT::update'
-            . '\s*Batches : 0'
-            . '\s*--'
-            . '#';
+        $pattern = '#Action: KLEVU_PRODUCT::update#';
         $matches = [];
         preg_match(
             pattern: $pattern,
             subject: $display,
             matches: $matches,
         );
-        $this->assertCount(1, $matches, 'KLEVU_PRODUCT::update batches');
+        $this->assertCount(0, $matches, 'KLEVU_PRODUCT::update batches');
 
         $this->assertStringContainsString(
-            needle: 'Entity sync command completed successfully.',
+            needle: 'Entity sync completed successfully.',
             haystack: $display,
         );
 

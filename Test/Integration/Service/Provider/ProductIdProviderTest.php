@@ -89,6 +89,10 @@ class ProductIdProviderTest extends TestCase
         $this->assertEmpty(actual: $productIds, message: 'Product IDs empty');
     }
 
+    /**
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     */
     public function testGetBySku_ReturnsProductId(): void
     {
         $this->createProduct();
@@ -100,6 +104,10 @@ class ProductIdProviderTest extends TestCase
         $this->assertSame(expected: (int)$productFixture->getId(), actual: $productId);
     }
 
+    /**
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     */
     public function testGetBySkus_ReturnsArrayOfProductIds(): void
     {
         $this->createProduct([
@@ -202,6 +210,10 @@ class ProductIdProviderTest extends TestCase
         $this->assertSame(expected: $expected, actual: $result);
     }
 
+    /**
+     * @magentoAppIsolation enabled
+     * @magentoDbIsolation disabled
+     */
     public function testGetByLinkFields_ForCurrentMagentoVersion(): void
     {
         $metadataPool = $this->objectManager->get(MetadataPool::class);

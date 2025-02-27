@@ -1,0 +1,11 @@
+stages:
+  getImage:
+    pipeline: Stage\Extract
+    args:
+      extraction: currentProduct::getImage()
+      transformations:
+        - ResizeImage("image", $config::getForCurrentStore().image_width, $config::getForCurrentStore().image_height, $store::getForCurrentStore().store_id)
+  validateImage:
+    pipeline: Stage\Validate
+    args:
+      validation: IsNotEqualTo("no_selection")|IsNotEmpty

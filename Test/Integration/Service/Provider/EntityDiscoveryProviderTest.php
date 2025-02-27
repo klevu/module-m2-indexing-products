@@ -98,7 +98,6 @@ class EntityDiscoveryProviderTest extends TestCase
     public function testGetData_IsIndexableChecksDisabled(): void
     {
         $apiKey = 'klevu-js-api-key';
-        $this->cleanIndexingEntities($apiKey);
 
         $this->createStore();
         $storeFixture = $this->storeFixturesPool->get('test_store');
@@ -109,6 +108,7 @@ class EntityDiscoveryProviderTest extends TestCase
             $apiKey,
             'rest-auth-key',
         );
+        $this->cleanIndexingEntities($apiKey);
         $scopeProvider->unsetCurrentScope();
 
         $this->createProduct(storeId: $storeFixture->getId());
@@ -144,11 +144,14 @@ class EntityDiscoveryProviderTest extends TestCase
     public function testGetData_ForDisabledProduct_IsIndexableChecksEnabled(): void
     {
         $apiKey = 'klevu-js-api-key';
-        $this->cleanIndexingEntities($apiKey);
 
         $this->createStore();
         $storeFixture = $this->storeFixturesPool->get('test_store');
         $store = $storeFixture->get();
+        $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
+        $scopeProvider->setCurrentScope(scope: $storeFixture->get());
+        $this->cleanIndexingEntities($apiKey);
+        $scopeProvider->unsetCurrentScope();
 
         $this->createProduct(
             productData: [
@@ -163,6 +166,7 @@ class EntityDiscoveryProviderTest extends TestCase
                 ],
             ],
         );
+
         $product = $this->productFixturePool->get('test_product');
 
         $provider = $this->instantiateTestObject();
@@ -194,11 +198,14 @@ class EntityDiscoveryProviderTest extends TestCase
     public function testGetData_ForOutOfStockProduct_IsIndexableChecksEnabled(): void
     {
         $apiKey = 'klevu-js-api-key';
-        $this->cleanIndexingEntities($apiKey);
 
         $this->createStore();
         $storeFixture = $this->storeFixturesPool->get('test_store');
         $store = $storeFixture->get();
+        $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
+        $scopeProvider->setCurrentScope(scope: $storeFixture->get());
+        $this->cleanIndexingEntities($apiKey);
+        $scopeProvider->unsetCurrentScope();
 
         $this->createProduct(
             productData: [
@@ -238,7 +245,6 @@ class EntityDiscoveryProviderTest extends TestCase
     public function testGetData_IsIndexable_ForProductDisabledInOneStore_IsIndexableChecksEnabled(): void
     {
         $apiKey = 'klevu-js-api-key';
-        $this->cleanIndexingEntities($apiKey);
 
         $this->createWebsite();
         $websiteFixture = $this->websiteFixturesPool->get('test_website');
@@ -257,6 +263,11 @@ class EntityDiscoveryProviderTest extends TestCase
         ]);
         $storeFixture2 = $this->storeFixturesPool->get('test_store_2');
         $store2 = $storeFixture2->get();
+
+        $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
+        $scopeProvider->setCurrentScope(scope: $storeFixture2->get());
+        $this->cleanIndexingEntities($apiKey);
+        $scopeProvider->unsetCurrentScope();
 
         ConfigFixture::setForStore(
             path: 'klevu_configuration/auth_keys/js_api_key',

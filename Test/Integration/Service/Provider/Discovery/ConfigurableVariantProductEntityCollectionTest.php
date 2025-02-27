@@ -20,6 +20,7 @@ use Klevu\TestFixtures\Traits\TestImplementsInterfaceTrait;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
+use Magento\Framework\DataObject;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
@@ -155,12 +156,12 @@ class ConfigurableVariantProductEntityCollectionTest extends TestCase
 
         $provider = $this->instantiateTestObject();
         $collection = $provider->get($store);
-        /** @var ProductInterface[] $items */
+        /** @var array<DataObject&ProductInterface> $items */
         $items = $collection->getItems();
 
         $foundItemsForSimple1 = array_filter(
             array: $items,
-            callback: static fn (ProductInterface $collectionItem): bool => (
+            callback: static fn (DataObject&ProductInterface $collectionItem): bool => (
                 (int)$collectionItem->getId() === $productSimple1->getId()
                 && (int)$collectionItem->getData('parent_id') === $productConfigurable->getId()
             ),
@@ -181,7 +182,7 @@ class ConfigurableVariantProductEntityCollectionTest extends TestCase
 
         $foundItemsForSimple2 = array_filter(
             array: $items,
-            callback: static fn (ProductInterface $collectionItem): bool => (
+            callback: static fn (DataObject&ProductInterface $collectionItem): bool => (
                 (int)$collectionItem->getId() === $productSimple2->getId()
                 && (int)$collectionItem->getData('parent_id') === $productConfigurable->getId()
             ),
@@ -196,13 +197,13 @@ class ConfigurableVariantProductEntityCollectionTest extends TestCase
             ),
         );
 
-        /** @var ProductInterface $item2 */
+        /** @var DataObject&ProductInterface $item2 */
         $item2 = current($foundItemsForSimple2);
         $this->assertSame(expected: Status::STATUS_DISABLED, actual: (int)$item2->getStatus());
 
         $foundItemsForConfigurable = array_filter(
             array: $items,
-            callback: static fn (ProductInterface $collectionItem): bool => (
+            callback: static fn (DataObject&ProductInterface $collectionItem): bool => (
                 (int)$collectionItem->getId() === $productConfigurable->getId()
             ),
         );
@@ -219,7 +220,6 @@ class ConfigurableVariantProductEntityCollectionTest extends TestCase
     /**
      * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
-     * @group wip
      */
     public function testGet_ReturnsCollection_FilteredByType_AndStore_AndEntityId(): void
     {
@@ -301,12 +301,12 @@ class ConfigurableVariantProductEntityCollectionTest extends TestCase
 
         $provider = $this->instantiateTestObject();
         $collection = $provider->get($store, [(int)$productSimple2->getId()]);
-        /** @var ProductInterface[] $items */
+        /** @var array<DataObject&ProductInterface> $items */
         $items = $collection->getItems();
 
         $foundItemsForSimple1 = array_filter(
             array: $items,
-            callback: static fn (ProductInterface $collectionItem): bool => (
+            callback: static fn (DataObject&ProductInterface $collectionItem): bool => (
                 (int)$collectionItem->getId() === $productSimple1->getId()
                 && (int)$collectionItem->getData('parent_id') === $productConfigurable->getId()
             ),
@@ -323,7 +323,7 @@ class ConfigurableVariantProductEntityCollectionTest extends TestCase
 
         $foundItemsForSimple2 = array_filter(
             array: $items,
-            callback: static fn (ProductInterface $collectionItem): bool => (
+            callback: static fn (DataObject&ProductInterface $collectionItem): bool => (
                 (int)$collectionItem->getId() === $productSimple2->getId()
                 && (int)$collectionItem->getData('parent_id') === $productConfigurable->getId()
             ),
@@ -338,13 +338,13 @@ class ConfigurableVariantProductEntityCollectionTest extends TestCase
             ),
         );
 
-        /** @var ProductInterface $item2 */
+        /** @var DataObject&ProductInterface $item2 */
         $item2 = current($foundItemsForSimple2);
         $this->assertSame(expected: Status::STATUS_DISABLED, actual: (int)$item2->getStatus());
 
         $foundItemsForConfigurable = array_filter(
             array: $items,
-            callback: static fn (ProductInterface $collectionItem): bool => (
+            callback: static fn (DataObject&ProductInterface $collectionItem): bool => (
                 (int)$collectionItem->getId() === $productConfigurable->getId()
             ),
         );
@@ -447,12 +447,12 @@ class ConfigurableVariantProductEntityCollectionTest extends TestCase
 
         $provider = $this->instantiateTestObject();
         $collection = $provider->get($store);
-        /** @var ProductInterface[] $items */
+        /** @var array<DataObject&ProductInterface> $items */
         $items = $collection->getItems();
 
         $foundItemsForSimpleConfig1 = array_filter(
             array: $items,
-            callback: static fn (ProductInterface $collectionItem): bool => (
+            callback: static fn (DataObject&ProductInterface $collectionItem): bool => (
                 (int)$collectionItem->getId() === $productSimple->getId()
                 && (int)$collectionItem->getData('parent_id') === $productConfigurable1->getId()
             ),
@@ -469,7 +469,7 @@ class ConfigurableVariantProductEntityCollectionTest extends TestCase
 
         $foundItemsForConfigurable1 = array_filter(
             array: $items,
-            callback: static fn (ProductInterface $collectionItem): bool => (
+            callback: static fn (DataObject&ProductInterface $collectionItem): bool => (
                 (int)$collectionItem->getId() === $productConfigurable1->getId()
             ),
         );
@@ -484,7 +484,7 @@ class ConfigurableVariantProductEntityCollectionTest extends TestCase
 
         $foundItemsForSimpleConfig2 = array_filter(
             array: $items,
-            callback: static fn (ProductInterface $collectionItem): bool => (
+            callback: static fn (DataObject&ProductInterface $collectionItem): bool => (
                 (int)$collectionItem->getId() === $productSimple->getId()
                 && (int)$collectionItem->getData('parent_id') === $productConfigurable2->getId()
             ),
@@ -501,7 +501,7 @@ class ConfigurableVariantProductEntityCollectionTest extends TestCase
 
         $foundItemsForConfigurable2 = array_filter(
             array: $items,
-            callback: static fn (ProductInterface $collectionItem): bool => (
+            callback: static fn (DataObject&ProductInterface $collectionItem): bool => (
                 (int)$collectionItem->getId() === $productConfigurable2->getId()
             ),
         );

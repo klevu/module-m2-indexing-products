@@ -108,6 +108,9 @@ class UpdateRatingAttributesOnAggregatePluginTest extends TestCase
         );
     }
 
+    /**
+     * @magentoAppIsolation enabled
+     */
     public function testExecute_CallsUpdateRecordService_WhenProductFound(): void
     {
         $this->createProduct();

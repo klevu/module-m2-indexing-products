@@ -10,6 +10,7 @@ namespace Klevu\IndexingProducts\Model\ResourceModel\Catalog\ConfigurableVariant
 
 use Klevu\IndexingProducts\Model\ResourceModel\Catalog\ProductCollectionTrait;
 use Klevu\IndexingProducts\Model\ResourceModel\Product\Collection as ProductCollection;
+use Klevu\IndexingProducts\Service\Action\JoinStockToCollectionActionInterface;
 use Klevu\IndexingProducts\Service\Modifier\Catalog\Product\Collection\AddParentAttributeToCollectionModifierInterface;
 use Klevu\IndexingProducts\Service\Provider\Catalog\Product\Collection\AddParentAttributeToCollectionModifierProviderInterface; //phpcs:ignore Generic.Files.LineLength.TooLong
 use Magento\Catalog\Model\Indexer\Category\Product\TableMaintainer;
@@ -63,9 +64,16 @@ class Collection extends ProductCollection
      */
     private readonly array $addParentAttributeToCollectionModifiers;
     /**
-     * @var CategoryInventoryStockHelper|mixed
+     * @deprecated changed to use JoinStockToCollectionActionInterface for performance gains
+     * @use $joinStockToCollectionAction
+     *
+     * @var CategoryInventoryStockHelper
      */
-    private readonly mixed $categoryInventoryStockHelper;
+    private readonly CategoryInventoryStockHelper $categoryInventoryStockHelper; // @phpstan-ignore-line
+    /**
+     * @var JoinStockToCollectionActionInterface
+     */
+    private readonly JoinStockToCollectionActionInterface $joinStockToCollectionAction;
 
     /**
      * @param AddParentAttributeToCollectionModifierProviderInterface $addParentAttributeToCollectionModifierProvider
@@ -99,6 +107,7 @@ class Collection extends ProductCollection
      * @param GalleryReadHandler|null $productGalleryReadHandler
      * @param Gallery|null $mediaGalleryResource
      * @param CategoryInventoryStockHelper|null $categoryInventoryStockHelper
+     * @param JoinStockToCollectionActionInterface|null $joinStockToCollectionAction
      */
     public function __construct(
         AddParentAttributeToCollectionModifierProviderInterface $addParentAttributeToCollectionModifierProvider,
@@ -134,6 +143,7 @@ class Collection extends ProductCollection
         Gallery $mediaGalleryResource = null,
         CategoryInventoryStockHelper $categoryInventoryStockHelper = null,
         // phpcs:enable SlevomatCodingStandard.TypeHints.NullableTypeForNullDefaultValue.NullabilityTypeMissing
+        ?JoinStockToCollectionActionInterface $joinStockToCollectionAction = null,
     ) {
         parent::__construct(
             entityFactory: $entityFactory,
@@ -171,6 +181,8 @@ class Collection extends ProductCollection
         $objectManager = ObjectManager::getInstance();
         $this->categoryInventoryStockHelper = $categoryInventoryStockHelper
             ?: $objectManager->get(CategoryInventoryStockHelper::class);
+        $this->joinStockToCollectionAction = $joinStockToCollectionAction
+            ?: $objectManager->get(JoinStockToCollectionActionInterface::class);
     }
 
     /**
@@ -283,11 +295,6 @@ class Collection extends ProductCollection
      */
     private function joinStock(): void
     {
-        // categoryInventoryStockHelper is deprecated in favour of MSI
-        // however, MSI has a plugin on the addInStockFilterToCollection method
-        // so we can safely use this in case the merchant has removed MSI.
-        $this->categoryInventoryStockHelper->addInStockFilterToCollection(
-            collection: $this, // @phpstan-ignore-line incorrect type hint in Magento core
-        );
+        $this->joinStockToCollectionAction->execute(collection: $this);
     }
 }

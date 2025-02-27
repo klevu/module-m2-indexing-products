@@ -79,6 +79,7 @@ class MagentoAverageRatingProviderTest extends TestCase
     }
 
     /**
+     * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      */
     public function testGet_ReturnsNull_WhenNoReviewsExist(): void
@@ -96,6 +97,7 @@ class MagentoAverageRatingProviderTest extends TestCase
     }
 
     /**
+     * @magentoAppIsolation enabled
      * @magentoDbIsolation disabled
      */
     public function testGet_ReturnsArray_WhenProductHasPendingReview(): void

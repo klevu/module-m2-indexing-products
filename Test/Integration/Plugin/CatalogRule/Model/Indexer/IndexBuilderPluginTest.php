@@ -114,6 +114,7 @@ class IndexBuilderPluginTest extends TestCase
 
         $this->createIndexingEntity([
             IndexingEntity::TARGET_ID => $productFixture->getId(),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
             IndexingEntity::IS_INDEXABLE => true,
@@ -128,7 +129,12 @@ class IndexBuilderPluginTest extends TestCase
             type: 'KLEVU_PRODUCT',
         );
         $this->assertNotNull($indexingEntity);
-        $this->assertSame(expected: Actions::UPDATE, actual: $indexingEntity->getNextAction());
+        $this->assertSame(
+            expected: Actions::UPDATE,
+            actual: $indexingEntity->getNextAction(),
+            message: 'Expected ' . Actions::UPDATE->value . ', received ' . $indexingEntity->getNextAction()->value,
+        );
+
         $this->assertTrue(condition: $indexingEntity->getIsIndexable());
     }
 
@@ -169,6 +175,7 @@ class IndexBuilderPluginTest extends TestCase
 
         $this->createIndexingEntity([
             IndexingEntity::TARGET_ID => $productFixture->getId(),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
             IndexingEntity::IS_INDEXABLE => true,
@@ -183,7 +190,12 @@ class IndexBuilderPluginTest extends TestCase
             type: 'KLEVU_PRODUCT',
         );
         $this->assertNotNull($indexingEntity);
-        $this->assertSame(expected: Actions::UPDATE, actual: $indexingEntity->getNextAction());
+        $this->assertSame(
+            expected: Actions::UPDATE,
+            actual: $indexingEntity->getNextAction(),
+            message: 'Expected ' . Actions::UPDATE->value . ', received ' . $indexingEntity->getNextAction()->value,
+
+        );
         $this->assertTrue(condition: $indexingEntity->getIsIndexable());
     }
 
@@ -224,6 +236,7 @@ class IndexBuilderPluginTest extends TestCase
 
         $this->createIndexingEntity([
             IndexingEntity::TARGET_ID => $productFixture->getId(),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
             IndexingEntity::API_KEY => $apiKey,
             IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
             IndexingEntity::IS_INDEXABLE => true,
@@ -238,7 +251,11 @@ class IndexBuilderPluginTest extends TestCase
             type: 'KLEVU_PRODUCT',
         );
         $this->assertNotNull($indexingEntity);
-        $this->assertSame(expected: Actions::UPDATE, actual: $indexingEntity->getNextAction());
+        $this->assertSame(
+            expected: Actions::UPDATE,
+            actual: $indexingEntity->getNextAction(),
+            message: 'Expected ' . Actions::UPDATE->value . ', received ' . $indexingEntity->getNextAction()->value,
+        );
         $this->assertTrue(condition: $indexingEntity->getIsIndexable());
     }
 

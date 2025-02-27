@@ -130,14 +130,36 @@ class RegenerateConfigurationOverridesTest extends TestCase
         );
         $this->assertSame(
             expected: [
-                'pipeline' => 'Stage\Extract',
-                'args' => [
-                    'extraction' => 'currentProduct::getKlevuTestAttributeText()',
-                    'transformations' => [
-                        'ToString',
-                        'StripTags(["p", "br", "hr", "h1", "h2", "h3", "h4", "h5", "h6", "strong", "em", "ul", "ol", "li", "dl", "dt", "dd", "img", "sub", "sup", "small"], ["script"])', // phpcs:ignore Generic.Files.LineLength.TooLong
-                        'EscapeHtml',
-                        'Trim',
+                'stages' => [
+                    'processAttribute' => [
+                        'pipeline' => 'Pipeline\Fallback',
+                        'stages' => [
+                            'getData' => [
+                                'stages' => [
+                                    'extract' => [
+                                        'pipeline' => 'Stage\Extract',
+                                        'args' => [
+                                            'extraction' => 'currentProduct::getKlevuTestAttributeText()',
+                                            'transformations' => [],
+                                        ],
+                                    ],
+                                    'validate' => [
+                                        'pipeline' => 'Stage\Validate',
+                                        'args' => [
+                                            'validation' => [
+                                                'IsNotIn([null, ""], true)',
+                                            ],
+                                        ],
+                                    ],
+                                    'transform' => [
+                                        'pipeline' => 'Stage\Transform',
+                                        'args' => [
+                                            'transformation' => 'ToString|StripTags(["p", "br", "hr", "h1", "h2", "h3", "h4", "h5", "h6", "strong", "em", "ul", "ol", "li", "dl", "dt", "dd", "img", "sub", "sup", "small"], ["script"])|EscapeHtml|Trim', // phpcs:ignore Generic.Files.LineLength.TooLong
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -198,14 +220,36 @@ class RegenerateConfigurationOverridesTest extends TestCase
         );
         $this->assertSame(
             expected: [
-                'pipeline' => 'Stage\Extract',
-                'args' => [
-                    'extraction' => 'currentProduct::getKlevuTestAttributeText()',
-                    'transformations' => [
-                        'ToString',
-                        'StripTags(["p", "br", "hr", "h1", "h2", "h3", "h4", "h5", "h6", "strong", "em", "ul", "ol", "li", "dl", "dt", "dd", "img", "sub", "sup", "small"], ["script"])', // phpcs:ignore Generic.Files.LineLength.TooLong
-                        'EscapeHtml',
-                        'Trim',
+                'stages' => [
+                    'processAttribute' => [
+                        'pipeline' => 'Pipeline\Fallback',
+                        'stages' => [
+                            'getData' => [
+                                'stages' => [
+                                    'extract' => [
+                                        'pipeline' => 'Stage\Extract',
+                                        'args' => [
+                                            'extraction' => 'currentProduct::getKlevuTestAttributeText()',
+                                            'transformations' => [],
+                                        ],
+                                    ],
+                                    'validate' => [
+                                        'pipeline' => 'Stage\Validate',
+                                        'args' => [
+                                            'validation' => [
+                                                'IsNotIn([null, ""], true)',
+                                            ],
+                                        ],
+                                    ],
+                                    'transform' => [
+                                        'pipeline' => 'Stage\Transform',
+                                        'args' => [
+                                            'transformation' => 'ToString|StripTags(["p", "br", "hr", "h1", "h2", "h3", "h4", "h5", "h6", "strong", "em", "ul", "ol", "li", "dl", "dt", "dd", "img", "sub", "sup", "small"], ["script"])|EscapeHtml|Trim', // phpcs:ignore Generic.Files.LineLength.TooLong
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -256,6 +300,9 @@ class RegenerateConfigurationOverridesTest extends TestCase
         }
     }
 
+    /**
+     * @magentoAppIsolation enabled
+     */
     public function testExecute_PerformsNoAction_WhenConfigurationDisabled_AndFilesExist(): void
     {
         ConfigFixture::setGlobal(

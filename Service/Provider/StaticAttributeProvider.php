@@ -122,7 +122,7 @@ class StaticAttributeProvider implements StaticAttributeProviderInterface
         if (!($this->validateAttributeData($data))) {
             return null;
         }
-        /** @var DataObject|ProductAttributeInterface $attribute */
+        /** @var DataObject&ProductAttributeInterface $attribute */
         $attribute = $this->attributeFactory->create();
         $attribute->setAttributeId((int)$data['attribute_id']);
         $attribute->setAttributeCode($data['attribute_code']);
