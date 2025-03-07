@@ -12,12 +12,12 @@ use Klevu\Configuration\Service\Provider\ScopeProviderInterface;
 use Klevu\IndexingApi\Service\Determiner\IsIndexableConditionInterface;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\CatalogInventory\Api\Data\StockItemInterface;
+use Magento\CatalogInventory\Api\StockRegistryInterface;
 use Magento\CatalogInventory\Model\Spi\StockRegistryProviderInterface;
 use Magento\Cms\Api\Data\PageInterface;
 use Magento\Framework\Api\ExtensibleDataInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ObjectManager;
-use Magento\Framework\DataObject;
 use Magento\Store\Api\Data\StoreInterface;
 use Psr\Log\LoggerInterface;
 
@@ -38,28 +38,39 @@ class OutOfStockProductsIsIndexableCondition implements IsIndexableConditionInte
      */
     private readonly ScopeProviderInterface $scopeProvider;
     /**
-     * @var StockRegistryProviderInterface
+     * @deprecated 3.1.0
+     * no longer in use
+     *
+     * @var StockRegistryProviderInterface|null
      */
-    private readonly StockRegistryProviderInterface $stockRegistryProvider;
+    private readonly ?StockRegistryProviderInterface $stockRegistryProvider; // @phpstan-ignore-line
+    /**
+     * @var StockRegistryInterface
+     */
+    private readonly StockRegistryInterface $stockRegistry;
 
     /**
      * @param ScopeConfigInterface $scopeConfig
      * @param LoggerInterface $logger
      * @param ScopeProviderInterface $scopeProvider
+     * @param StockRegistryProviderInterface|null $stockRegistryProvider
+     * @param StockRegistryInterface|null $stockRegistry
      */
     public function __construct(
         ScopeConfigInterface $scopeConfig,
         LoggerInterface $logger,
         ScopeProviderInterface $scopeProvider,
         ?StockRegistryProviderInterface $stockRegistryProvider = null,
+        ?StockRegistryInterface $stockRegistry = null,
     ) {
         $this->scopeConfig = $scopeConfig;
         $this->logger = $logger;
         $this->scopeProvider = $scopeProvider;
+        $this->stockRegistryProvider = $stockRegistryProvider;
 
         $objectManager = ObjectManager::getInstance();
-        $this->stockRegistryProvider = $stockRegistryProvider
-            ?: $objectManager->get(StockRegistryProviderInterface::class);
+        $this->stockRegistry = $stockRegistry
+            ?: $objectManager->get(StockRegistryInterface::class);
     }
 
     /**
@@ -138,12 +149,12 @@ class OutOfStockProductsIsIndexableCondition implements IsIndexableConditionInte
      */
     private function isProductInStock(ProductInterface $product): bool
     {
-        $stockItem = $this->getStockItemFromProductExtensionAttributes($product)
-            ?: $this->getStockItemFromStockRegistryProvider($product);
+        $stockItem = $this->getStockItemFromProductExtensionAttributes($product);
+        $stockStatus = $stockItem
+            ? $stockItem->getIsInStock()
+            : $this->getStockFromStockRegistry($product);
 
-        return $stockItem
-            ? (bool)$stockItem->getIsInStock()
-            : $this->getStockFromProduct($product);
+        return (bool)$stockStatus;
     }
 
     /**
@@ -161,37 +172,15 @@ class OutOfStockProductsIsIndexableCondition implements IsIndexableConditionInte
     /**
      * @param ProductInterface $product
      *
-     * @return StockItemInterface|null
-     */
-    private function getStockItemFromStockRegistryProvider(ProductInterface $product): ?StockItemInterface
-    {
-        $scope = $this->scopeProvider->getCurrentScope();
-        $scopeObject = $scope->getScopeObject();
-        if ($scopeObject && $scope->getScopeType() === 'stores') {
-            $scopeId = $scopeObject->getWebsiteId();
-        } else {
-            $scopeId = $scope->getScopeId();
-        }
-
-        return $this->stockRegistryProvider->getStockItem(
-            productId: $product->getId(),
-            scopeId: $scopeId,
-        );
-    }
-
-    /**
-     * @param ProductInterface $product
-     *
      * @return bool
      */
-    private function getStockFromProduct(ProductInterface $product): bool
+    private function getStockFromStockRegistry(ProductInterface $product): bool
     {
-        /** @var DataObject & ProductInterface $product */
-        $stockData = $product->getData('quantity_and_stock_status');
-        $return = (is_array($stockData) && ($stockData['is_in_stock'] ?? false))
-            ? $stockData['is_in_stock']
-            : $stockData;
+        /**
+         * MSI has a plugin on this method to get the correct stock.
+         */
+        $stockStatus = $this->stockRegistry->getStockStatus($product->getId());
 
-        return (bool)$return;
+        return (bool)$stockStatus->getStockStatus();
     }
 }
