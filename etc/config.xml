@@ -10,6 +10,7 @@
                 <enable_product_sync>1</enable_product_sync>
                 <exclude_disabled_products>1</exclude_disabled_products>
                 <exclude_oos_products>0</exclude_oos_products>
+                <disable_entity_discovery_on_product_attribute_save>0</disable_entity_discovery_on_product_attribute_save>
                 <image_height_product>130</image_height_product>
                 <image_width_product>130</image_width_product>
             </indexing>

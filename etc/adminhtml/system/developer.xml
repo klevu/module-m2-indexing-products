@@ -33,5 +33,23 @@
             <comment><![CDATA[Reduces the total records index, but will increase indexing time and complexity]]></comment>
             <config_path>klevu/indexing/exclude_oos_products</config_path>
         </field>
+        <field id="disable_entity_discovery_on_product_attribute_save"
+               translate="label comment tooltip"
+               sortOrder="40"
+               type="select"
+               showInDefault="1"
+               showInWebsite="0"
+               showInStore="0"
+               canRestore="1">
+            <label>Disable Entity Discovery on Product Attribute Save</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <comment>
+                <![CDATA[Disabling this will improve performance when saving product attributes, but new attribute data
+                may not be synced to Klevu.<br />
+                To requeue all products in order to send data with the updated attribute configuration, please
+                run <code>bin/magento klevu:indexing:entity-update --entity-types KLEVU_PRODUCT --entity-ids all</code>
+                via the terminal.]]></comment>
+            <config_path>klevu/indexing/disable_entity_discovery_on_product_attribute_save</config_path>
+        </field>
     </group>
 </config>

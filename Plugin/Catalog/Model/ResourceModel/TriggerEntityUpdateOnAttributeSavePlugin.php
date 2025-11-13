@@ -16,6 +16,8 @@ use Magento\Catalog\Model\ResourceModel\Eav\Attribute as EavAttributeResourceMod
 use Magento\Eav\Api\Data\AttributeInterface;
 use Magento\Eav\Model\Config as EavConfig;
 use Magento\Eav\Model\ConfigFactory as EavConfigFactory;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Model\AbstractModel;
 use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
@@ -23,6 +25,8 @@ use Psr\Log\LoggerInterface;
 
 class TriggerEntityUpdateOnAttributeSavePlugin
 {
+    public const XML_PATH_DISABLE_ENTITY_DISCOVERY_ON_PRODUCT_ATTRIBUTE_SAVE = 'klevu/indexing/disable_entity_discovery_on_product_attribute_save'; // phpcs:ignore Generic.Files.LineLength.TooLong
+
     /**
      * @var EntityUpdateResponderServiceInterface
      */
@@ -35,20 +39,28 @@ class TriggerEntityUpdateOnAttributeSavePlugin
      * @var LoggerInterface
      */
     private readonly LoggerInterface $logger;
+    /**
+     * @var ScopeConfigInterface
+     */
+    private readonly ScopeConfigInterface $scopeConfig;
 
     /**
      * @param EntityUpdateResponderServiceInterface $responderService
      * @param EavConfigFactory $eavConfigFactory
      * @param LoggerInterface $logger
+     * @param ScopeConfigInterface|null $scopeConfig
      */
     public function __construct(
         EntityUpdateResponderServiceInterface $responderService,
         EavConfigFactory $eavConfigFactory,
         LoggerInterface $logger,
+        ?ScopeConfigInterface $scopeConfig = null,
     ) {
         $this->responderService = $responderService;
         $this->eavConfigFactory = $eavConfigFactory;
         $this->logger = $logger;
+        $objectManager = ObjectManager::getInstance();
+        $this->scopeConfig = $scopeConfig ?: $objectManager->get(ScopeConfigInterface::class);
     }
 
     /**
@@ -84,7 +96,28 @@ class TriggerEntityUpdateOnAttributeSavePlugin
      */
     private function isUpdateRequired(mixed $attribute): bool
     {
-        if (!($attribute instanceof AttributeInterface) || !($attribute instanceof AbstractModel)) {
+        $isEntityDiscoveryDisabled = $this->scopeConfig->isSetFlag(
+            self::XML_PATH_DISABLE_ENTITY_DISCOVERY_ON_PRODUCT_ATTRIBUTE_SAVE,
+            ScopeConfigInterface::SCOPE_TYPE_DEFAULT,
+            null,
+        );
+
+        if (
+            $isEntityDiscoveryDisabled
+            || !($attribute instanceof AttributeInterface)
+            || !($attribute instanceof AbstractModel)
+        ) {
+            $this->logger->info(
+                message: 'Skipping entity update on product attribute save.',
+                context: [
+                    'conditions' => [
+                        'is_entity_discovery_disabled' => $isEntityDiscoveryDisabled,
+                        'is_instance_of_attribute_interface' => $attribute instanceof AttributeInterface,
+                        'is_instance_of_abstract_model' => $attribute instanceof AbstractModel,
+                    ],
+                ],
+            );
+
             return false;
         }
 

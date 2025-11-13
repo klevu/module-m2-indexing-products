@@ -32,6 +32,7 @@ use Magento\Framework\ObjectManagerInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
 use TddWizard\Fixtures\Catalog\ProductFixturePool;
+use TddWizard\Fixtures\Core\ConfigFixture;
 
 /**
  * @covers TriggerEntityUpdateOnAttributeSavePlugin::class
@@ -944,6 +945,83 @@ class TriggerEntityUpdateOnAttributeSavePluginTest extends TestCase
             expected: Actions::UPDATE,
             actual: $indexingEntity3->getNextAction(),
             message: 'Expected ' . Actions::UPDATE->value . ', received ' . $indexingEntity3->getNextAction()->value,
+        );
+    }
+
+    /**
+     * @group wip
+     */
+    public function testAfterSave_DoesNotExecuteWhenDisabled(): void
+    {
+        $apiKey = 'klevu-js-api-key';
+
+        $this->createStore();
+        $storeFixture = $this->storeFixturesPool->get('test_store');
+        $scopeProvider = $this->objectManager->get(ScopeProviderInterface::class);
+        $scopeProvider->setCurrentScope($storeFixture->get());
+        $this->setAuthKeys(
+            scopeProvider: $scopeProvider,
+            jsApiKey: $apiKey,
+            restAuthKey: 'klevu-rest-key',
+        );
+
+        $this->createAttribute([
+            'index_as' => IndexType::INDEX,
+            'generate_config_for' => [
+                'simple',
+                'virtual',
+                'grouped',
+            ],
+            'aspect' => Aspect::ATTRIBUTES,
+        ]);
+        $attributeFixture = $this->attributeFixturePool->get('test_attribute');
+        /** @var AttributeInterface&DataObject $attribute */
+        $attribute = $attributeFixture->getAttribute();
+
+        $this->createProduct([
+            'data' => [
+                $attribute->getAttributeCode() => 'Some Value',
+            ],
+        ]);
+        $productFixture1 = $this->productFixturePool->get('test_product');
+
+        $this->cleanIndexingEntities($apiKey);
+        $this->createIndexingEntity([
+            IndexingEntity::TARGET_ID => $productFixture1->getId(),
+            IndexingEntity::API_KEY => $apiKey,
+            IndexingEntity::TARGET_ENTITY_TYPE => 'KLEVU_PRODUCT',
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
+            IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
+            IndexingEntity::LAST_ACTION => Actions::ADD,
+            IndexingEntity::LAST_ACTION_TIMESTAMP => date('Y-m-d H:i:s'),
+            IndexingEntity::IS_INDEXABLE => true,
+        ]);
+
+        $attribute->setData(
+            MagentoAttributeInterface::ATTRIBUTE_PROPERTY_IS_INDEXABLE,
+            IndexType::NO_INDEX->value,
+        );
+        $attribute->setData(
+            MagentoAttributeInterface::ATTRIBUTE_PROPERTY_GENERATE_CONFIGURATION_FOR_ENTITY_SUBTYPES,
+            ['grouped'],
+        );
+
+        ConfigFixture::setGlobal(
+            path: 'klevu/indexing/disable_entity_discovery_on_product_attribute_save',
+            value: '1',
+        );
+
+        $this->resourceModel->save($attribute); // @phpstan-ignore-line
+
+        $indexingEntity1 = $this->getIndexingEntityForEntity(
+            apiKey: $apiKey,
+            entity: $productFixture1->getProduct(),
+            type: 'KLEVU_PRODUCT',
+        );
+        $this->assertSame(
+            expected: Actions::NO_ACTION,
+            actual: $indexingEntity1->getNextAction(),
+            message: 'Expected ' . Actions::UPDATE->value . ', received ' . $indexingEntity1->getNextAction()->value,
         );
     }
 }

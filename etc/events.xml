@@ -5,6 +5,10 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
 
+    <event name="magento_catalog_api_data_productinterface_delete_before">
+        <observer name="Klevu_IndexingProducts_ProductDeleteBefore"
+                  instance="Klevu\IndexingProducts\Observer\ProductDeleteBeforeObserver"/>
+    </event>
     <event name="catalog_product_delete_after_done">
         <observer name="Klevu_IndexingProducts_ProductDelete"
                   instance="Klevu\IndexingProducts\Observer\ProductDeleteObserver"/>
