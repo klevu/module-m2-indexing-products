@@ -125,11 +125,17 @@ class UpdateRatingServiceTest extends TestCase
                 ],
             )
             ->willReturnCallback(callback: function () use ($matcher): AttributeInterface {
-                if ($matcher->getInvocationCount() === 1) {
+                $invocationCount = match (true) {
+                    method_exists($matcher, 'getInvocationCount') => $matcher->getInvocationCount(),
+                    method_exists($matcher, 'numberOfInvocations') => $matcher->numberOfInvocations(),
+                    default => throw new \RuntimeException('Cannot determine invocation count from matcher'),
+                };
+
+                if ($invocationCount === 1) {
                     throw new NoSuchEntityException(
                         __(
                             'The attribute with a "%1" attributeCode doesn\'t exist.'
-                            . ' Verify the attribute and try again.',
+                                . ' Verify the attribute and try again.',
                             KlevuRatingInterface::ATTRIBUTE_CODE,
                         ),
                     );
@@ -191,11 +197,17 @@ class UpdateRatingServiceTest extends TestCase
                 ],
             )
             ->willReturnCallback(callback: function () use ($matcher): AttributeInterface {
-                if ($matcher->getInvocationCount() === 2) {
+                $invocationCount = match (true) {
+                    method_exists($matcher, 'getInvocationCount') => $matcher->getInvocationCount(),
+                    method_exists($matcher, 'numberOfInvocations') => $matcher->numberOfInvocations(),
+                    default => throw new \RuntimeException('Cannot determine invocation count from matcher'),
+                };
+
+                if ($invocationCount === 2) {
                     throw new NoSuchEntityException(
                         __(
                             'The attribute with a "%1" attributeCode doesn\'t exist.'
-                            . ' Verify the attribute and try again.',
+                                . ' Verify the attribute and try again.',
                             KlevuRatingCountInterface::ATTRIBUTE_CODE,
                         ),
                     );
