@@ -8,10 +8,25 @@ declare(strict_types=1);
 
 namespace Klevu\IndexingProducts\Plugin\Catalog\Ui\Component\Listing\Columns;
 
+use Klevu\Configuration\Service\Provider\ApiKeysProviderInterface;
 use Magento\Catalog\Ui\Component\Listing\Columns\ProductActions;
 
 class ProductActionsPlugin
 {
+    /**
+     * @var ApiKeysProviderInterface
+     */
+    private readonly ApiKeysProviderInterface $apiKeysProvider;
+
+    /**
+     * @param ApiKeysProviderInterface $apiKeysProvider
+     */
+    public function __construct(
+        ApiKeysProviderInterface $apiKeysProvider,
+    ) {
+        $this->apiKeysProvider = $apiKeysProvider;
+    }
+
     /**
      * @param ProductActions $subject
      * @param mixed[] $result
@@ -22,6 +37,10 @@ class ProductActionsPlugin
         ProductActions $subject,
         array $result,
     ): array {
+        if (!$this->apiKeysProvider->get([])) {
+            return $result;
+        }
+
         if (isset($result['data']['items'])) {
             // phpcs:ignore SlevomatCodingStandard.PHP.DisallowReference.DisallowedAssigningByReference
             foreach ($result['data']['items'] as &$item) {
@@ -64,6 +83,8 @@ class ProductActionsPlugin
         $productListing = 'product_listing.product_listing';
         $modal = $productListing . '.klevu_product_sync_info_modal';
         $container = $modal . '.klevu_product_sync_info_container';
+        $infoFieldset = $container . '.klevu_product_entity_info_fieldset';
+        $infoListing = $infoFieldset . '.klevu_product_entity_info_listing';
         $actionFieldset = $container . '.klevu_product_sync_next_action_fieldset';
         $actionListing = $actionFieldset . '.klevu_product_sync_next_action_listing';
         $historyFieldset = $container . '.klevu_product_sync_history_fieldset';
@@ -72,6 +93,10 @@ class ProductActionsPlugin
         $historyConsolidationListing = $historyConsolidationFieldset . '.klevu_product_sync_history_consolidation';
 
         return [
+            [
+                'provider' => $infoListing,
+                'target' => 'destroyInserted',
+            ],
             [
                 'provider' => $actionListing,
                 'target' => 'destroyInserted',
@@ -83,6 +108,13 @@ class ProductActionsPlugin
             [
                 'provider' => $historyConsolidationListing,
                 'target' => 'destroyInserted',
+            ],
+            [
+                'provider' => $infoListing,
+                'target' => 'updateData',
+                'params' => [
+                    'target_id' => $entityId,
+                ],
             ],
             [
                 'provider' => $actionListing,

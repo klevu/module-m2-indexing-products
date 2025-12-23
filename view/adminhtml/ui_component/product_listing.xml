@@ -12,6 +12,28 @@
             </options>
         </settings>
         <container name="klevu_product_sync_info_container">
+            <fieldset name="klevu_product_entity_info_fieldset"
+                      sortOrder="5">
+                <settings>
+                    <label translate="true">Entity Information</label>
+                    <collapsible>true</collapsible>
+                    <opened>false</opened>
+                </settings>
+                <insertListing name="klevu_product_entity_info_listing">
+                    <settings>
+                        <dataLinks>
+                            <exports>false</exports>
+                            <imports>true</imports>
+                        </dataLinks>
+                        <autoRender>false</autoRender>
+                        <dataScope>klevu_product_entity_info_listing</dataScope>
+                        <loading>false</loading>
+                        <ns>klevu_product_entity_info_listing</ns>
+                        <externalProvider>${ $.ns }.klevu_product_entity_info_listing_data_source</externalProvider>
+                    </settings>
+                </insertListing>
+            </fieldset>
+
             <fieldset name="klevu_product_sync_next_action_fieldset"
                       sortOrder="10">
                 <settings>

@@ -8,6 +8,12 @@
     <preference for="Klevu\IndexingProducts\Model\Source\EntitySubtypeOptionsInterface"
                 type="Klevu\IndexingProducts\Model\Source\EntitySubtypeOptions"/>
 
+    <preference for="Klevu\IndexingProducts\Service\Provider\ProductStatusProviderInterface"
+                type="Klevu\IndexingProducts\Service\Provider\ProductStatusProvider"/>
+
+    <preference for="Klevu\IndexingProducts\Service\Provider\ProductStockStatusProviderInterface"
+                type="Klevu\IndexingProducts\Service\Provider\ProductStockStatusProvider"/>
+
     <preference for="Klevu\IndexingApi\Service\Action\ImageGenerationActionInterface"
                 type="Klevu\IndexingProducts\Service\Action\ImageGenerationAction"/>
 
@@ -110,6 +116,15 @@
             </argument>
         </arguments>
     </virtualType>
+
+    <type name="Klevu\Indexing\Service\Determiner\RequiresUpdateDeterminer">
+        <arguments>
+            <argument name="criteriaServices" xsi:type="array">
+                <item name="stock_status" xsi:type="object">Klevu\IndexingProducts\Service\Determiner\RequiresUpdateCriteria\StockStatus</item>
+                <item name="status" xsi:type="object">Klevu\IndexingProducts\Service\Determiner\RequiresUpdateCriteria\Status</item>
+            </argument>
+        </arguments>
+    </type>
 
     <virtualType name="Klevu\IndexingProducts\Service\Provider\SyncEnabledProvider"
                  type="Klevu\Configuration\Service\Provider\ScopeConfigProvider">
@@ -1168,6 +1183,12 @@
         </arguments>
     </type>
 
+    <type name="Klevu\IndexingProducts\Pipeline\Provider\Argument\Transformer\GetProductStockStatusArgumentProvider">
+        <arguments>
+            <argument name="argumentProvider" xsi:type="object">Klevu\Pipelines\Provider\ArgumentProvider</argument>
+        </arguments>
+    </type>
+
     <type name="Klevu\IndexingProducts\Pipeline\Provider\Argument\Transformer\SetDataOnProductArgumentProvider">
         <arguments>
             <argument name="argumentProvider" xsi:type="object">Klevu\Pipelines\Provider\ArgumentProvider</argument>
@@ -1241,6 +1262,25 @@
             <argument name="action" xsi:type="string">Update</argument>
         </arguments>
     </virtualType>
+
+    <type name="Klevu\IndexingProducts\Plugin\PlatformPipelines\Service\ConfigurationOverridesBuilder\StockStatusPlugin">
+        <arguments>
+            <argument name="entitySubtypeToParentPathMap" xsi:type="array">
+                <item name="simple" xsi:type="string">iterateIndexingRecordsBatch.iterateIndexingRecords.processProduct.default.generateRecord.attributes</item>
+                <item name="virtual" xsi:type="string">iterateIndexingRecordsBatch.iterateIndexingRecords.processProduct.virtualProduct.generateRecord.attributes</item>
+                <item name="downloadable" xsi:type="string">iterateIndexingRecordsBatch.iterateIndexingRecords.processProduct.downloadableProduct.generateRecord.attributes</item>
+                <item name="grouped" xsi:type="string">iterateIndexingRecordsBatch.iterateIndexingRecords.processProduct.groupedProduct.generateRecord.attributes</item>
+                <item name="bundle" xsi:type="string">iterateIndexingRecordsBatch.iterateIndexingRecords.processProduct.bundleProduct.generateRecord.attributes</item>
+                <item name="configurable" xsi:type="string">iterateIndexingRecordsBatch.iterateIndexingRecords.processProduct.configurableProduct.generateRecord.attributes</item>
+                <item name="configurable_variants" xsi:type="string">iterateIndexingRecordsBatch.iterateIndexingRecords.processProduct.variantProduct.generateRecord.attributes</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\PlatformPipelines\Service\ConfigurationOverridesBuilder">
+        <plugin name="Klevu_IndexingProducts::ConfigurationOverridesBuilderStockStatusPlugin"
+                type="Klevu\IndexingProducts\Plugin\PlatformPipelines\Service\ConfigurationOverridesBuilder\StockStatusPlugin"/>
+    </type>
 
     <virtualType name="Klevu\IndexingProducts\Service\Provider\GeneratedConfigurationOverridesFilepathProvider\AddUpdate"
                  type="Klevu\Indexing\Service\Provider\GeneratedConfigurationOverridesFilepathProvider">
@@ -1531,6 +1571,55 @@
         </arguments>
     </type>
 
+    <type name="Klevu\IndexingProducts\Service\Provider\ProductStockStatusProvider">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\IndexingProducts\Service\Provider\TargetParentIdsProvider">
+        <arguments>
+            <argument name="logger" xsi:type="object">Klevu\Indexing\Logger\Logger</argument>
+            <argument name="applicableProductTypes" xsi:type="array">
+                <item name="simple" xsi:type="const">Magento\Catalog\Model\Product\Type::TYPE_SIMPLE</item>
+                <item name="virtual" xsi:type="const">Magento\Catalog\Model\Product\Type::TYPE_VIRTUAL</item>
+                <item name="downloadable" xsi:type="const">Magento\Downloadable\Model\Product\Type::TYPE_DOWNLOADABLE</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Indexing\Service\Provider\TargetParentIdsProvider">
+        <arguments>
+            <argument name="targetParentIdsProviders" xsi:type="array">
+                <item name="KLEVU_PRODUCT"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\TargetParentIdsProvider</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\IndexingProducts\Service\Provider\EntitySyncConditionsValuesProvider">
+        <arguments>
+            <argument name="isIndexableDeterminer"
+                        xsi:type="object">Klevu\IndexingProducts\Service\Determiner\IsIndexableDeterminer</argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\Indexing\Service\Provider\EntitySyncConditionsValuesProvider">
+        <arguments>
+            <argument name="entitySyncConditionsValuesProviders" xsi:type="array">
+                <item name="KLEVU_PRODUCT"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\EntitySyncConditionsValuesProvider</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Klevu\IndexingProducts\Ui\Component\Listing\EntityInfoDataProvider">
+        <arguments>
+            <argument name="entitySyncConditionsValuesProvider"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Provider\EntitySyncConditionsValuesProvider</argument>
+        </arguments>
+    </type>
+
     <type name="Magento\Catalog\Model\ResourceModel\Category">
         <plugin name="Klevu_IndexingProducts::CategoryResourceModelChangedProductIdsPlugin"
                 type="Klevu\IndexingProducts\Plugin\Catalog\Model\ResourceModel\CategoryResourceModelChangedProductIdsPlugin"/>
@@ -1552,6 +1641,30 @@
                       xsi:type="object">Klevu\IndexingProducts\Service\Provider\GeneratedConfigurationOverridesFilepathProvider\Delete</item>
             </argument>
         </arguments>
+    </type>
+
+    <type name="Klevu\Indexing\Console\Command\EntitySyncInformationCommand">
+        <arguments>
+            <argument name="isIndexableDeterminers" xsi:type="array">
+                <item name="KLEVU_PRODUCT"
+                      xsi:type="object">Klevu\IndexingProducts\Service\Determiner\IsIndexableDeterminer</item>
+            </argument>
+        </arguments>
+        <plugin name="Klevu_IndexingProducts::AddProductSyncInformationPlugin"
+                type="Klevu\IndexingProducts\Plugin\Console\Command\EntitySyncInformationCommand\AddProductSyncInformationPlugin"/>
+    </type>
+
+    <type name="Klevu\Indexing\Cron\ProcessRequireUpdateEntities">
+        <arguments>
+            <argument name="entityDiscoveryProviders" xsi:type="array">
+                <item name="KLEVU_PRODUCT" xsi:type="object">Klevu\IndexingProducts\Service\Provider\EntityDiscoveryProvider\Batched</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Magento\CatalogInventory\Api\StockItemRepositoryInterface">
+        <plugin name="Klevu_IndexingProducts::StockItemSaveRequiresUpdatePlugin"
+                type="Klevu\IndexingProducts\Plugin\CatalogInventory\Model\Stock\StockItemRepository\SetRequiresUpdatePlugin"/>
     </type>
 
 </config>

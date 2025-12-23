@@ -10,11 +10,12 @@ namespace Klevu\IndexingProducts\Service\Determiner;
 
 use Klevu\Configuration\Service\Provider\ScopeProviderInterface;
 use Klevu\IndexingApi\Service\Determiner\IsIndexableConditionInterface;
+use Klevu\IndexingProducts\Service\Provider\ProductStatusProviderInterface;
 use Magento\Catalog\Api\Data\ProductInterface;
-use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Cms\Api\Data\PageInterface;
 use Magento\Framework\Api\ExtensibleDataInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\ObjectManager;
 use Magento\Store\Api\Data\StoreInterface;
 use Psr\Log\LoggerInterface;
 
@@ -34,20 +35,30 @@ class DisabledProductsIsIndexableCondition implements IsIndexableConditionInterf
      * @var ScopeProviderInterface
      */
     private readonly ScopeProviderInterface $scopeProvider;
+    /**
+     * @var ProductStatusProviderInterface 
+     */
+    private readonly ProductStatusProviderInterface $productStatusProvider;
 
     /**
      * @param ScopeConfigInterface $scopeConfig
      * @param LoggerInterface $logger
      * @param ScopeProviderInterface $scopeProvider
+     * @param ProductStatusProviderInterface|null $productStatusProvider
      */
     public function __construct(
         ScopeConfigInterface $scopeConfig,
         LoggerInterface $logger,
         ScopeProviderInterface $scopeProvider,
+        ?ProductStatusProviderInterface $productStatusProvider = null,
     ) {
         $this->scopeConfig = $scopeConfig;
         $this->logger = $logger;
         $this->scopeProvider = $scopeProvider;
+        
+        $objectManager = ObjectManager::getInstance();
+        $this->productStatusProvider = $productStatusProvider
+            ?? $objectManager->get(ProductStatusProviderInterface::class);
     }
 
     /**
@@ -94,7 +105,10 @@ class DisabledProductsIsIndexableCondition implements IsIndexableConditionInterf
      */
     private function isIndexable(ProductInterface $entity, StoreInterface $store): bool
     {
-        $isProductEnabled = $this->isProductEnabled(entity: $entity);
+        $isProductEnabled = $this->productStatusProvider->get(
+            product: $entity,
+            store: $store,
+        );
         if (!$isProductEnabled) {
             $currentScope = $this->scopeProvider->getCurrentScope();
             $this->scopeProvider->setCurrentScope(scope: $store);
@@ -116,15 +130,5 @@ class DisabledProductsIsIndexableCondition implements IsIndexableConditionInterf
         }
 
         return $isProductEnabled;
-    }
-
-    /**
-     * @param ProductInterface $entity
-     *
-     * @return bool
-     */
-    private function isProductEnabled(ProductInterface $entity): bool
-    {
-        return (int)$entity->getStatus() !== Status::STATUS_DISABLED;
     }
 }
