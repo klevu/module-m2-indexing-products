@@ -13,6 +13,8 @@
                 <disable_entity_discovery_on_product_attribute_save>0</disable_entity_discovery_on_product_attribute_save>
                 <image_height_product>130</image_height_product>
                 <image_width_product>130</image_width_product>
+                <product_stock_status_calculation_method>stock_item</product_stock_status_calculation_method>
+                <use_provider_for_pipelines_stock_status>0</use_provider_for_pipelines_stock_status>
             </indexing>
         </klevu>
     </default>

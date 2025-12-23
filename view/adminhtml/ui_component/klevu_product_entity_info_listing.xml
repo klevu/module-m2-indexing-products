@@ -7,21 +7,21 @@
 
     <argument name="data" xsi:type="array">
         <item name="js_config" xsi:type="array">
-            <item name="namespace" xsi:type="string">klevu_product_sync_next_action_listing</item>
+            <item name="namespace" xsi:type="string">klevu_product_entity_info_listing</item>
             <item name="provider"
-                  xsi:type="string">klevu_product_sync_next_action_listing.klevu_product_sync_next_action_listing_data_source</item>
+                  xsi:type="string">klevu_product_entity_info_listing.klevu_product_entity_info_listing_data_source</item>
         </item>
     </argument>
 
     <settings>
-        <spinner>next_action_columns</spinner>
+        <spinner>entity_info_columns</spinner>
         <deps>
-            <dep>klevu_product_sync_next_action_listing.klevu_product_sync_next_action_listing_data_source</dep>
+            <dep>klevu_product_entity_info_listing.klevu_product_entity_info_listing_data_source</dep>
         </deps>
     </settings>
 
-    <dataSource name="klevu_product_sync_next_action_listing_data_source"
-                component="Klevu_Indexing/js/grid/indexing/history/provider">
+    <dataSource name="klevu_product_entity_info_listing_data_source"
+                component="Klevu_IndexingProducts/js/grid/indexing/entity-info/provider">
         <settings>
             <storageConfig>
                 <param name="cacheRequests" xsi:type="boolean">false</param>
@@ -33,8 +33,8 @@
             </filterUrlParams>
         </settings>
         <aclResource>Klevu_indexing::indexing</aclResource>
-        <dataProvider class="Klevu\IndexingProducts\Ui\Component\Listing\EntitySyncNextActionDataProvider"
-                      name="klevu_product_sync_next_action_listing_data_source">
+        <dataProvider class="Klevu\IndexingProducts\Ui\Component\Listing\EntityInfoDataProvider"
+                      name="klevu_product_entity_info_listing_data_source">
             <settings>
                 <requestFieldName>target_id</requestFieldName>
                 <primaryFieldName>entity_id</primaryFieldName>
@@ -50,13 +50,7 @@
         <columnsControls name="columns_controls"/>
     </listingToolbar>
 
-    <columns name="next_action_columns">
-        <column name="entity_id" sortOrder="10">
-            <settings>
-                <label translate="true">ID</label>
-                <visible>false</visible>
-            </settings>
-        </column>
+    <columns name="entity_info_columns">
         <column name="target_id" sortOrder="20">
             <settings>
                 <label translate="true">Target ID</label>
@@ -69,50 +63,51 @@
                 <sorting>asc</sorting>
             </settings>
         </column>
+        <column name="store_code" sortOrder="35">
+            <settings>
+                <label translate="true">Store Code</label>
+            </settings>
+        </column>
         <column name="target_parent_id" sortOrder="40">
             <settings>
                 <label translate="true">Parent Product ID (if applicable)</label>
             </settings>
         </column>
-        <column name="is_indexable" sortOrder="50" component="Magento_Ui/js/grid/columns/select">
+        <column name="is_discovered" sortOrder="50">
             <settings>
                 <options class="Magento\Config\Model\Config\Source\Yesno"/>
                 <dataType>select</dataType>
+                <label translate="true">Is Discovered</label>
+            </settings>
+        </column>
+        <column name="is_indexable" sortOrder="60">
+            <settings>
                 <label translate="true">Is Indexable</label>
             </settings>
         </column>
-        <column name="requires_update" sortOrder="55" component="Magento_Ui/js/grid/columns/select">
+        <column name="assigned_to_website" sortOrder="70">
             <settings>
-                <options class="Magento\Config\Model\Config\Source\Yesno"/>
-                <dataType>select</dataType>
-                <label translate="true">Requires Update</label>
+                <label translate="true">Assigned to Website</label>
             </settings>
         </column>
-        <column name="next_action" sortOrder="60">
+        <column name="product_status" sortOrder="80">
             <settings>
-                <options class="Klevu\IndexingApi\Model\Source\ActionsSource"/>
-                <dataType>select</dataType>
-                <label translate="true">Action in Next Sync</label>
+                <label translate="true">Product Status</label>
             </settings>
         </column>
-        <column name="last_action" sortOrder="70">
+        <column name="stock_status" sortOrder="90">
             <settings>
-                <options class="Klevu\IndexingApi\Model\Source\ActionsSource"/>
-                <dataType>select</dataType>
-                <label translate="true">Action in Previous Sync</label>
-                <visible>false</visible>
+                <label translate="true">Stock Status</label>
             </settings>
         </column>
-        <column name="created_at" sortOrder="80">
+        <column name="is_salable" sortOrder="100">
             <settings>
-                <label translate="true">Created At</label>
-                <sorting>desc</sorting>
+                <label translate="true">Product is_salable</label>
             </settings>
         </column>
-        <column name="updated_at" sortOrder="90">
+        <column name="is_available" sortOrder="110">
             <settings>
-                <label translate="true">Updated At</label>
-                <sorting>desc</sorting>
+                <label translate="true">Product is_available</label>
             </settings>
         </column>
     </columns>

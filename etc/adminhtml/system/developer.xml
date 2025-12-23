@@ -51,5 +51,31 @@
                 via the terminal.]]></comment>
             <config_path>klevu/indexing/disable_entity_discovery_on_product_attribute_save</config_path>
         </field>
+        <field id="product_stock_status_calculation_method"
+               translate="label comment tooltip"
+               sortOrder="50"
+               type="select"
+               showInDefault="1"
+               showInWebsite="0"
+               showInStore="0"
+               canRestore="1">
+            <label>Stock Status Calculation Method</label>
+            <source_model>Klevu\IndexingProducts\Model\Source\StockStatusCalculationMethodOptions</source_model>
+            <comment><![CDATA[Determines how stock status is calculated for products during discovery using the Stock Status provider.<br />Changing this setting requires discovery or update of the product catalog before taking effect on existing indexes]]></comment>
+            <config_path>klevu/indexing/product_stock_status_calculation_method</config_path>
+        </field>
+        <field id="use_provider_for_pipelines_stock_status"
+               translate="label comment tooltip"
+               sortOrder="60"
+               type="select"
+               showInDefault="1"
+               showInWebsite="0"
+               showInStore="0"
+               canRestore="1">
+            <label>Use Provider for Stock Status Value</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <comment><![CDATA[Utilises the same provider as discovery to determine a product's stock status value for sync.<br />Requires autogeneration of pipelines overrides]]></comment>
+            <config_path>klevu/indexing/use_provider_for_pipelines_stock_status</config_path>
+        </field>
     </group>
 </config>
