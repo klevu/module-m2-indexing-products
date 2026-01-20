@@ -17,6 +17,7 @@ use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\CatalogInventory\Api\Data\StockItemInterface;
 use Magento\CatalogInventory\Api\StockItemRepositoryInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -147,6 +148,8 @@ class SetRequiresUpdatePlugin
                     );
                 }
             }
+        } catch (NoSuchEntityException) {
+            // New product; we don't need to log this
         } catch (\Exception $exception) {
             $this->logger->error(
                 message: 'Failed to set indexing entities to require update on stock item save',
