@@ -81,9 +81,14 @@ class StockStatus implements RequiresUpdateCriteriaInterface
         $storesForApiKey = $this->storesProvider->get(
             apiKey: $indexingEntity->getApiKey(),
         );
-        $product = $this->productRepository->getById(
-            productId: $indexingEntity->getTargetId(),
-        );
+        try {
+            $product = $this->productRepository->getById(
+                productId: $indexingEntity->getTargetId(),
+            );
+        } catch (NoSuchEntityException) {
+            return true;
+        }
+
         $parentProduct = $indexingEntity->getTargetParentId()
             ? $this->productRepository->getById(
                 productId: $indexingEntity->getTargetParentId(),
