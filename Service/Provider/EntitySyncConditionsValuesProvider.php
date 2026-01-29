@@ -99,11 +99,22 @@ class EntitySyncConditionsValuesProvider implements EntitySyncConditionsValuesPr
      * @param int $targetEntityId
      *
      * @return EntitySyncConditionsValuesInterface[]
+     * @throws \InvalidArgumentException
      */
     public function get(
-        string $targetEntityType, // phpcs:ignore SlevomatCodingStandard.Functions.UnusedParameter.UnusedParameter
+        string $targetEntityType,
         int $targetEntityId,
     ): array {
+        if ('KLEVU_PRODUCT' !== $targetEntityType) {
+            throw new \InvalidArgumentException(
+                message: sprintf(
+                    'Provider of type %s cannot be used to retrieve information about entities of type %s',
+                    self::class,
+                    $targetEntityType,
+                ),
+            );
+        }
+
         $return = [];
 
         $apiKeys = $this->apiKeysProvider->get(storeIds: []);
