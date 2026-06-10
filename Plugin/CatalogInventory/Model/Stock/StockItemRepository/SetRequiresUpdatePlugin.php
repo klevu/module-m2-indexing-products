@@ -17,6 +17,8 @@ use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\CatalogInventory\Api\Data\StockItemInterface;
 use Magento\CatalogInventory\Api\StockItemRepositoryInterface;
+use Magento\ConfigurableProduct\Model\Product\Type\Configurable as ConfigurableType;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\StoreManagerInterface;
@@ -56,6 +58,10 @@ class SetRequiresUpdatePlugin
      * @var TargetParentIdsProviderInterface
      */
     private readonly TargetParentIdsProviderInterface $targetParentIdsProvider;
+    /**
+     * @var ConfigurableType
+     */
+    private readonly ConfigurableType $configurableType;
 
     /**
      * @param LoggerInterface $logger
@@ -66,6 +72,7 @@ class SetRequiresUpdatePlugin
      * @param ProductStockStatusProviderInterface $productStockStatusProvider
      * @param SetIndexingEntitiesToRequireUpdateActionInterface $setIndexingEntitiesToRequireUpdateAction
      * @param TargetParentIdsProviderInterface $targetParentIdsProvider
+     * @param ConfigurableType|null $configurableType
      */
     public function __construct(
         LoggerInterface $logger,
@@ -76,6 +83,7 @@ class SetRequiresUpdatePlugin
         ProductStockStatusProviderInterface $productStockStatusProvider,
         SetIndexingEntitiesToRequireUpdateActionInterface $setIndexingEntitiesToRequireUpdateAction,
         TargetParentIdsProviderInterface $targetParentIdsProvider,
+        ?ConfigurableType $configurableType = null,
     ) {
         $this->logger = $logger;
         $this->storeManager = $storeManager;
@@ -85,6 +93,9 @@ class SetRequiresUpdatePlugin
         $this->productStockStatusProvider = $productStockStatusProvider;
         $this->setIndexingEntitiesToRequireUpdateAction = $setIndexingEntitiesToRequireUpdateAction;
         $this->targetParentIdsProvider = $targetParentIdsProvider;
+
+        $objectManager = ObjectManager::getInstance();
+        $this->configurableType = $configurableType ?? $objectManager->get(ConfigurableType::class);
     }
 
     /**
@@ -125,12 +136,26 @@ class SetRequiresUpdatePlugin
                 ),
                 array: $parentIds,
             );
+            $variantProducts = [];
+            if (ConfigurableType::TYPE_CODE === $product->getTypeId()) {
+                $variantIds = $this->configurableType->getChildrenIds(
+                    parentId: $product->getId(),
+                );
+                $variantProducts = array_map(
+                    callback: fn (int $variantId): ProductInterface => $this->productRepository->getById(
+                        productId: $variantId,
+                        storeId: $storeId,
+                    ),
+                    array: $variantIds[0] ?? [],
+                );
+            }
 
             foreach ($apiKeys as $apiKey) {
                 $entityIdsForUpdate = $this->determineEntityIdsToUpdate(
                     product: $product,
                     store: $store,
                     parentProducts: $parentProducts,
+                    variantProducts: $variantProducts,
                 );
 
                 foreach ($entityIdsForUpdate as $stockStatus => $entityIds) {
@@ -176,6 +201,7 @@ class SetRequiresUpdatePlugin
      * @param ProductInterface $product
      * @param StoreInterface $store
      * @param ProductInterface[] $parentProducts
+     * @param ProductInterface[] $variantProducts
      *
      * @return array<int, array<string, array<int|null>>>
      */
@@ -183,6 +209,7 @@ class SetRequiresUpdatePlugin
         ProductInterface $product,
         StoreInterface $store,
         array $parentProducts,
+        array $variantProducts,
     ): array {
         $entityIdsForUpdate = [
             0 => [],
@@ -218,6 +245,18 @@ class SetRequiresUpdatePlugin
             $entityIdsForUpdate[(int)$origStockStatusForParent][] = [
                 SetIndexingEntitiesToRequireUpdateActionInterface::ENTITY_IDS_KEY_TARGET_ID => (int)$parentProduct->getId(), // phpcs:ignore Generic.Files.LineLength.TooLong
                 SetIndexingEntitiesToRequireUpdateActionInterface::ENTITY_IDS_KEY_TARGET_PARENT_ID => null,
+            ];
+        }
+
+        foreach ($variantProducts as $variantProduct) {
+            $origStockStatusForVariant = $this->productStockStatusProvider->get(
+                product: $variantProduct,
+                store: $store,
+                parentProduct: $product,
+            );
+            $entityIdsForUpdate[(int)$origStockStatusForVariant][] = [
+                SetIndexingEntitiesToRequireUpdateActionInterface::ENTITY_IDS_KEY_TARGET_ID => (int)$variantProduct->getId(), // phpcs:ignore Generic.Files.LineLength.TooLong
+                SetIndexingEntitiesToRequireUpdateActionInterface::ENTITY_IDS_KEY_TARGET_PARENT_ID => (int)$product->getId(), // phpcs:ignore Generic.Files.LineLength.TooLong
             ];
         }
 

@@ -21,6 +21,9 @@ use Magento\CatalogInventory\Api\Data\StockItemInterfaceFactory;
 use Magento\CatalogInventory\Api\StockRegistryInterface;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\Eav\Api\Data\AttributeInterface;
+use Magento\Framework\Exception\CouldNotSaveException;
+use Magento\Framework\Exception\InputException;
+use Magento\Framework\Exception\StateException;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\GroupedProduct\Model\Product\Type\Grouped;
 use TddWizard\Fixtures\Catalog\ProductFixture;
@@ -36,7 +39,6 @@ trait ProductStockStatusProviderTestTrait
      * @var ProductRepositoryInterface|null
      */
     private ?ProductRepositoryInterface $productRepository = null; // @phpstan-ignore-line
-
     /**
      * @var StockRegistryInterface|mixed|null
      */
@@ -155,7 +157,7 @@ trait ProductStockStatusProviderTestTrait
 
     /**
      * @param string $appendIdentifier
-     * @param array $websiteIds
+     * @param int[] $websiteIds
      * @param int $quantity
      * @param bool $stockStatus
      * @param int $status
@@ -217,9 +219,9 @@ trait ProductStockStatusProviderTestTrait
      * @param array<string, mixed> $data
      *
      * @return ProductFixture
-     * @throws \Magento\Framework\Exception\CouldNotSaveException
-     * @throws \Magento\Framework\Exception\InputException
-     * @throws \Magento\Framework\Exception\StateException
+     * @throws CouldNotSaveException
+     * @throws InputException
+     * @throws StateException
      */
     private function createConfigurableProductFixture(
         string $appendIdentifier,

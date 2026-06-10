@@ -24,6 +24,7 @@ use Magento\Framework\ObjectManagerInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
 use TddWizard\Fixtures\Catalog\ProductFixturePool;
+use TddWizard\Fixtures\Core\ConfigFixture;
 
 class IndexBuilderPluginTest extends TestCase
 {
@@ -82,6 +83,7 @@ class IndexBuilderPluginTest extends TestCase
      * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/js_api_key klevu-js-api-key
      * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/rest_auth_key klevu-rest-auth-key
      * @magentoConfigFixture default/klevu/indexing/exclude_disabled_products 1
+     * @magentoConfigFixture default/klevu/indexing/disable_entity_discovery_on_catalogrule_index 0
      */
     public function testReindexFull_UpdatesIndexingEntities(): void
     {
@@ -91,6 +93,30 @@ class IndexBuilderPluginTest extends TestCase
         $this->createStore();
         $storeFixture = $this->storeFixturesPool->get('test_store');
         $store = $storeFixture->get();
+
+        ConfigFixture::setGlobal(
+            path: IndexBuilderPlugin::XML_PATH_DISABLE_ENTITY_DISCOVERY_ON_CATALOGRULE_INDEX,
+            value: 0,
+        );
+        ConfigFixture::setGlobal(
+            path: 'klevu/indexing/exclude_disabled_products',
+            value: 1,
+        );
+        ConfigFixture::setForStore(
+            path: IndexBuilderPlugin::XML_PATH_DISABLE_ENTITY_DISCOVERY_ON_CATALOGRULE_INDEX,
+            value: 0,
+            storeCode: $storeFixture->getCode(),
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu_configuration/auth_keys/js_api_key',
+            value: $apiKey,
+            storeCode: $storeFixture->getCode(),
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu_configuration/auth_keys/rest_auth_key',
+            value: 'klevu-rest-auth-key',
+            storeCode: $storeFixture->getCode(),
+        );
 
         $sku = 'KlevuTest' . random_int(0, 9999999);
         $this->createProduct(
@@ -143,6 +169,93 @@ class IndexBuilderPluginTest extends TestCase
      * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/js_api_key klevu-js-api-key
      * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/rest_auth_key klevu-rest-auth-key
      * @magentoConfigFixture default/klevu/indexing/exclude_disabled_products 1
+     * @magentoConfigFixture default/klevu/indexing/disable_entity_discovery_on_catalogrule_index 1
+     */
+    public function testReindexFull_DoesNotUpdateIndexingEntities_OnPluginDisabled(): void
+    {
+        $apiKey = 'klevu-js-api-key';
+        $this->cleanIndexingEntities($apiKey);
+
+        $this->createStore();
+        $storeFixture = $this->storeFixturesPool->get('test_store');
+        $store = $storeFixture->get();
+
+        ConfigFixture::setGlobal(
+            path: IndexBuilderPlugin::XML_PATH_DISABLE_ENTITY_DISCOVERY_ON_CATALOGRULE_INDEX,
+            value: 1,
+        );
+        ConfigFixture::setGlobal(
+            path: 'klevu/indexing/exclude_disabled_products',
+            value: 1,
+        );
+        ConfigFixture::setForStore(
+            path: IndexBuilderPlugin::XML_PATH_DISABLE_ENTITY_DISCOVERY_ON_CATALOGRULE_INDEX,
+            value: 1,
+            storeCode: $storeFixture->getCode(),
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu_configuration/auth_keys/js_api_key',
+            value: $apiKey,
+            storeCode: $storeFixture->getCode(),
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu_configuration/auth_keys/rest_auth_key',
+            value: 'klevu-rest-auth-key',
+            storeCode: $storeFixture->getCode(),
+        );
+
+        $sku = 'KlevuTest' . random_int(0, 9999999);
+        $this->createProduct(
+            productData: [
+                'sku' => $sku,
+            ],
+            storeId: (int)$store->getId(),
+        );
+        $productFixture = $this->productFixturePool->get('test_product');
+
+        $this->createRule([
+            'conditions' => [
+                [
+                    'attribute' => 'sku',
+                    'value' => $sku,
+                ],
+            ],
+        ]);
+
+        $this->cleanIndexingEntities($apiKey);
+
+        $this->createIndexingEntity([
+            IndexingEntity::TARGET_ID => $productFixture->getId(),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
+            IndexingEntity::API_KEY => $apiKey,
+            IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
+            IndexingEntity::IS_INDEXABLE => true,
+        ]);
+
+        $indexBuilder = $this->objectManager->get(IndexBuilder::class);
+        $indexBuilder->reindexFull();
+
+        $indexingEntity = $this->getIndexingEntityForEntity(
+            apiKey: $apiKey,
+            entity: $productFixture->getProduct(),
+            type: 'KLEVU_PRODUCT',
+        );
+        $this->assertNotNull($indexingEntity);
+        $this->assertSame(
+            expected: Actions::NO_ACTION,
+            actual: $indexingEntity->getNextAction(),
+            message: 'Expected ' . Actions::NO_ACTION->value . ', received ' . $indexingEntity->getNextAction()->value,
+        );
+
+        $this->assertTrue(condition: $indexingEntity->getIsIndexable());
+    }
+
+    /**
+     * @magentoDbIsolation disabled
+     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/js_api_key klevu-js-api-key
+     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/rest_auth_key klevu-rest-auth-key
+     * @magentoConfigFixture default/klevu/indexing/exclude_disabled_products 1
+     * @magentoConfigFixture default/klevu/indexing/disable_entity_discovery_on_catalogrule_index 0
      */
     public function testReindexById_UpdatesIndexingEntities(): void
     {
@@ -152,6 +265,30 @@ class IndexBuilderPluginTest extends TestCase
         $this->createStore();
         $storeFixture = $this->storeFixturesPool->get('test_store');
         $store = $storeFixture->get();
+
+        ConfigFixture::setGlobal(
+            path: IndexBuilderPlugin::XML_PATH_DISABLE_ENTITY_DISCOVERY_ON_CATALOGRULE_INDEX,
+            value: 0,
+        );
+        ConfigFixture::setGlobal(
+            path: 'klevu/indexing/exclude_disabled_products',
+            value: 1,
+        );
+        ConfigFixture::setForStore(
+            path: IndexBuilderPlugin::XML_PATH_DISABLE_ENTITY_DISCOVERY_ON_CATALOGRULE_INDEX,
+            value: 0,
+            storeCode: $storeFixture->getCode(),
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu_configuration/auth_keys/js_api_key',
+            value: $apiKey,
+            storeCode: $storeFixture->getCode(),
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu_configuration/auth_keys/rest_auth_key',
+            value: 'klevu-rest-auth-key',
+            storeCode: $storeFixture->getCode(),
+        );
 
         $sku = 'KlevuTest' . random_int(0, 9999999);
         $this->createProduct(
@@ -204,6 +341,93 @@ class IndexBuilderPluginTest extends TestCase
      * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/js_api_key klevu-js-api-key
      * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/rest_auth_key klevu-rest-auth-key
      * @magentoConfigFixture default/klevu/indexing/exclude_disabled_products 1
+     * @magentoConfigFixture default/klevu/indexing/disable_entity_discovery_on_catalogrule_index 1
+     */
+    public function testReindexById_DoesNotUpdateIndexingEntities_OnPluginDisabled(): void
+    {
+        $apiKey = 'klevu-js-api-key';
+        $this->cleanIndexingEntities($apiKey);
+
+        $this->createStore();
+        $storeFixture = $this->storeFixturesPool->get('test_store');
+        $store = $storeFixture->get();
+
+        ConfigFixture::setGlobal(
+            path: IndexBuilderPlugin::XML_PATH_DISABLE_ENTITY_DISCOVERY_ON_CATALOGRULE_INDEX,
+            value: 1,
+        );
+        ConfigFixture::setGlobal(
+            path: 'klevu/indexing/exclude_disabled_products',
+            value: 1,
+        );
+        ConfigFixture::setForStore(
+            path: IndexBuilderPlugin::XML_PATH_DISABLE_ENTITY_DISCOVERY_ON_CATALOGRULE_INDEX,
+            value: 1,
+            storeCode: $storeFixture->getCode(),
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu_configuration/auth_keys/js_api_key',
+            value: $apiKey,
+            storeCode: $storeFixture->getCode(),
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu_configuration/auth_keys/rest_auth_key',
+            value: 'klevu-rest-auth-key',
+            storeCode: $storeFixture->getCode(),
+        );
+
+        $sku = 'KlevuTest' . random_int(0, 9999999);
+        $this->createProduct(
+            productData: [
+                'sku' => $sku,
+            ],
+            storeId: (int)$store->getId(),
+        );
+        $productFixture = $this->productFixturePool->get('test_product');
+
+        $this->createRule([
+            'conditions' => [
+                [
+                    'attribute' => 'sku',
+                    'value' => $sku,
+                ],
+            ],
+        ]);
+
+        $this->cleanIndexingEntities($apiKey);
+
+        $this->createIndexingEntity([
+            IndexingEntity::TARGET_ID => $productFixture->getId(),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
+            IndexingEntity::API_KEY => $apiKey,
+            IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
+            IndexingEntity::IS_INDEXABLE => true,
+        ]);
+
+        $indexBuilder = $this->objectManager->get(IndexBuilder::class);
+        $indexBuilder->reindexById((string)$productFixture->getId());
+
+        $indexingEntity = $this->getIndexingEntityForEntity(
+            apiKey: $apiKey,
+            entity: $productFixture->getProduct(),
+            type: 'KLEVU_PRODUCT',
+        );
+        $this->assertNotNull($indexingEntity);
+        $this->assertSame(
+            expected: Actions::NO_ACTION,
+            actual: $indexingEntity->getNextAction(),
+            message: 'Expected ' . Actions::NO_ACTION->value . ', received ' . $indexingEntity->getNextAction()->value,
+
+        );
+        $this->assertTrue(condition: $indexingEntity->getIsIndexable());
+    }
+
+    /**
+     * @magentoDbIsolation disabled
+     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/js_api_key klevu-js-api-key
+     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/rest_auth_key klevu-rest-auth-key
+     * @magentoConfigFixture default/klevu/indexing/exclude_disabled_products 1
+     * @magentoConfigFixture default/klevu/indexing/disable_entity_discovery_on_catalogrule_index 0
      */
     public function testReindexByIds_UpdatesIndexingEntities(): void
     {
@@ -213,6 +437,30 @@ class IndexBuilderPluginTest extends TestCase
         $this->createStore();
         $storeFixture = $this->storeFixturesPool->get('test_store');
         $store = $storeFixture->get();
+
+        ConfigFixture::setGlobal(
+            path: IndexBuilderPlugin::XML_PATH_DISABLE_ENTITY_DISCOVERY_ON_CATALOGRULE_INDEX,
+            value: 0,
+        );
+        ConfigFixture::setGlobal(
+            path: 'klevu/indexing/exclude_disabled_products',
+            value: 1,
+        );
+        ConfigFixture::setForStore(
+            path: IndexBuilderPlugin::XML_PATH_DISABLE_ENTITY_DISCOVERY_ON_CATALOGRULE_INDEX,
+            value: 0,
+            storeCode: $storeFixture->getCode(),
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu_configuration/auth_keys/js_api_key',
+            value: $apiKey,
+            storeCode: $storeFixture->getCode(),
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu_configuration/auth_keys/rest_auth_key',
+            value: 'klevu-rest-auth-key',
+            storeCode: $storeFixture->getCode(),
+        );
 
         $sku = 'KlevuTest' . random_int(0, 9999999);
         $this->createProduct(
@@ -255,6 +503,91 @@ class IndexBuilderPluginTest extends TestCase
             expected: Actions::UPDATE,
             actual: $indexingEntity->getNextAction(),
             message: 'Expected ' . Actions::UPDATE->value . ', received ' . $indexingEntity->getNextAction()->value,
+        );
+        $this->assertTrue(condition: $indexingEntity->getIsIndexable());
+    }
+
+    /**
+     * @magentoDbIsolation disabled
+     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/js_api_key klevu-js-api-key
+     * @magentoConfigFixture klevu_test_store_1_store klevu_configuration/auth_keys/rest_auth_key klevu-rest-auth-key
+     * @magentoConfigFixture default/klevu/indexing/exclude_disabled_products 1
+     * @magentoConfigFixture default/klevu/indexing/disable_entity_discovery_on_catalogrule_index 1
+     */
+    public function testReindexByIds_DoesNotUpdateIndexingEntities_OnPluginDisabled(): void
+    {
+        $apiKey = 'klevu-js-api-key';
+        $this->cleanIndexingEntities($apiKey);
+
+        $this->createStore();
+        $storeFixture = $this->storeFixturesPool->get('test_store');
+        $store = $storeFixture->get();
+
+        ConfigFixture::setGlobal(
+            path: IndexBuilderPlugin::XML_PATH_DISABLE_ENTITY_DISCOVERY_ON_CATALOGRULE_INDEX,
+            value: 1,
+        );
+        ConfigFixture::setGlobal(
+            path: 'klevu/indexing/exclude_disabled_products',
+            value: 1,
+        );
+        ConfigFixture::setForStore(
+            path: IndexBuilderPlugin::XML_PATH_DISABLE_ENTITY_DISCOVERY_ON_CATALOGRULE_INDEX,
+            value: 1,
+            storeCode: $storeFixture->getCode(),
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu_configuration/auth_keys/js_api_key',
+            value: $apiKey,
+            storeCode: $storeFixture->getCode(),
+        );
+        ConfigFixture::setForStore(
+            path: 'klevu_configuration/auth_keys/rest_auth_key',
+            value: 'klevu-rest-auth-key',
+            storeCode: $storeFixture->getCode(),
+        );
+
+        $sku = 'KlevuTest' . random_int(0, 9999999);
+        $this->createProduct(
+            productData: [
+                'sku' => $sku,
+            ],
+            storeId: (int)$store->getId(),
+        );
+        $productFixture = $this->productFixturePool->get('test_product');
+
+        $this->createRule([
+            'conditions' => [
+                [
+                    'attribute' => 'sku',
+                    'value' => $sku,
+                ],
+            ],
+        ]);
+
+        $this->cleanIndexingEntities($apiKey);
+
+        $this->createIndexingEntity([
+            IndexingEntity::TARGET_ID => $productFixture->getId(),
+            IndexingEntity::TARGET_ENTITY_SUBTYPE => 'simple',
+            IndexingEntity::API_KEY => $apiKey,
+            IndexingEntity::NEXT_ACTION => Actions::NO_ACTION,
+            IndexingEntity::IS_INDEXABLE => true,
+        ]);
+
+        $indexBuilder = $this->objectManager->get(IndexBuilder::class);
+        $indexBuilder->reindexByIds([(string)$productFixture->getId()]);
+
+        $indexingEntity = $this->getIndexingEntityForEntity(
+            apiKey: $apiKey,
+            entity: $productFixture->getProduct(),
+            type: 'KLEVU_PRODUCT',
+        );
+        $this->assertNotNull($indexingEntity);
+        $this->assertSame(
+            expected: Actions::NO_ACTION,
+            actual: $indexingEntity->getNextAction(),
+            message: 'Expected ' . Actions::NO_ACTION->value . ', received ' . $indexingEntity->getNextAction()->value,
         );
         $this->assertTrue(condition: $indexingEntity->getIsIndexable());
     }

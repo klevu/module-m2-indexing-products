@@ -13,9 +13,13 @@ use Klevu\IndexingApi\Service\EntityUpdateResponderServiceInterface;
 use Klevu\IndexingApi\Service\Provider\CatalogRule\CatalogRuleProductIdsProviderInterface;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\CatalogRule\Model\Indexer\IndexBuilder;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\ObjectManager;
 
 class IndexBuilderPlugin
 {
+    public const XML_PATH_DISABLE_ENTITY_DISCOVERY_ON_CATALOGRULE_INDEX = 'klevu/indexing/disable_entity_discovery_on_catalogrule_index'; // phpcs:ignore Generic.Files.LineLength.TooLong
+
     /**
      * @var EntityUpdateResponderServiceInterface
      */
@@ -24,17 +28,26 @@ class IndexBuilderPlugin
      * @var CatalogRuleProductIdsProviderInterface
      */
     private readonly CatalogRuleProductIdsProviderInterface $catalogRuleProductIdsProvider;
+    /**
+     * @var ScopeConfigInterface
+     */
+    private readonly ScopeConfigInterface $scopeConfig;
 
     /**
      * @param EntityUpdateResponderServiceInterface $responderService
      * @param CatalogRuleProductIdsProviderInterface $catalogRuleProductIdsProvider
+     * @param ScopeConfigInterface|null $scopeConfig
      */
     public function __construct(
         EntityUpdateResponderServiceInterface $responderService,
         CatalogRuleProductIdsProviderInterface $catalogRuleProductIdsProvider,
+        ?ScopeConfigInterface $scopeConfig = null,
     ) {
         $this->responderService = $responderService;
         $this->catalogRuleProductIdsProvider = $catalogRuleProductIdsProvider;
+
+        $objectManager = ObjectManager::getInstance();
+        $this->scopeConfig = $scopeConfig ?? $objectManager->get(ScopeConfigInterface::class);
     }
 
     /**
@@ -51,6 +64,10 @@ class IndexBuilderPlugin
         mixed $result,
         mixed $productId,
     ): void {
+        if (!$this->isPluginEnabled()) {
+            return;
+        }
+
         $this->updateIndexingEntities([$productId]);
 
         // Magento\CatalogRule\Model\Indexer\IndexBuilder::reindexById returns void
@@ -70,6 +87,10 @@ class IndexBuilderPlugin
         mixed $result,
         array $productIds,
     ): void {
+        if (!$this->isPluginEnabled()) {
+            return;
+        }
+
         $this->updateIndexingEntities($productIds);
 
         // Magento\CatalogRule\Model\Indexer\IndexBuilder::reindexByIds returns void
@@ -86,6 +107,10 @@ class IndexBuilderPlugin
         IndexBuilder $subject,
         callable $proceed,
     ): void {
+        if (!$this->isPluginEnabled()) {
+            return;
+        }
+
         $initialProductIds = $this->catalogRuleProductIdsProvider->get();
         /**
          * \Magento\CatalogRule\Model\Indexer\IndexBuilder::reindexFull "$proceed()" returns void
@@ -115,5 +140,17 @@ class IndexBuilderPlugin
                 ProductInterface::PRICE,
             ],
         ]);
+    }
+
+    /**
+     * @return bool
+     */
+    private function isPluginEnabled(): bool
+    {
+        return !$this->scopeConfig->isSetFlag(
+            static::XML_PATH_DISABLE_ENTITY_DISCOVERY_ON_CATALOGRULE_INDEX,
+            ScopeConfigInterface::SCOPE_TYPE_DEFAULT,
+            0,
+        );
     }
 }

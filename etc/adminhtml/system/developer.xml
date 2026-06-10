@@ -51,6 +51,24 @@
                 via the terminal.]]></comment>
             <config_path>klevu/indexing/disable_entity_discovery_on_product_attribute_save</config_path>
         </field>
+        <field id="disable_entity_discovery_on_catalogrule_index"
+               translate="label comment tooltip"
+               sortOrder="42"
+               type="select"
+               showInDefault="1"
+               showInWebsite="0"
+               showInStore="0"
+               canRestore="1">
+            <label>Disable Entity Discovery on Catalogrule Reindex</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <comment>
+                <![CDATA[Disabling this will improve performance when saving products and reduce the number of
+                products included in sync operations if you are not implementing Magento Catalog Rules for pricing.<br />
+                To requeue all products manually in order to send data with updated price information, please
+                run <code>bin/magento klevu:indexing:entity-update --entity-types KLEVU_PRODUCT --entity-ids all</code>
+                via the terminal.]]></comment>
+            <config_path>klevu/indexing/disable_entity_discovery_on_catalogrule_index</config_path>
+        </field>
         <field id="product_stock_status_calculation_method"
                translate="label comment tooltip"
                sortOrder="50"
